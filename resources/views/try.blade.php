@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>Document1</title>
+	<title>Document</title>
 </head>
 <body>
 
