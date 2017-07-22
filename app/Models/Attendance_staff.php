@@ -7,7 +7,7 @@ use App\Models\Holiday;
 class Attendance_staff extends Model
 {
     //
-    protected $table = 'Attendance_staff';
+    protected $table = 'attendance_staff';
     protected $fillable = [
     	'staff_sn',
     	'parent',
