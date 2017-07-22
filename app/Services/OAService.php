@@ -9,7 +9,7 @@ class OAService {
 
     protected $appId = 7; /* AppId */
     protected $appTicket = '8Fdhj4B8PqLgsAzolxOcsExofolNZaTK'; /* AppTicket */
-    protected $oaApiPath = 'http://192.168.1.117:8002/api/'; /* OA接口根路由 */
+    protected $oaApiPath = 'http://192.168.1.20:8001/api/'; /* OA接口根路由 */
     protected $receiptUrl = null; /* 重定向地址 应指向getAppToken方法 */
 
     /**
@@ -24,7 +24,7 @@ class OAService {
             $params['app_token'] = cache('OA_appToken_' . session('OA_staff_sn'));
             $response = CurlService::build($url)->sendMessageByPost($params);
             if (!isset($response['status'])) {
-                abort(500,'未知接口错误');
+                abort(500, '未知接口错误');
             } elseif ($response['status'] == -1 && $response['error_code'] == 503) {
                 cache()->forget('OA_appToken_' . session('OA_staff_sn'));
                 session()->forget('OA_refresh_token');
@@ -55,6 +55,7 @@ class OAService {
         $params = '?' . http_build_query(['app_id' => $this->appId, 'redirect_uri' => $this->receiptUrl]);
         $url .= $params;
         header('Location:' . $url);
+        die;
     }
 
     /**
@@ -94,6 +95,7 @@ class OAService {
             $this->saveAppToken($response['message']);
             return $this->makeAppTokenSuccessResponse($response);
         } elseif ($response['status'] == -1) {
+            session()->forget('OA_refresh_token');
             return $this->makeAppTokenErrorResponse($response);
         }
     }
