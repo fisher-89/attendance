@@ -56,10 +56,10 @@ Route::any('attendance/getstafflist', 'AttendanceController@getstafflist');
 /* 数据统计 */
 Route::group(['prefix' => 'statistic'], function() {
     Route::any('getlist', 'AttendanceController@getStaffData');
-    Route::get('savelist', 'AttendanceController@staffData');
+    Route::any('savelist', 'AttendanceController@staffData');
     Route::any('getstatistic', 'AttendanceController@getstatistic');
     Route::any('getstaffdetail', 'AttendanceController@getStaffDetail');
-    Route::get('export', 'UpfileController@export');
+    Route::any('export', 'UpfileController@export');
 });
 
 //demo
