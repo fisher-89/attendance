@@ -3,17 +3,16 @@
 namespace App\Http\Middleware;
 
 use Closure;
-class Initial
-{
+
+class Initial {
+
     private $url;
     private $redirectUrl;
     public $OASer;
 
-    public function __construct(){
-        // $this->url = 'http://120.77.14.132:8002/api/login/';
-        // $this->redirectUrl = 'http://120.77.14.132:8002/get_user_token/';
-        $this->url =  'login';
-        $this->OASer = new  \App\Services\OAService;
+    public function __construct() {
+        $this->url = 'get_current_user';
+        $this->OASer = new \App\Services\OAService;
     }
 
     /**
@@ -23,15 +22,14 @@ class Initial
      * @param  \Closure  $next
      * @return mixed
      */
-    public function handle($request, Closure $next)
-    {
-        $token =  $request->user_token;
+    public function handle($request, Closure $next) {
+        $token = $request->user_token;
         $username = session('username');
-        if(!$username){
+        if (!$username) {
             $userInfo = $this->OASer->getDataFromApi($this->url);
-            if($userInfo['status'] == 1){
-                session(['username'=>$userInfo['message']['realname']]);
-                session(['staff_sn'=>$userInfo['message']['staff_sn']]);
+            if ($userInfo['status'] == 1) {
+                session(['username' => $userInfo['message']['realname']]);
+                session(['staff_sn' => $userInfo['message']['staff_sn']]);
             }
         }
         // return redirect('/loginError')->with(['redirectUrl'=>$this->redirectUrl]);
@@ -39,9 +37,9 @@ class Initial
         // dd($userInfo);
         // dd(session()->all());
         // dd(cache('OA_appToken_112068'));
-
         // echo json_encode(session()->all());
 // dd(session('staff_sn'));
         return $next($request);
     }
+
 }
