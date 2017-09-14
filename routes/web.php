@@ -12,10 +12,8 @@
 */
 
 Route::get('/', function(){
-		return redirect('/f');
-		// return session('username');
-		return view('front.index');
-	});
+	return redirect('/f/sign');
+});
 
 //非常重要
 Route::group(['prefix'=>'f','namespace'=>'f','middleware'=>'initial'],function(){

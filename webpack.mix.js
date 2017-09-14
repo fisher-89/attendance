@@ -1,5 +1,5 @@
-const { mix } = require('laravel-mix');
-
+let mix = require('laravel-mix');
+var path = require('path');
 /*
  |--------------------------------------------------------------------------
  | Mix Asset Management
@@ -7,14 +7,27 @@ const { mix } = require('laravel-mix');
  |
  | Mix provides a clean, fluent API for defining some Webpack build steps
  | for your Laravel application. By default, we are compiling the Sass
- | file for the application as well as bundling up all the JS files.
+ | file for your application, as well as bundling up your JS files.
  |
  */
-
-// mix.js('resources/assets/js/app.js', 'public/js')
-//    .sass('resources/assets/sass/app.scss', 'public/css');
-
-// mix.js('resources/assets/js/end.js', 'public/end')
-//    .js('resources/assets/js/front.js', 'public/front');
-
-mix.js('resources/assets/js/front.js', 'public/js');
+mix.js('resources/assets/js/front.js', 'public/js/front.js');
+mix.webpackConfig({
+	output: {
+		path: path.resolve('public')
+	}
+});
+// Full API
+// mix.js(src, output);
+// mix.extract(vendorLibs);
+// mix.sass(src, output);
+// mix.less(src, output);
+// mix.combine(files, destination);
+// mix.copy(from, to);
+// mix.minify(file);
+// mix.sourceMaps(); // Enable sourcemaps
+// mix.version(); // Enable versioning.
+// mix.disableNotifications();
+// mix.setPublicPath('path/to/public');
+// mix.autoload({}); <-- Will be passed to Webpack's ProvidePlugin.
+// mix.webpackConfig({}); <-- Override webpack.config.js, without editing the file directly.
+// mix.then(function () {}) <-- Will be triggered each time Webpack finishes building.

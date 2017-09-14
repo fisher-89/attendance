@@ -1,47 +1,36 @@
 <?php
 
-use Illuminate\Http\Request;
-
-Route::get('/getuser', 'TransferController@getuser');   //获取用户信息
-Route::get('/dd', 'TransferController@dd');
-Route::post('/transferstatus', 'TransferController@transferstatus');   //到店签到
-//调动
-Route::group(['prefix' => 'transfer'], function() {
-    Route::get('list', 'TransferController@list');
-    Route::get('save', 'TransferController@save');
-    Route::get('edit', 'TransferController@edit');
-    Route::get('cancel', 'TransferController@cancel');
-    Route::post('outshop', 'TransferController@outshop');  //离店签到
-    Route::post('goshop', 'TransferController@goshop');    //到店签到
-    Route::post('record', 'TransferController@record');  //到店签到
-    Route::post('confirm', 'TransferController@confirm'); //店长确认
-    Route::post('getTransferShop', 'TransferController@getTransferShop');    //获取该店调动员工列表 
-});
+Route::get('/getuser', function () {
+    return session()->get('staff');
+}); //获取用户信息
 
 //签卡
-Route::group(['prefix' => 'sign'], function() {
-    Route::post('save', 'SignController@save');
-    Route::post('selects', 'SignController@selects');
+Route::group(['prefix' => 'clock'], function () {
+    Route::post('info', 'SignController@getRecord'); //获取打卡记录
+    Route::post('save', 'SignController@save'); //打卡
 });
 
+//调动
+Route::group(['prefix' => 'transfer'], function () {
+    Route::post('record', 'TransferController@getTransferByStaff'); //获取员工的调动信息
+    Route::post('next', 'TransferController@getNextTransfer'); //获取员工将要执行的调动
+    Route::post('save', 'TransferController@save'); //调动打卡
+});
 
 //请假
-Route::group(['prefix' => 'holiday'], function() {
-    Route::post('list', 'HolidayController@list');
-    Route::get('list', 'HolidayController@list');
-    Route::post('cancel', 'HolidayController@cancel');
-    Route::post('imports', 'HolidayController@imports');
-    Route::get('imports', 'HolidayController@imports');
-    Route::post('selects', 'SignController@selects');
+Route::group(['prefix' => 'leave'], function () {
+    Route::get('get_type', 'LeaveController@getLeaveType'); //获取请假类型
+    Route::post('record', 'LeaveController@getLeaveRecord'); //获取请假记录
+    Route::post('next', 'LeaveController@getNextRecord'); //获取将要生效的请假记录
+    Route::post('save', 'LeaveController@clock'); //请假打卡
+    Route::post('submit', 'LeaveController@submitLeaveRequest'); //请假申请
+    Route::any('callback', 'LeaveController@dingTalkApprovalCallback'); //钉钉审批接口回调
 });
 
-Route::any('oaser', function() {
-    return session('username');
-})->middleware('initial');
-
-
 //考勤
-Route::group(['prefix' => 'attendance', 'middleware' => 'initial'], function() {
+Route::group(['prefix' => 'attendance'], function () {
+    Route::post('sheet','AttendanceController@getAttendanceSheet');//获取店铺考勤表数据
+
     Route::any('getshopinfo', 'AttendanceController@getShopInfo');
     Route::get('getrecordlist', 'AttendanceController@getrecordlist');
     Route::any('getshopattendinfo', 'AttendanceController@getShopAttendInfo');
@@ -50,11 +39,10 @@ Route::group(['prefix' => 'attendance', 'middleware' => 'initial'], function() {
     Route::post('save', 'AttendanceController@save');
     Route::post('updata', 'AttendanceController@attendUpdata');
 });
-Route::any('attendance/getlist', 'AttendanceController@getlist');
 Route::any('attendance/getstafflist', 'AttendanceController@getstafflist');
 
 /* 数据统计 */
-Route::group(['prefix' => 'statistic'], function() {
+Route::group(['prefix' => 'statistic'], function () {
     Route::any('getlist', 'AttendanceController@getStaffData');
     Route::any('savelist', 'AttendanceController@staffData');
     Route::any('getstatistic', 'AttendanceController@getstatistic');

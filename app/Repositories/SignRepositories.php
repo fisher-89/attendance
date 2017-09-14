@@ -1,51 +1,85 @@
-<?php 
+<?php
+
 namespace App\Repositories;
-use App\Models\Sign;
 
-class SignRepositories{
+use App\Models\Clock;
 
-	public function save($input){
+class SignRepositories
+{
 
-		$accept = [
-			'sign_time'=>'sign_time',
-			'down_time'=>'down_time'
-		];
+    public function getRecord($date = null)
+    {
+        $today = app('Clock')->getAttendanceDate();
+        if (empty($date)) {
+            $date = $today;
+        }
+        $tableName = 'clock_' . date('Ym', strtotime($date));
+        list($startTime,
+            $endTime) = app('Clock')->getAttendanceDay($date);
+        $staffSn = session()->get('staff.staff_sn');
+        $where = [
+            ['staff_sn', '=', $staffSn],
+            ['created_at', '>=', $startTime],
+            ['created_at', '<=', $endTime],
+        ];
+        $clockRecord = Clock::from($tableName)->where($where)
+            ->orderBy('created_at', 'asc')
+            ->get()->map(function ($model) {
+                $model->setAttribute('clock_type', $model->clock_type);
+                return $model;
+            });
+        $response = [
+            'record' => $clockRecord->toArray(),
+            'today' => $today,
+        ];
+        return $response;
+    }
 
-		if(!isset($accept[$input['type']])) return returnErr('hints.102');
- 
-		$input[$input['type']] = date('Y-m-d H:i:s',time());
-		// return $input ;
-		$res = Sign::create($input);
-		// return $res;
-		return returnRes($res['id'],'hints.112','hints.113');
-	}
+    public function sign($request, $distance)
+    {
+        $staffSn = app('CurrentUser')->staff_sn;
+        $shopSn = app('CurrentUser')->staff_sn;
+        switch ($request->get('type')) {
+            case 'clock_in':
+                $type = 1;
+                break;
+            case 'clock_out':
+                $lastClockOut = $this->getLastClockOut($staffSn, $shopSn);
+                if ($lastClockOut) {
+                    $lastClockOut->is_abandoned = 1;
+                    $lastClockOut->save();
+                };
+                $type = 2;
+                break;
+            default:
+                return returnErr('hints.102');
+                break;
+        }
+        if(app('LeaveRepos')->isLeaveClock()){
+            return returnErr('hints.113');
+        }
+        $clockData = array_collapse([
+            $request->all(),
+            [
+                'staff_sn' => $staffSn,
+                'shop_sn' => $shopSn,
+                'distance' => $distance,
+                'attendance_type' => 1,
+                'type' => $type,
+            ],
+        ]);
+        $res = Clock::create($clockData);
+        return returnRes($res->id, 'hints.112', 'hints.113');
+    }
 
-
-	public function selects($input){
-		$accept = [''];
-		$towork = [];  //上班
-		$offwork = [];  //下班
-		array_push($towork,['staff_sn',$input['usersn']]);
-		array_push($offwork,['staff_sn',$input['usersn']]);
-		if(isset($input['time'])){
-			array_push($towork,['sign_time','>',$input['time']]);
-			array_push($towork, ['sign_time','<',$input['endTime']]);
-
-			array_push($offwork,['down_time','>',$input['time']]);
-			array_push($offwork, ['down_time','<',$input['endTime']]);
-		}
-
-		$toworkRes = Sign::where($towork)->take(5)->orderBy('created_at','desc')->get();
-		$offworkRes = Sign::where($offwork)->take(5)->orderBy('created_at','desc')->get();
-		// return $offworkRes;
-		return compact('toworkRes','offworkRes');
-		return returnRes($res,'hints.101','hints.100');
-	}
-
-	//OA调用
-	public function dataTables($request){
-		return $plugin->dataTables($request,new Sign());
-	}
-
+    protected function getLastClockOut($staffSn, $shopSn)
+    {
+        list($startTime,
+            $endTime) = app('Clock')->getAttendanceDay();
+        $lastClockOut = Clock::where('created_at', '>', $startTime)
+            ->where(['staff_sn' => $staffSn, 'shop_sn' => $shopSn, 'type' => 2, 'is_abandoned' => 0])
+            ->orderBy('created_at', 'desc')->first();
+        return $lastClockOut;
+    }
 
 }

@@ -4,18 +4,23 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Attendance extends Model {
+class Attendance extends Model
+{
 
-    protected $table = 'attendance';
+    use \Illuminate\Database\Eloquent\SoftDeletes;
+
+    protected $table    = 'attendance_shop';
     protected $fillable = [
-        'staff_sn',
-        'achievement',
-        'attachment',
-        'shop_name',
         'shop_sn',
+        'shop_name',
+        'sales_performance',
+        'attachment',
+        'status',
+        'submitted_at',
     ];
 
-    public static function updata($params) {
+    public static function updata($params)
+    {
         $obj = static::find($params['id']);
         if (!$obj) {
             return ['msg' => 'errs'];
