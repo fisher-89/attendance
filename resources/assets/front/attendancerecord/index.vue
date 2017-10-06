@@ -36,7 +36,7 @@
 		methods:{
 			init(){
 				let _this = this;
-				let url = '/api/attendance/getrecordlist';
+				let url = '/attendance/getrecordlist';
 				// Indicator.open('加载中...');
 				axios.get(url).then(function(response){
 					log(response.data);

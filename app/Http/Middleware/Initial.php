@@ -11,16 +11,13 @@ class Initial
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
+     * @param  \Illuminate\Http\Request $request
+     * @param  \Closure $next
      * @return mixed
      */
     public function handle($request, Closure $next)
     {
-        $token   = $request->user_token;
-        $staffSn = session('staff_sn');
-        $staffSn = false;
-        if (!$staffSn) {
+        if (!app('CurrentUser')->isLogin()) {
             app('CurrentUser')->login();
         }
         return $next($request);

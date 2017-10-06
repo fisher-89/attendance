@@ -1,43 +1,254 @@
 <template>
-    <div>
-        {{attendanceSheet}}
-    </div>
+	<div>
+		<template v-if="currentUser.shop.lng == null">
+			<Alert banner type="error" show-icon>
+				店铺未定位
+				<template slot="desc">
+					请在店铺中点击下方按钮设置店铺坐标
+				</template>
+			</Alert>
+			<div style="margin-top:50px;text-align:center;">
+				<Button style="width:150px;height:150px;font-size:30px;"
+				        type="info" size="large" shape="circle" icon="location"
+				        @click="locate"></Button>
+			</div>
+		</template>
+		<template v-else>
+			<Alert banner :type="statusColor[attendanceData.status]">
+				<h3>
+					{{attendanceData.shop_name}}&nbsp;
+					<span style="color:#999;">{{attendanceData.shop_sn}}</span>
+				</h3>
+				<Tag v-if="attendanceData.status == 0" color="blue">未提交</Tag>
+				<Tag v-else-if="attendanceData.status == 1" color="yellow">已提交</Tag>
+				<Tag v-else-if="attendanceData.status == 2" color="green">已通过</Tag>
+				<Tag v-else-if="attendanceData.status == -1" color="red">已驳回</Tag>
+				<h4 slot="desc">
+					<Row>
+						<i-col span="6">
+							考勤日期：
+						</i-col>
+						<i-col span="18">
+							{{attendanceData.attendance_date}}
+						</i-col>
+					</Row>
+					<Row>
+						<i-col span="6">
+							店铺业绩：
+						</i-col>
+						<i-col span="18">
+							{{attendanceData.sales_performance}}
+						</i-col>
+					</Row>
+				</h4>
+			</Alert>
+			<template v-if="typeof attendanceData.detail == 'string' ">
+				<Alert type="error">
+					<h4 style="text-align:center">{{attendanceData.detail}}</h4>
+				</Alert>
+			</template>
+			<template v-else>
+				<Card v-for="(staffAttendance,index) in attendanceData.detail" style="margin-bottom:5px;">
+					<template slot="title">
+						<Row>
+							<i-col span="8">
+								<p style="line-height:26px;">
+									{{staffAttendance.staff_name}}&nbsp;
+									<span style="color:#999;">{{staffAttendance.staff_sn}}</span>
+								</p>
+							</i-col>
+							<i-col span="16">
+								<Tag v-if="staffAttendance.is_missing" color="red">漏签</Tag>
+								<template v-else>
+									<Tag v-if="staffAttendance.late_time > 0" color="red">迟到</Tag>
+									<Tag v-if="staffAttendance.early_out_time > 0" color="red">早退</Tag>
+									<Tag v-if="staffAttendance.is_leaving" color="yellow">请假</Tag>
+									<Tag v-if="staffAttendance.is_transferring > 0" color="blue">调动</Tag>
+								</template>
+							</i-col>
+						</Row>
+						<ClockLine v-if="!staffAttendance.is_missing"
+						           :clockLog="staffAttendance.clock_log"
+						           :shopStartAt="currentUser.shop.clock_in"
+						           :shopEndAt="currentUser.shop.clock_out"></ClockLine>
+					</template>
+					<template v-if="staffAttendance.is_missing">
+						<Alert type="error">
+							<h4 style="text-align:center">请先补签</h4>
+						</Alert>
+					</template>
+					<template v-else-if="staffAttendance.working_hours == 0">
+						<Alert type="error">
+							<h4 style="text-align:center">没有上班</h4>
+						</Alert>
+					</template>
+					<template v-else>
+						<Row>
+							<i-col span="10" style="line-height:24px;">
+								销售业绩(利鲨)：
+							</i-col>
+							<i-col span="12">
+								<i-input v-model="attendanceData.detail[index].sales_performance_lisha" type="number"
+								         placeholder="请填写业绩"
+								         size="small">
+									<span slot="prepend">￥</span>
+								</i-input>
+							</i-col>
+						</Row>
+						<Row>
+							<i-col span="10" style="line-height:24px;">
+								销售业绩(GO)：
+							</i-col>
+							<i-col span="12">
+								<i-input v-model="attendanceData.detail[index].sales_performance_go" type="number"
+								         placeholder="请填写业绩" size="small">
+									<span slot="prepend">￥</span>
+								</i-input>
+							</i-col>
+						</Row>
+						<Row>
+							<i-col span="10" style="line-height:24px;">
+								销售业绩(公司)：
+							</i-col>
+							<i-col span="12">
+								<i-input v-model="attendanceData.detail[index].sales_performance_group" type="number"
+								         placeholder="请填写业绩"
+								         size="small">
+									<span slot="prepend">￥</span>
+								</i-input>
+							</i-col>
+						</Row>
+						<Row>
+							<i-col span="10" style="line-height:24px;">
+								销售业绩(合作方)：
+							</i-col>
+							<i-col span="12">
+								<i-input v-model="attendanceData.detail[index].sales_performance_partner" type="number"
+								         placeholder="请填写业绩"
+								         size="small">
+									<span slot="prepend">￥</span>
+								</i-input>
+							</i-col>
+						</Row>
+					</template>
+				</Card>
+			</template>
+		</template>
+	</div>
 </template>
 
 <script>
+    import {Field} from 'mint-ui';
+    import clockLineComponent from './clockLine.vue';
+
+    let components = {};
+    components[Field.name] = Field;
+    components['ClockLine'] = clockLineComponent;
 
     export default {
         data() {
             return {
-                shopInfo: {
-                    // achievement:18181,
-                    name: '',
-                    shop_sn: '',
-                    lister: '',
-                    oimg: '',
-                    achievement: 0,
-                    cooperate_money: 0,
-                    goods_money: 0,
-                },
-                attendanceSheet: [],
+                attendanceData: [],
+                statusColor: {'0': 'info', '1': 'warning', '2': 'success', '-1': 'error'},
                 searchStaffStatus: false,
             }
         },
-        mounted() {
+        props: ['currentUser'],
+        components: components,
+        beforeMount() {
+            this.dingtalkInit();
             this.getAttendanceRecord();
         },
+        watch: {
+            attendanceData: {
+                handler: (value) => {
+                    let sales_performance_lisha = 0;
+                    let sales_performance_go = 0;
+                    let sales_performance_group = 0;
+                    let sales_performance_partner = 0;
+                    for (let i in value.detail) {
+                        let staffAttendance = value.detail[i];
+                        sales_performance_lisha += parseFloat(staffAttendance.sales_performance_lisha) || 0;
+                        sales_performance_go += parseFloat(staffAttendance.sales_performance_go) || 0;
+                        sales_performance_group += parseFloat(staffAttendance.sales_performance_group) || 0;
+                        sales_performance_partner += parseFloat(staffAttendance.sales_performance_partner) || 0;
+                    }
+                    value.sales_performance_lisha = sales_performance_lisha;
+                    value.sales_performance_go = sales_performance_go;
+                    value.sales_performance_group = sales_performance_group;
+                    value.sales_performance_partner = sales_performance_partner;
+                    value.sales_performance = (sales_performance_lisha +
+                        sales_performance_go +
+                        sales_performance_group +
+                        sales_performance_partner).toFixed(2);
+                },
+                deep: true
+            }
+        },
         methods: {
-            getAttendanceRecord() {
-                Indicator.open('加载中...');
-                axios.post('/api/attendance').then((response) => {
-                    this.attendanceSheet = response.data;
-                    Indicator.close();
+            locate() {
+                dd.ready(() => {
+                    Indicator.open('定位中...');
+                    dd.device.geolocation.get({
+                        targetAccuracy: 15,
+                        coordinate: 1,
+                        withReGeocode: true,
+                        useCache: false,
+                        onSuccess: (result) => {
+                            let position = {
+                                lng: result.longitude,
+                                lat: result.latitude
+                            };
+                            this.getAttendanceRecord();
+                            axios.post('/attendance/locate', position).then((response) => {
+                                Indicator.close();
+                                if (response.data.status == 1) {
+                                    this.$Message.success('定位成功');
+                                } else if (response.data.status == -1) {
+                                    this.$Message.error(response.data.message);
+                                    position = {
+                                        lng: response.data.lng,
+                                        lat: response.data.lat
+                                    };
+                                } else {
+                                    document.write(response.data);
+                                    return false;
+                                }
+                                this.currentUser.shop.lng = position.lng;
+                                this.currentUser.shop.lat = position.lat;
+                                sessionStorage.setItem('staff', JSON.stringify(this.currentUser));
+                                axios.get('/re_login');
+                            });
+                        },
+                        onFail: (err) => {
+                            document.write(JSON.stringify(err));
+                        }
+                    });
                 });
             },
+            getAttendanceRecord() {
+                Indicator.open('加载中...');
+                axios.post('/attendance/sheet').then((response) => {
+                    this.attendanceData = response.data;
+                    let match = this.attendanceData.detail[0].clock_log.match(/\d{4}\w\d{5}/);
+                    Indicator.close();
+                }).catch((error) => {
+                    document.write(error);
+                });
+            },
+            dingtalkInit() {
+                let url = '/js_config';
+                axios.post(url, {'current_url': location.href}).then((response) => {
+                    let jsConfig = response.data;
+                    jsConfig['jsApiList'] = ['biz.util.uploadImageFromCamera', 'device.geolocation.get'];
+                    dd.config(jsConfig);
 
+                    dd.error(function (error) {
+                        document.write(JSON.stringify(error));
+                    });
+                });
+            }
         },
-        computed: {
-
-        }
+        computed: {}
     }
 </script>

@@ -10,14 +10,26 @@ class AttendanceStaff extends Model
 
     use \Illuminate\Database\Eloquent\SoftDeletes;
 
-    protected $table    = 'attendance_staff';
+    protected $table = 'attendance_staff';
     protected $fillable = [
+        'attendance_shop_id',
         'staff_sn',
         'staff_name',
-        'attendance_shop_id',
+        'position',
         'sales_performance',
-        'clock_in',
-        'clock_out',
+        'working_days',
+        'working_hours',
+        'leaving_days',
+        'leaving_hours',
+        'transferring_days',
+        'transferring_hours',
+        'is_missing',
+        'late_time',
+        'early_out_time',
+        'over_time',
+        'is_leaving',
+        'is_transferring',
+        'clock_log',
     ];
 
     /* 访问器 Start */
@@ -40,7 +52,7 @@ class AttendanceStaff extends Model
     public static function statistic()
     {
         $firstDay = date('Y-m-01', time());
-        $lastDay  = date('Y-m-d', strtotime(date('Y-m-01', time()) . ' +1 month'));
+        $lastDay = date('Y-m-d', strtotime(date('Y-m-01', time()) . ' +1 month'));
         // return $this->holiday();
         $resArr = self::where([['submit_time', '>', $firstDay], ['submit_time', '<', $lastDay]])->select(\DB::raw('sum(achievement+cooperate_money+goods_money) as achievement'), 'staff_sn', 'staff_name')->groupBy('staff_sn')->get()->toArray();
 
@@ -53,9 +65,9 @@ class AttendanceStaff extends Model
     //获取员工请假数据
     public static function staff_holiday()
     {
-        $resData  = [];
+        $resData = [];
         $firstDay = date('Y-m-01', time());
-        $lastDay  = date('Y-m-d', strtotime(date('Y-m-01', time()) . ' +1 month'));
+        $lastDay = date('Y-m-d', strtotime(date('Y-m-01', time()) . ' +1 month'));
         return Holiday::where([['subject_result', 1], ['start_time', '>', $firstDay], ['start_time', '<', $lastDay], ['end_time', '>', $firstDay]])->select('sponsor', 'start_time', 'end_time')->get()->toArray();
 
         return $arrData;
@@ -72,10 +84,10 @@ class AttendanceStaff extends Model
         if (!$obj) {
             return ['msg' => 'errs'];
         }
-        $obj->achievement     = $params['achievement'];
+        $obj->achievement = $params['achievement'];
         $obj->cooperate_money = $params['cooperate_money'];
-        $obj->goods_money     = $params['goods_money'];
-        $obj->updated_at      = time();
+        $obj->goods_money = $params['goods_money'];
+        $obj->updated_at = time();
         return $obj->save();
 
     }

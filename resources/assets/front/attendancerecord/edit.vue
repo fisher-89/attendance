@@ -100,8 +100,8 @@
 
 				Indicator.open('数据加载...');
 				let _this = this;
-				// let url = '/api/attendance/getshopinfo';
-				let url = '/api/attendance/getshopattendinfo';
+				// let url = '/attendance/getshopinfo';
+				let url = '/attendance/getshopattendinfo';
 
 				let params = {attendid:attendid};
 				setTimeout(function(){
@@ -128,7 +128,7 @@
 			},
 			save(){
 				let _this = this;
-				let url = '/api/attendance/updata';
+				let url = '/attendance/updata';
 				let data = {
 					shop:this.shopInfo,
 					staff:this.staffInfo,

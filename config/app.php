@@ -167,6 +167,7 @@ return [
          * Package Service Providers...
          */
         Laravel\Tinker\TinkerServiceProvider::class,
+        Intervention\Image\ImageServiceProvider::class,
 
         /*
          * Application Service Providers...
@@ -238,6 +239,7 @@ return [
         'Crud'         => App\Facades\CrudFacade::class,
         'Curl'         => App\Facades\CurlFacade::class,
         'Oa'           => App\Facades\OaFacade::class,
+        'Image'        => Intervention\Image\Facades\Image::class,
     ],
 
 ];

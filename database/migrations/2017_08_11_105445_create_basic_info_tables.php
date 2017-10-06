@@ -13,10 +13,10 @@ class CreateBasicInfoTables extends Migration
      */
     public function up()
     {
-        Schema::create('shop_position', function (Blueprint $table) {
-            $table->increments('id');
-            $table->char('name');
-            $table->tinyInteger('sort')->unsigned();
+        Schema::create('shop_duty', function (Blueprint $table) {
+            $table->tinyIncrements('id');
+            $table->char('name', 10)->comment('职务名称');
+            $table->tinyInteger('sort')->unsigned()->comment('排序');
         });
     }
 
@@ -27,6 +27,6 @@ class CreateBasicInfoTables extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('shop_position');
+        Schema::dropIfExists('shop_duty');
     }
 }

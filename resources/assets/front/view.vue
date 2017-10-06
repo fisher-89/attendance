@@ -4,7 +4,7 @@
 			<router-view :currentUser="currentUser"></router-view>
 			<div style="width:100%;height:60px;"></div>
 		</div>
-		<mt-tabbar v-model="tabbar">
+		<mt-tabbar v-model="tabbar" style="z-index: 10;">
 			<mt-tab-item id="/f/sign">
 				<router-link to="/f/sign">
 					<Row>
@@ -50,46 +50,53 @@
 </template>
 
 <style>
-	.mint-tab-item{
-		color:#999;
+	.mint-tab-item {
+		color: #999;
 	}
-	.mint-tab-item a{
-		color:inherit;
+
+	.mint-tab-item a {
+		color: inherit;
 	}
 </style>
 
 <script>
-	export default {
-		data(){
-			let currentUser = this.getCurrentUser();
-			return {
-				tabbar:window.location.pathname,
-				currentUser:currentUser
-			};
-		},
-		computed:{
-			inShop:function(){
-					if(this.currentUser){
-							return this.currentUser.shop_sn.length > 0;
-					}else{
-							return false;
-					}
-			},
-			isManager:function(){
-					if(this.currentUser && this.inShop){
-							let managerSn = this.currentUser.shop.manager_sn;
-							let staffSn = this.currentUser.staff_sn;
-							return staffSn == managerSn;
-					}else{
-							return false;
-					}
-			}
-		},
-		methods:{
-			getCurrentUser:function(){
-				let staff = sessionStorage.getItem('staff');
-				return JSON.parse(staff);
-			}
-		}
-	}
+    export default {
+        data() {
+            let currentUser = this.getCurrentUser();
+            return {
+                tabbar: window.location.pathname,
+                currentUser: currentUser
+            };
+        },
+        computed: {
+            inShop: function () {
+                if (this.currentUser) {
+                    return this.currentUser.shop_sn.length > 0;
+                } else {
+                    return false;
+                }
+            },
+            isManager: function () {
+                if (this.inShop) {
+                    let managerSn = this.currentUser.shop.manager_sn;
+                    let staffSn = this.currentUser.staff_sn;
+                    return staffSn == managerSn;
+                } else {
+                    return false;
+                }
+            }
+        },
+        methods: {
+            getCurrentUser: function () {
+                let staff = sessionStorage.getItem('staff');
+                let currentUser = JSON.parse(staff);
+                if (currentUser.shop) {
+                    let clockIn = new Date('2000/01/01 ' + currentUser.shop.clock_in);
+                    let clockOut = new Date('2000/01/01 ' + currentUser.shop.clock_out);
+                    currentUser.shop.working_hours = (clockOut - clockIn) / 3600 / 1000;
+                }
+                return currentUser;
+            }
+        }
+    }
 </script>

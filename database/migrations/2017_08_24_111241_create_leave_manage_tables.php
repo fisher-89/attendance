@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CrateLeaveManageTables extends Migration
+class CreateLeaveManageTables extends Migration
 {
     /**
      * Run the migrations.
@@ -17,14 +17,14 @@ class CrateLeaveManageTables extends Migration
             $table->increments('id');
             $table->mediumInteger('staff_sn')->unsigned()->comment('员工编号');
             $table->char('staff_name', 10)->comment('员工姓名');
-            $table->datetime('start_at')->nullable()->comment('开始时间');
-            $table->datetime('end_at')->nullable()->comment('结束时间');
+            $table->datetime('start_at')->comment('开始时间');
+            $table->datetime('end_at')->comment('结束时间');
             $table->decimal('duration', 5, 2)->comment('请假时长');
             $table->tinyInteger('type_id')->comment('请假类型,关联leave_type表');
             $table->char('reason', 200)->comment('请假原因');
             $table->tinyInteger('status')->comment('请假状态: 0:审批中,1:已通过,-1:已驳回,-2:已撤回');
-            $table->tinyInteger('has_clock_out')->comment('已经离开: 0:否,1:是');
-            $table->tinyInteger('has_clock_in')->comment('已经返回: 0:否,1:是');
+            $table->datetime('clock_out_at')->nullable()->comment('离开时间');
+            $table->datetime('clock_in_at')->nullable()->comment('返回时间');
             $table->char('process_instance_id', 50)->comment('钉钉审批实例ID');
             $table->timestamps();
             $table->softDeletes();

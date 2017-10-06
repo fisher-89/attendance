@@ -30,7 +30,7 @@
 		methods:{
 			search(){
 				let _this = this;
-				let url = '/api/attendance/searchstaff';
+				let url = '/attendance/searchstaff';
 				this.staffList = [];
 				Indicator.open('查询中...');
 				axios.post(url,{realname:this.keyword}).then(function(response){

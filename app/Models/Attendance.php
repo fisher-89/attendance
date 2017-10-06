@@ -9,27 +9,20 @@ class Attendance extends Model
 
     use \Illuminate\Database\Eloquent\SoftDeletes;
 
-    protected $table    = 'attendance_shop';
+    protected $table = 'attendance_shop';
     protected $fillable = [
         'shop_sn',
         'shop_name',
-        'sales_performance',
+        'manager_sn',
+        'manager_name',
+        'attendance_date',
+        'sales_performance_lisha',
+        'sales_performance_go',
+        'sales_performance_group',
+        'sales_performance_partner',
         'attachment',
         'status',
         'submitted_at',
     ];
-
-    public static function updata($params)
-    {
-        $obj = static::find($params['id']);
-        if (!$obj) {
-            return ['msg' => 'errs'];
-        }
-        $obj->achievement = $params['achievement'];
-        if (!empty($params['attachment'])) {
-            $obj->attachment = $params['attachment'];
-        }
-        return $obj->save();
-    }
 
 }

@@ -8,18 +8,21 @@ class Clock extends Model
 {
     use \Illuminate\Database\Eloquent\SoftDeletes;
 
-    protected $table    = 'clock_';
+    protected $table = 'clock_';
     protected $fillable = [
         'parent_id',
         'staff_sn',
         'shop_sn',
+        'clock_at',
+        'punctual_time',
         'lng',
         'lat',
         'address',
         'distance',
         'attendance_type',
         'type',
-
+        'photo',
+        'thumb',
     ];
 
     public function __construct(array $attributes = [])
@@ -34,22 +37,24 @@ class Clock extends Model
 
     /* 访问器 Start */
 
-//    public function getCreatedAtAttribute($value)
-//    {
-//        $timestamp = strtotime($value);
-//        return date('H:i', $timestamp);
-//    }
-
     public function getClockTypeAttribute($value)
     {
         $attendanceType = $this->getAttribute('attendance_type');
-        $type           = $this->getAttribute('type');
+        $type = $this->getAttribute('type');
         switch ($attendanceType . $type) {
             case 11:
-                return '上班';
+                if ($this->clock_at > $this->punctual_time) {
+                    return '迟到';
+                } else {
+                    return '上班';
+                }
                 break;
             case 12:
-                return '下班';
+                if ($this->clock_at < $this->punctual_time) {
+                    return '早退';
+                } else {
+                    return '下班';
+                }
                 break;
             case 21:
                 return '调动到达';
@@ -58,10 +63,10 @@ class Clock extends Model
                 return '调动出发';
                 break;
             case 31:
-                return '请假返回';
+                return '请假结束';
                 break;
             case 32:
-                return '请假外出';
+                return '请假开始';
                 break;
         }
     }

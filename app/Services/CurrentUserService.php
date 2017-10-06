@@ -10,14 +10,12 @@ namespace App\Services;
 class CurrentUserService
 {
 
-    protected $userInfo;
+    protected $userInfo = [];
 
     public function __construct()
     {
         if ($this->isLogin()) {
             $this->userInfo = session('staff');
-        } else {
-            abort(500, '当前用户不存在');
         }
     }
 
@@ -29,7 +27,8 @@ class CurrentUserService
     /**
      * 登录，从OA获取用户信息
      */
-    public function login(){
+    public function login()
+    {
         $userInfo = app('OA')->getDataFromApi('get_current_user');
         if ($userInfo['status'] == 1) {
             session()->put('staff_sn', $userInfo['message']['staff_sn']);
@@ -41,16 +40,18 @@ class CurrentUserService
      * 是否为店长
      * @return bool
      */
-    public function isManager(){
-        if($this->inShop()){
-            return $this->userInfo->shop->manager_sn == $this->userInfo->staff_sn;
-        }else{
+    public function isShopManager()
+    {
+        if ($this->inShop()) {
+            return $this->userInfo['shop']['manager_sn'] == $this->userInfo['staff_sn'];
+        } else {
             return false;
         }
     }
 
-    public function inShop(){
-        return $this->userInfo->shop_sn != 0;
+    public function inShop()
+    {
+        return !empty($this->userInfo['shop_sn']);
     }
 
     /**
@@ -59,7 +60,7 @@ class CurrentUserService
      */
     public function getInfo()
     {
-        return array_except($this->userInfo, ['user_token', 'user_token_expiration']);
+        return array_except($this->userInfo, ['user_token', 'user_token_expiration', 'password', 'salt']);
     }
 
     /**

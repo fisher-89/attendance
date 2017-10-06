@@ -1,31 +1,445 @@
 <?php
+
 namespace App\Repositories;
 
+use App\Models\Attendance;
+use App\Models\AttendanceStaff;
 use App\Models\Clock;
-use App\Models\Transfer;
+use App\Models\WorkingSchedule;
 
+/**
+ * 考勤数据仓库，所有时间转化为时间戳，方便计算
+ * Class AttendanceRepositories
+ * @package App\Repositories
+ */
 class AttendanceRepositories
 {
 
-    public function getAttendanceDataByShop($shopSn)
-    {
-        list($start, $end) = app('Clock')->getAttendanceDay();
-        $clockData         = Clock::where([
-            ['shop_sn', '=', $shopSn],
-            ['created_at', '>', $start],
-            ['created_at', '<', $end],
-            ['attendanceType', '=', 1],
-            ['is_abandoned', '=', 0],
-        ])->get();
-        return $clockData;
+    protected $date;
+    protected $dayStartAt;
+    protected $dayEndAt;
+    protected $shopSn;
+    /**
+     * 店铺上下班时间
+     * @var int
+     */
+    protected $shopStartAt;
+    protected $shopEndAt;
+    /**
+     * 员工上下班时间
+     * @var int
+     */
+    protected $staffStartAt;
+    protected $staffEndAt;
+    /**
+     * 工作时长
+     * @var int
+     */
+    protected $workingHours;
+    /**
+     * 报销单ID
+     * @var int
+     */
+    protected $attendanceId;
+    /**
+     * 迟到/早退时间上限（小时），超过判断为漏签
+     * @var int
+     */
+    protected $lateMax = 4;
+    /**
+     * 上一条打卡记录
+     * @var Clock
+     */
+    protected $lastClock;
+    /**
+     * 员工考勤记录
+     * @var array
+     */
+    protected $staffRecord;
 
-        $transferData = Transfer::where([
-            ['leaving_shop_sn', '=', $shopSn],
-            ['created_at', '>', $start],
-            ['created_at', '<', $end],
-            ['attendanceType', '=', 2],
+    public function __construct()
+    {
+        $this->date = app('Clock')->getAttendanceDate();
+        list($this->dayStartAt, $this->dayEndAt) = app('Clock')->getAttendanceDay($this->date);
+        /* start @TODO 开发配置时间 */
+        $this->dayEndAt = date('Y-m-d H:i:s', strtotime($this->dayStartAt) + 60 * 60 * 24 - 1);
+        /* end */
+        $this->shopSn = app('CurrentUser')->shop_sn;
+        $this->shopStartAt = strtotime($this->date . ' ' . app('CurrentUser')->shop['clock_in']);
+        $this->shopEndAt = strtotime($this->date . ' ' . app('CurrentUser')->shop['clock_out']);
+    }
+
+    /**
+     * 生成店铺考勤数据
+     * @return array
+     */
+    public function makeAttendanceDataByShop()
+    {
+        $shopAttendance = $this->createShopAttendance();
+        if ($shopAttendance->status > 0) {
+            $staffAttendanceData = AttendanceStaff::where('shop_attendance_id', $this->attendanceId)->get();
+            //@TODO 下班时间锁定
+//        } elseif ($this->shopEndAt > time()) {
+//            $staffAttendanceData = '未到下班时间';
+        } else {
+            $staffGroup = WorkingSchedule::where('shop_sn', app('CurrentUser')->shop_sn)->get();
+            $staffAttendanceData = [];
+            foreach ($staffGroup as $staff) {
+                $staffAttendanceData[] = $this->getAttendanceDataByStaff($staff);
+            }
+        }
+        $shopAttendance->detail = $staffAttendanceData;
+        return $shopAttendance;
+
+    }
+
+    /**
+     * 初始化店铺考勤数据
+     * @return $this|\Illuminate\Database\Eloquent\Model|mixed
+     */
+    protected function createShopAttendance()
+    {
+        $attendance = Attendance::where([
+            'shop_sn' => $this->shopSn,
+            'attendance_date' => $this->date,
+        ])->first();
+        if (empty($attendance)) {
+            $attendance = Attendance::create([
+                'shop_sn' => $this->shopSn,
+                'shop_name' => app('CurrentUser')->shop['name'],
+                'manager_sn' => app('CurrentUser')->staff_sn,
+                'manager_name' => app('CurrentUser')->realname,
+                'attendance_date' => $this->date,
+                'status' => 0,
+            ]);
+            $this->attendanceId = $attendance->id;
+        }
+        return $attendance;
+    }
+
+    /**
+     * 获取员工的考勤数据
+     * @param $staffSn
+     * @return array
+     */
+    protected function getAttendanceDataByStaff($staff)
+    {
+        $staffSn = $staff['staff_sn'];
+        $this->initStaffRecord($staff);
+        Clock::where([
+            ['shop_sn', '=', $this->shopSn],
+            ['staff_sn', '=', $staffSn],
+            ['clock_at', '>', $this->dayStartAt],
+            ['clock_at', '<', $this->dayEndAt],
             ['is_abandoned', '=', 0],
-        ])->get();
+        ])->orderBy('clock_at', 'asc')->each(function ($clock) {
+            $clock->clock_at = strtotime($clock->clock_at);
+            $clock->punctual_time = strtotime($clock->punctual_time);
+            $clock->combined_type = $clock->attendance_type . $clock->type;
+
+            /* 去除超出上下班时间的部分 */
+            if ($clock->clock_at < $this->staffStartAt) {
+                if ($clock->type == 1) {
+                    $this->staffRecord['over_time'] = $this->countHoursBetween($clock->clock_at, $this->staffStartAt);
+                }
+                $clock->clock_at = $this->staffStartAt;
+            }
+            if ($clock->clock_at > $this->staffEndAt) {
+                if ($clock->type == 2) {
+                    $this->staffRecord['over_time'] = $this->countHoursBetween($this->staffEndAt, $clock->clock_at);
+                }
+                $clock->clock_at = $this->staffEndAt;
+            }
+            switch ($clock->combined_type) {
+                case 11:
+                    $this->recordWorkingClockIn($clock);
+                    break;
+                case 12:
+                    $this->recordWorkingClockOut($clock, $this->lastClock);
+                    break;
+                case 21:
+                    $this->recordTransferringClockIn($clock, $this->lastClock);
+                    break;
+                case 22:
+                    $this->recordTransferringClockOut($clock, $this->lastClock);
+                    break;
+                case 31:
+                    $this->recordLeavingClockIn($clock, $this->lastClock);
+                    break;
+                case 32:
+                    $this->recordLeavingClockOut($clock, $this->lastClock);
+                    break;
+            }
+            $this->lastClock = $clock;
+        });
+        if ($this->lastClock && $this->lastClock->clock_at < $this->shopEndAt) {
+            if ($this->lastClock->type == 1) {
+                $this->staffRecord['is_missing'] = 1;
+            } else {
+                switch ($this->lastClock->attendance_type) {
+                    case 2:
+                        $duration = $this->countHoursBetween($this->lastClock->clock_at, $this->shopEndAt);
+                        $this->staffRecord['transferring_hours'] += $duration;
+                        $this->staffRecord['transferring_days'] += $duration / $this->workingHours;
+                        break;
+                    case 3:
+                        $duration = $this->countHoursBetween($this->lastClock->clock_at, $this->shopEndAt);
+                        $this->staffRecord['leaving_hours'] += $duration;
+                        $this->staffRecord['leaving_days'] += $duration / $this->workingHours;
+                        break;
+                    default:
+                        $this->staffRecord['is_missing'] = 1;
+                }
+            }
+        }
+
+        $this->staffRecord['working_days'] = round($this->staffRecord['working_days'], 4);
+        $this->staffRecord['working_hours'] = round($this->staffRecord['working_hours'], 2);
+        $this->staffRecord['leaving_days'] = round($this->staffRecord['leaving_days'], 4);
+        $this->staffRecord['leaving_hours'] = round($this->staffRecord['leaving_hours'], 2);
+        $this->staffRecord['transferring_days'] = round($this->staffRecord['transferring_days'], 4);
+        $this->staffRecord['transferring_hours'] = round($this->staffRecord['transferring_hours'], 2);
+
+        $oneDay = $this->staffRecord['working_days'] + $this->staffRecord['leaving_days'] + $this->staffRecord['transferring_days'];
+        if ($oneDay == 0) {
+            $latestClock = Clock::where([
+                ['shop_sn', '=', $this->shopSn],
+                ['staff_sn', '=', $staffSn],
+                ['clock_at', '<', $this->dayStartAt],
+                ['is_abandoned', '=', 0],
+            ])->orderBy('clock_at', 'desc')->first();
+            if (!$latestClock || $latestClock->type == 1 || $latestClock->attendance_type == 1) {
+                $this->staffRecord['is_missing'] = 1;
+            } elseif ($latestClock->attendance_type == 2) {
+                $this->staffRecord['is_transferring'] = 1;
+                $this->addClockLog($this->shopStartAt, $this->shopEndAt, 2);
+                $this->staffRecord['transferring_days'] = 1.0000;
+                $this->staffRecord['transferring_hours'] = $this->workingHours;
+            } elseif ($latestClock->attendance_type == 3) {
+                $this->staffRecord['is_leaving'] = 1;
+                $this->addClockLog($this->shopStartAt, $this->shopEndAt, 3);
+                $this->staffRecord['leaving_days'] = 1.0000;
+                $this->staffRecord['leaving_hours'] = $this->workingHours;
+            }
+        } elseif (!$this->staffRecord['is_transferring'] && round($oneDay, 2) != 1) {
+            $this->staffRecord['is_missing'] = 1;
+        }
+
+        return $this->staffRecord;
+    }
+
+    /**
+     * 员工考勤记录初始化
+     */
+    protected function initStaffRecord($staff)
+    {
+        $this->lastClock = false;
+        $this->staffStartAt = empty($staff->clock_in) ? $this->shopStartAt : $staff->clock_in;
+        $this->staffEndAt = empty($staff->clock_out) ? $this->shopEndAt : $staff->clock_out;
+        $this->workingHours = $this->countHoursBetween($this->staffStartAt, $this->staffEndAt);
+        $this->staffRecord = [
+            'attendance_shop_id' => $this->attendanceId,
+            'staff_sn' => $staff->staff_sn,
+            'staff_name' => $staff->staff_name,
+            'sales_performance_lisha' => '',
+            'sales_performance_go' => '',
+            'sales_performance_group' => '',
+            'sales_performance_partner' => '',
+            'working_days' => 0,
+            'working_hours' => 0,
+            'leaving_days' => 0,
+            'leaving_hours' => 0,
+            'transferring_days' => 0,
+            'transferring_hours' => 0,
+            'is_missing' => 0,
+            'late_time' => 0,
+            'early_out_time' => 0,
+            'over_time' => 0,
+            'is_leaving' => 0,
+            'is_transferring' => 0,
+            'clock_log' => '',
+        ];
+    }
+
+    /**
+     * 上班打卡
+     * @param Clock $clock
+     */
+    protected function recordWorkingClockIn(Clock $clock)
+    {
+        if ($clock->clock_at > $this->staffStartAt) {
+            $lateTime = $this->countHoursBetween($this->staffStartAt, $clock->clock_at);
+            $this->addLateTime($lateTime);
+            $clock->clock_at = $this->staffStartAt;
+        }
+    }
+
+    /**
+     * 下班打卡
+     * @param Clock $clock
+     * @param Clock $lastClock
+     */
+    protected function recordWorkingClockOut(Clock $clock, $lastClock)
+    {
+        if (!$lastClock || $lastClock->type != 1) {
+            $this->staffRecord['is_missing'] = 1;
+        } else {
+            if ($clock->clock_at < $this->staffEndAt) {
+                $this->staffRecord['early_out_time'] += $this->countHoursBetween($clock->clock_at, $this->staffEndAt);
+                $clock->clock_at = $this->staffEndAt;
+            }
+            $duration = $this->countHoursBetween($lastClock->clock_at, $clock->clock_at);
+            $this->addClockLog($lastClock->clock_at, $clock->clock_at, 1);
+            $this->staffRecord['working_hours'] += $duration;
+            $this->staffRecord['working_days'] += $duration / $this->workingHours;
+        }
+    }
+
+
+    /**
+     * 调动出发
+     * @param Clock $clock
+     * @param Clock $lastClock
+     */
+    protected function recordTransferringClockOut(Clock $clock, $lastClock)
+    {
+        if ($lastClock) {
+            $duration = $this->countHoursBetween($lastClock->clock_at, $clock->clock_at);
+            $this->addClockLog($lastClock->clock_at, $clock->clock_at, 1);
+            $this->staffRecord['working_hours'] += $duration;
+            $this->staffRecord['working_days'] += $duration / $this->workingHours;
+        } elseif ($clock->clock_at > $this->staffStartAt) {
+            $lateTime = $this->countHoursBetween($this->staffStartAt, $clock->clock_at);
+            $this->addLateTime($lateTime);
+            $clock->clock_at = $this->staffStartAt;
+        }
+        $this->staffRecord['is_transferring'] = 1;
+    }
+
+    /**
+     * 调动到达
+     * @param Clock $clock
+     * @param Clock $lastClock
+     */
+    protected function recordTransferringClockIn(Clock $clock, $lastClock)
+    {
+        if ($lastClock && !$lastClock->combined_type == 31) {
+            $this->staffRecord['is_missing'] = 1;
+        } else {
+            if ($lastClock) {
+                $start = $lastClock->clock_at;
+            } else {
+                $prevClock = app('Clock')->getPrevClock($clock, date('Y-m-d H:i:s', $this->staffStartAt));
+                if ($prevClock && $prevClock->attendance_type == 2 && $prevClock->type == 2) {
+                    $start = strtotime($prevClock->clock_at);
+                } else {
+                    $start = $this->staffStartAt;
+                }
+            }
+            $this->staffRecord['is_transferring'] = 1;
+            $duration = $this->countHoursBetween($start, $clock->clock_at);
+            $this->addClockLog($start, $clock->clock_at, 2);
+            $this->staffRecord['transferring_hours'] += $duration;
+            $this->staffRecord['transferring_days'] += $duration / $this->workingHours;
+        }
+    }
+
+    /**
+     * 请假出发
+     * @param Clock $clock
+     * @param Clock $lastClock
+     */
+    protected function recordLeavingClockOut(Clock $clock, $lastClock)
+    {
+        if ($lastClock && !($lastClock->type == 1 || $lastClock->combined_type == 22)) {
+            $this->staffRecord['is_missing'] = 1;
+        } else {
+            if ($clock->clock_at < $clock->punctual_time) {
+                $this->staffRecord['early_out_time'] += $this->countHoursBetween($clock->clock_at, $clock->punctual_time);
+            }
+            $clock->clock_at = max($clock->punctual_time, $this->staffStartAt);
+            if ($lastClock) {
+                $duration = $this->countHoursBetween($lastClock->clock_at, $clock->clock_at);
+                if ($lastClock->combined_type == 22) {
+                    $this->addClockLog($lastClock->clock_at, $clock->clock_at, 2);
+                    $this->staffRecord['transferring_hours'] += $duration;
+                    $this->staffRecord['transferring_days'] += $duration / $this->workingHours;
+                } else {
+                    $this->addClockLog($lastClock->clock_at, $clock->clock_at, 1);
+                    $this->staffRecord['working_hours'] += $duration;
+                    $this->staffRecord['working_days'] += $duration / $this->workingHours;
+                }
+            } elseif ($clock->clock_at > $this->staffStartAt) {
+                $prevClock = app('Clock')->getPrevClock($clock);
+                if ($prevClock && $prevClock->attendance_type == 2 && $prevClock->type == 2) {
+                    $start = max(strtotime($prevClock->clock_at), $this->staffStartAt);
+                    $duration = $this->countHoursBetween($start, $clock->clock_at);
+                    $this->addClockLog($start, $clock->clock_at, 2);
+                    $this->staffRecord['transferring_hours'] += $duration;
+                    $this->staffRecord['transferring_days'] += $duration / $this->workingHours;
+                } else {
+                    $this->staffRecord['is_missing'] = 1;
+                }
+            }
+            $this->staffRecord['is_leaving'] = 1;
+        }
+    }
+
+    /**
+     * 请假返回
+     * @param Clock $clock
+     * @param Clock $lastClock
+     */
+    protected function recordLeavingClockIn(Clock $clock, $lastClock)
+    {
+        if ($lastClock && $lastClock->combined_type != 32) {
+            $this->staffRecord['is_missing'] = 1;
+        } else {
+            if ($clock->clock_at > $clock->punctual_time) {
+                $lateTime = $this->countHoursBetween($clock->punctual_time, $clock->clock_at);
+                $this->addLateTime($lateTime);
+            }
+            $clock->clock_at = min($clock->punctual_time, $this->staffEndAt);
+            if ($lastClock) {
+                $start = $lastClock->clock_at;
+            } else {
+                $start = $this->staffStartAt;
+            }
+            $this->staffRecord['is_leaving'] = 1;
+            $duration = $this->countHoursBetween($start, $clock->clock_at);
+            $this->addClockLog($start, $clock->clock_at, 3);
+            $this->staffRecord['leaving_hours'] += $duration;
+            $this->staffRecord['leaving_days'] += $duration / $this->workingHours;
+        }
+    }
+
+    protected function countHoursBetween($startTime, $endTime)
+    {
+        return ($endTime - $startTime) / 3600;
+    }
+
+    protected function addLateTime($lateTime)
+    {
+//        if ($lateTime > $this->lateMax) {
+//            $this->staffRecord['is_missing'] = 1;
+//        }
+        $this->staffRecord['late_time'] += $lateTime;
+    }
+
+    protected function addClockLog($start, $end, $type)
+    {
+        $typeGroup = [1 => 'w', 2 => 't', 3 => 'l'];
+        $startClock = date('Hi', $start);
+        $endClock = date('Hi', $end);
+        if (empty($this->staffRecord['clock_log'])) {
+            $clockLogString = $startClock . $typeGroup[$type] . $endClock;
+        } elseif (substr($this->staffRecord['clock_log'], -4) == $startClock) {
+            $clockLogString = $typeGroup[$type] . $endClock;
+        } else {
+            $this->staffRecord['is_missing'] = 1;
+            $clockLogString = $startClock . $typeGroup[$type] . $endClock;
+        }
+        $this->staffRecord['clock_log'] .= $clockLogString;
     }
 
 }

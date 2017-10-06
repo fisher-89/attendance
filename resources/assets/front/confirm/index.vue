@@ -52,7 +52,7 @@
 		},
 		methods:{
 			save(item,type){
-				axios.post('/api/transfer/confirm',{id:item.id,type:type}).then(function(response){
+				axios.post('/transfer/confirm',{id:item.id,type:type}).then(function(response){
 					log(response.data);
 					if(response.data.status){
 						item[type] = 123;
@@ -62,7 +62,7 @@
 			},
 			getTransferShop(){
 				let _this = this;
-				axios.post('/api/transfer/getTransferShop').then(function(response){
+				axios.post('/transfer/getTransferShop').then(function(response){
 					log(response.data);
 					_this.listdata = response.data.data;
 				})

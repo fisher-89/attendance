@@ -8,12 +8,13 @@ use Illuminate\Http\Request;
 class OAService
 {
 
-    protected $appId = 7; /* AppId */
-    // protected $appId     = 5; /* AppId */
+    protected $appId = 7; /* AppId 本地 */
+//    protected $appId = 5; /* AppId */
     protected $appTicket = '8Fdhj4B8PqLgsAzolxOcsExofolNZaTK'; /* AppTicket */
-    protected $oaApiPath = 'http://192.168.1.20:8001/api/'; /* OA接口根路由 */
-    // protected $oaApiPath  = 'http://of.xigemall.com/api/'; /* OA接口根路由 */
+    protected $oaApiPath = 'http://192.168.1.20:8001/api/'; /* OA接口根路由 本地 */
+//    protected $oaApiPath = 'http://of.xigemall.com/api/'; /* OA接口根路由 */
     protected $receiptUrl = null; /* 重定向地址 应指向getAppToken方法 */
+    protected $passport = true;
 
     /**
      * 使用app_token与OA接口交互
@@ -23,20 +24,19 @@ class OAService
      */
     public function getDataFromApi($url, $params = [])
     {
+        $url = preg_match('/^https?:\/\//', $url) ? $url : $this->oaApiPath . $url;
         if (session()->has('OA_staff_sn') && cache()->has('OA_appToken_' . session('OA_staff_sn'))) {
-            $url                 = preg_match('/^https?:\/\//', $url) ? $url : $this->oaApiPath . $url;
             $params['app_token'] = cache('OA_appToken_' . session('OA_staff_sn'));
-            $response            = CurlService::build($url)->sendMessageByPost($params);
-            if (!isset($response['status'])) {
-                echo $response;
-                die;
-            } elseif ($response['status'] == -1 && $response['error_code'] == 503) {
-                cache()->forget('OA_appToken_' . session('OA_staff_sn'));
-                session()->forget('OA_refresh_token');
-                session()->forget('OA_staff_sn');
-            } else {
-                return $response;
-            }
+            $response = CurlService::build($url)->sendMessageByPost($params);
+            return $this->checkResponse($response);
+        } elseif (!$this->passport) {
+            $timestamp = time();
+            $params['timestamp'] = $timestamp;
+            $params['app_id'] = $this->appId;
+            $params['without_passport'] = 1;
+            $params['signature'] = md5($this->appTicket . $timestamp);
+            $response = CurlService::build($url)->sendMessageByPost($params);
+            return $this->checkResponse($response);
         } elseif (session()->has('OA_refresh_token')) {
             $this->refreshAppToken();
             return $this->getDataFromApi($url, $params);
@@ -57,7 +57,7 @@ class OAService
      */
     public function getAuthCode()
     {
-        $url    = $this->oaApiPath . 'get_auth_code';
+        $url = $this->oaApiPath . 'get_auth_code';
         $params = '?' . http_build_query(['app_id' => $this->appId, 'redirect_uri' => $this->receiptUrl]);
         $url .= $params;
         header('Location:' . $url);
@@ -69,11 +69,11 @@ class OAService
      */
     public function getAppToken()
     {
-        $url         = $this->oaApiPath . 'get_token';
-        $authCode    = request()->auth_code;
+        $url = $this->oaApiPath . 'get_token';
+        $authCode = request()->auth_code;
         $redirectUri = trim(url()->current(), '/');
-        $message     = ['auth_code' => $authCode, 'redirect_uri' => $redirectUri, 'secret' => $this->makeSecret($authCode)];
-        $response    = CurlService::build($url)->sendMessageByPost($message);
+        $message = ['auth_code' => $authCode, 'redirect_uri' => $redirectUri, 'secret' => $this->makeSecret($authCode)];
+        $response = CurlService::build($url)->sendMessageByPost($message);
         if (!isset($response['status'])) {
             echo $response;
             die;
@@ -91,10 +91,10 @@ class OAService
      */
     public function refreshAppToken()
     {
-        $url          = $this->oaApiPath . 'refresh_token';
+        $url = $this->oaApiPath . 'refresh_token';
         $refreshToken = session('OA_refresh_token');
-        $message      = ['refresh_token' => $refreshToken];
-        $response     = CurlService::build($url)->sendMessageByPost($message);
+        $message = ['refresh_token' => $refreshToken];
+        $response = CurlService::build($url)->sendMessageByPost($message);
         if (!isset($response['status'])) {
             echo $response;
             die;
@@ -104,6 +104,36 @@ class OAService
         } elseif ($response['status'] == -1) {
             session()->forget('OA_refresh_token');
             return $this->makeAppTokenErrorResponse($response);
+        }
+    }
+
+    /**
+     * 跳过passport验证，后台进程请求时使用
+     * @return $this
+     */
+    public function withoutPassport()
+    {
+        $this->passport = false;
+        return $this;
+    }
+
+
+    /**
+     * 检查OA的返回值
+     * @param $response
+     * @return mixed
+     */
+    private function checkResponse($response)
+    {
+        if (!isset($response['status'])) {
+            echo $response;
+            die;
+        } elseif ($response['status'] == -1 && $response['error_code'] == 503) {
+            cache()->forget('OA_appToken_' . session('OA_staff_sn'));
+            session()->forget('OA_refresh_token');
+            session()->forget('OA_staff_sn');
+        } else {
+            return $response;
         }
     }
 
@@ -119,10 +149,10 @@ class OAService
 
     private function saveAppToken($response)
     {
-        $appToken     = $response['app_token'];
+        $appToken = $response['app_token'];
         $refreshToken = $response['refresh_token'];
-        $staffSn      = $response['staff_sn'];
-        $expiration   = $response['expiration'] - 1;
+        $staffSn = $response['staff_sn'];
+        $expiration = $response['expiration'] - 1;
         cache()->put('OA_appToken_' . $staffSn, $appToken, $expiration);
         session()->put('OA_refresh_token', $refreshToken);
         session()->put('OA_staff_sn', $staffSn);

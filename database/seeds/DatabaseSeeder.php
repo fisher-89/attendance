@@ -11,7 +11,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        $this->call(ShopPositionSeeder::class);
+        $this->call(ShopDutySeeder::class);
         $this->call(TransferTagSeeder::class);
         $this->call(LeaveTypeSeeder::class);
     }

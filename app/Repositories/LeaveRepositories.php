@@ -23,44 +23,20 @@ class LeaveRepositories
     }
 
     /**
-     * 判断当前打卡是否为请假打卡
+     * 获取下一条未执行的请假
      * @param null $staffSn
-     * @return bool
+     * @return mixed
      */
-    public function isLeaveClock($staffSn = null){
-        if (empty($staffSn)) {
-            $staffSn = app('CurrentUser')->staff_sn;
-        }
-        $currentTime = date('Y-m-d H:i:s');
-        $leaveCount = Leave::where(['staff_sn' => $staffSn, 'status' => 1, 'has_clock_out' => 0, 'has_clock_in' => 0])
-            ->where([['start_at', '<', $currentTime], ['end_at', '>', $currentTime]])->count();
-        return $leaveCount > 0 || $this->isLeaving();
-    }
-
-    /**
-     * 判断当前是否在请假中
-     * @param null $staffSn
-     * @return bool
-     */
-    public function isLeaving($staffSn = null)
-    {
-        if (empty($staffSn)) {
-            $staffSn = app('CurrentUser')->staff_sn;
-        }
-        $currentTime = date('Y-m-d H:i:s');
-        $leaveCount = Leave::where(['staff_sn' => $staffSn, 'status' => 1, 'has_clock_out' => 1, 'has_clock_in' => 0])
-            ->where([['start_at', '<', $currentTime]])->count();
-        return $leaveCount > 0;
-    }
-
     public function getNextLeaveRequest($staffSn = null)
     {
         if (empty($staffSn)) {
             $staffSn = app('CurrentUser')->staff_sn;
         }
         $currentTime = date('Y-m-d H:i:s');
-        $leaveRequest = Leave::where(['staff_sn' => $staffSn, 'status' => 1, 'has_clock_in' => 0])
-            ->where([['end_at', '>', $currentTime]])
+        $leaveRequest = Leave::where([['staff_sn', '=', $staffSn], ['status', '=', 1]])
+            ->where(function ($query) use ($currentTime) {
+                $query->whereNull('clock_out_at')->orWhereNull('clock_in_at')->orWhere('clock_in_at', '>', $currentTime);
+            })
             ->orderBy('start_at', 'asc')
             ->first();
         return $leaveRequest;
