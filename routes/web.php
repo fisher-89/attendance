@@ -53,7 +53,7 @@ Route::group(['prefix' => 'attendance'], function () {
     Route::post('sheet', 'AttendanceController@getAttendanceForm'); //获取店铺考勤表数据
     Route::post('refresh', 'AttendanceController@refreshAttendanceForm'); //刷新店铺考勤表数据
     Route::post('submit', 'AttendanceController@submit'); //提交
-
+    Route::post('withdraw', 'AttendanceController@withdraw'); //撤回
 });
 
 /* 数据统计 */

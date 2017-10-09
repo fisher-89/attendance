@@ -67,32 +67,61 @@ class AttendanceController extends Controller
         }
     }
 
-
+    /**
+     * 提交考勤表
+     *
+     * @param Request $request
+     * @return \Illuminate\Database\Eloquent\Collection|\Illuminate\Database\Eloquent\Model|null|static|static[]
+     */
     public function submit(Request $request)
     {
-        $salesPerformance = [
-            'sales_performance_lisha' => 0,
-            'sales_performance_go' => 0,
-            'sales_performance_group' => 0,
-            'sales_performance_partner' => 0,
-        ];
-        foreach ($request->detail as $detail) {
-            AttendanceStaff::find($detail['id'])->update(array_only($detail, [
-                'sales_performance_lisha',
-                'sales_performance_go',
-                'sales_performance_group',
-                'sales_performance_partner',
-            ]));
-            $salesPerformance['sales_performance_lisha'] += $detail['sales_performance_lisha'];
-            $salesPerformance['sales_performance_go'] += $detail['sales_performance_go'];
-            $salesPerformance['sales_performance_group'] += $detail['sales_performance_group'];
-            $salesPerformance['sales_performance_partner'] += $detail['sales_performance_partner'];
-        }
         $form = Attendance::with('detail')->find($request->id);
-        $form->status = 1;
-        $form->submitted_at = date('Y-m-d H:i:s');
-        $form->update($salesPerformance);
-        return $form;
+        if ($form->status <= 0) {
+            $salesPerformance = [
+                'sales_performance_lisha' => 0,
+                'sales_performance_go' => 0,
+                'sales_performance_group' => 0,
+                'sales_performance_partner' => 0,
+            ];
+            foreach ($request->detail as $detail) {
+                AttendanceStaff::find($detail['id'])->update(array_only($detail, [
+                    'sales_performance_lisha',
+                    'sales_performance_go',
+                    'sales_performance_group',
+                    'sales_performance_partner',
+                ]));
+                $salesPerformance['sales_performance_lisha'] += $detail['sales_performance_lisha'];
+                $salesPerformance['sales_performance_go'] += $detail['sales_performance_go'];
+                $salesPerformance['sales_performance_group'] += $detail['sales_performance_group'];
+                $salesPerformance['sales_performance_partner'] += $detail['sales_performance_partner'];
+            }
+
+            $form->status = 1;
+            $form->submitted_at = date('Y-m-d H:i:s');
+            $form->update($salesPerformance);
+            return $form;
+        } else {
+            abort(500, '考勤表已提交');
+        }
+    }
+
+    /**
+     * 撤回考勤表
+     *
+     * @param Request $request
+     * @return \Illuminate\Database\Eloquent\Collection|\Illuminate\Database\Eloquent\Model|null|static|static[]
+     */
+    public function withdraw(Request $request)
+    {
+        $form = Attendance::with('detail')->find($request->id);
+        if ($form->status == 1) {
+            $form->status = 0;
+            $form->save();
+            return $form;
+        } else {
+            abort(500, '考勤表不可撤回');
+        }
+
     }
 
     /**

@@ -150,7 +150,8 @@
 							<!--:disabled="attendanceData.is_missing == 1">-->
 							提交
 						</Button>
-						<Button v-else-if="attendanceData.status == 1" type="warning" long size="large" @click="submit">
+						<Button v-else-if="attendanceData.status == 1" type="warning" long size="large"
+						        @click="withdraw">
 							撤回
 						</Button>
 					</div>
@@ -261,7 +262,12 @@
             },
             refreshAttendanceRecord() {
                 if (this.attendanceData.status > 0) {
-                    this.$refs.loadmore.onTopLoaded();
+                    axios.post('/attendance/sheet').then((response) => {
+                        this.attendanceData = response.data;
+                        this.$refs.loadmore.onTopLoaded();
+                    }).catch((error) => {
+                        document.write(error);
+                    });
                 } else {
                     axios.post('/attendance/refresh').then((response) => {
                         this.attendanceData = response.data;
@@ -289,6 +295,18 @@
                 axios.post(url, this.attendanceData).then((response) => {
                     this.attendanceData = response.data;
                     Indicator.close();
+                    this.$Message.success('提交成功');
+                }).catch((error) => {
+                    document.write(error);
+                });
+            },
+            withdraw() {
+                Indicator.open('处理中...');
+                let url = '/attendance/withdraw';
+                axios.post(url, this.attendanceData).then((response) => {
+                    this.attendanceData = response.data;
+                    Indicator.close();
+                    this.$Message.success('撤回成功');
                 }).catch((error) => {
                     document.write(error);
                 });
