@@ -91,9 +91,9 @@
                 let staff = sessionStorage.getItem('staff');
                 let currentUser = JSON.parse(staff);
                 if (currentUser.shop) {
-                    let clockIn = new Date('2000/01/01 ' + currentUser.shop.clock_in);
-                    let clockOut = new Date('2000/01/01 ' + currentUser.shop.clock_out);
-                    currentUser.shop.working_hours = (clockOut - clockIn) / 3600 / 1000;
+                    let clockIn = new Date('2000/01/01 ' + currentUser.working_start_at);
+                    let clockOut = new Date('2000/01/01 ' + currentUser.working_end_at);
+                    currentUser.working_hours = (clockOut - clockIn) / 3600 / 1000;
                 }
                 return currentUser;
             }

@@ -52,6 +52,11 @@ class AttendanceRepositories
      */
     protected $lastClock;
     /**
+     * 店铺考勤记录
+     * @var array
+     */
+    protected $shopRecord;
+    /**
      * 员工考勤记录
      * @var array
      */
@@ -70,39 +75,56 @@ class AttendanceRepositories
     }
 
     /**
-     * 生成店铺考勤数据
+     * 获取店铺考勤表
      * @return array
      */
-    public function makeAttendanceDataByShop()
+    public function getAttendanceForm()
     {
-        $shopAttendance = $this->createShopAttendance();
-        if ($shopAttendance->status > 0) {
-            $staffAttendanceData = AttendanceStaff::where('shop_attendance_id', $this->attendanceId)->get();
-            //@TODO 下班时间锁定
-//        } elseif ($this->shopEndAt > time()) {
-//            $staffAttendanceData = '未到下班时间';
-        } else {
-            $staffGroup = WorkingSchedule::where('shop_sn', app('CurrentUser')->shop_sn)->get();
-            $staffAttendanceData = [];
-            foreach ($staffGroup as $staff) {
-                $staffAttendanceData[] = $this->getAttendanceDataByStaff($staff);
+        $this->shopRecord = $this->getShopAttendanceForm();
+        if ($this->shopRecord->status == 0) {
+            //@TODO 下班时间锁定,取消注释
+//            if ($this->shopEndAt > time()) {
+//            $this->shopRecord->detail = '未到下班时间';
+//            } else
+            if ($this->shopRecord->detail()->count() == 0) {
+                $this->makeAttendanceDetail();
+                $this->shopRecord = $this->getShopAttendanceForm();
             }
         }
-        $shopAttendance->detail = $staffAttendanceData;
-        return $shopAttendance;
-
+        return $this->shopRecord;
     }
 
     /**
-     * 初始化店铺考勤数据
+     * 刷新店铺考勤表
+     * @return AttendanceRepositories|array|\Illuminate\Database\Eloquent\Model|mixed
+     */
+    public function refreshAttendanceForm()
+    {
+        $this->shopRecord = $this->getShopAttendanceForm();
+        $this->shopRecord->detail()->forceDelete();
+        if ($this->shopRecord->status <= 0) {
+            $this->shopRecord->is_missing = 0;
+            $this->shopRecord->is_late = 0;
+            $this->shopRecord->is_early_out = 0;
+            $this->makeAttendanceDetail();
+            $this->shopRecord = $this->getShopAttendanceForm();
+            return $this->shopRecord;
+        } else {
+            abort(500, '考勤表已提交，不可修改');
+        }
+    }
+
+    /**
+     * 获得or初始化店铺考勤数据
      * @return $this|\Illuminate\Database\Eloquent\Model|mixed
      */
-    protected function createShopAttendance()
+    protected function getShopAttendanceForm()
     {
-        $attendance = Attendance::where([
-            'shop_sn' => $this->shopSn,
-            'attendance_date' => $this->date,
-        ])->first();
+        $attendance = Attendance::with('detail')
+            ->where([
+                'shop_sn' => $this->shopSn,
+                'attendance_date' => $this->date,
+            ])->first();
         if (empty($attendance)) {
             $attendance = Attendance::create([
                 'shop_sn' => $this->shopSn,
@@ -111,10 +133,23 @@ class AttendanceRepositories
                 'manager_name' => app('CurrentUser')->realname,
                 'attendance_date' => $this->date,
                 'status' => 0,
+                'is_missing' => 0,
+                'is_late' => 0,
+                'is_early_out' => 0,
             ]);
-            $this->attendanceId = $attendance->id;
         }
+        $this->attendanceId = $attendance->id;
         return $attendance;
+    }
+
+    protected function makeAttendanceDetail()
+    {
+        $staffGroup = WorkingSchedule::where('shop_sn', app('CurrentUser')->shop_sn)->get();
+        foreach ($staffGroup as $staff) {
+            $this->getAttendanceDataByStaff($staff);
+        }
+        $this->shopRecord->detail;
+        $this->shopRecord->save();
     }
 
     /**
@@ -172,6 +207,7 @@ class AttendanceRepositories
             }
             $this->lastClock = $clock;
         });
+
         if ($this->lastClock && $this->lastClock->clock_at < $this->shopEndAt) {
             if ($this->lastClock->type == 1) {
                 $this->staffRecord['is_missing'] = 1;
@@ -187,18 +223,9 @@ class AttendanceRepositories
                         $this->staffRecord['leaving_hours'] += $duration;
                         $this->staffRecord['leaving_days'] += $duration / $this->workingHours;
                         break;
-                    default:
-                        $this->staffRecord['is_missing'] = 1;
                 }
             }
         }
-
-        $this->staffRecord['working_days'] = round($this->staffRecord['working_days'], 4);
-        $this->staffRecord['working_hours'] = round($this->staffRecord['working_hours'], 2);
-        $this->staffRecord['leaving_days'] = round($this->staffRecord['leaving_days'], 4);
-        $this->staffRecord['leaving_hours'] = round($this->staffRecord['leaving_hours'], 2);
-        $this->staffRecord['transferring_days'] = round($this->staffRecord['transferring_days'], 4);
-        $this->staffRecord['transferring_hours'] = round($this->staffRecord['transferring_hours'], 2);
 
         $oneDay = $this->staffRecord['working_days'] + $this->staffRecord['leaving_days'] + $this->staffRecord['transferring_days'];
         if ($oneDay == 0) {
@@ -225,7 +252,11 @@ class AttendanceRepositories
             $this->staffRecord['is_missing'] = 1;
         }
 
-        return $this->staffRecord;
+        $this->shopRecord->is_missing = $this->staffRecord['is_missing'] == 1 ? 1 : $this->shopRecord['is_missing'];
+        $this->shopRecord->is_late = $this->staffRecord['late_time'] > 0 ? 1 : $this->shopRecord['is_late'];
+        $this->shopRecord->is_early_out = $this->staffRecord['early_out_time'] > 0 ? 1 : $this->shopRecord['is_early_out'];
+
+        $this->shopRecord->detail()->create($this->staffRecord);
     }
 
     /**
@@ -234,13 +265,14 @@ class AttendanceRepositories
     protected function initStaffRecord($staff)
     {
         $this->lastClock = false;
-        $this->staffStartAt = empty($staff->clock_in) ? $this->shopStartAt : $staff->clock_in;
-        $this->staffEndAt = empty($staff->clock_out) ? $this->shopEndAt : $staff->clock_out;
+        $this->staffStartAt = empty($staff->clock_in) ? $this->shopStartAt : strtotime($staff->clock_in);
+        $this->staffEndAt = empty($staff->clock_out) ? $this->shopEndAt : strtotime($staff->clock_out);
         $this->workingHours = $this->countHoursBetween($this->staffStartAt, $this->staffEndAt);
         $this->staffRecord = [
             'attendance_shop_id' => $this->attendanceId,
             'staff_sn' => $staff->staff_sn,
             'staff_name' => $staff->staff_name,
+            'shop_duty_id' => $staff->shop_duty_id,
             'sales_performance_lisha' => '',
             'sales_performance_go' => '',
             'sales_performance_group' => '',

@@ -15,9 +15,5 @@ let response = [
         path: '/f/attend',
         component: require('../front/attendance/index.vue')
     }, //店铺考勤
-    {
-        path: '/f/attendrecord',
-        component: require('../front/attendancerecord/index.vue')
-    }, //店铺考勤记录
 ];
 export default response;

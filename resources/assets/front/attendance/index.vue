@@ -14,135 +14,159 @@
 			</div>
 		</template>
 		<template v-else>
-			<Alert banner :type="statusColor[attendanceData.status]">
-				<h3>
-					{{attendanceData.shop_name}}&nbsp;
-					<span style="color:#999;">{{attendanceData.shop_sn}}</span>
-				</h3>
-				<Tag v-if="attendanceData.status == 0" color="blue">未提交</Tag>
-				<Tag v-else-if="attendanceData.status == 1" color="yellow">已提交</Tag>
-				<Tag v-else-if="attendanceData.status == 2" color="green">已通过</Tag>
-				<Tag v-else-if="attendanceData.status == -1" color="red">已驳回</Tag>
-				<h4 slot="desc">
-					<Row>
-						<i-col span="6">
-							考勤日期：
-						</i-col>
-						<i-col span="18">
-							{{attendanceData.attendance_date}}
-						</i-col>
-					</Row>
-					<Row>
-						<i-col span="6">
-							店铺业绩：
-						</i-col>
-						<i-col span="18">
-							{{attendanceData.sales_performance}}
-						</i-col>
-					</Row>
-				</h4>
-			</Alert>
-			<template v-if="typeof attendanceData.detail == 'string' ">
-				<Alert type="error">
-					<h4 style="text-align:center">{{attendanceData.detail}}</h4>
-				</Alert>
-			</template>
-			<template v-else>
-				<Card v-for="(staffAttendance,index) in attendanceData.detail" style="margin-bottom:5px;">
-					<template slot="title">
+			<mt-loadmore :top-method="refreshAttendanceRecord" ref="loadmore">
+				<Alert banner :type="statusColor[attendanceData.status]">
+					<h3>
+						{{attendanceData.shop_name}}&nbsp;
+						<span style="color:#999;">{{attendanceData.shop_sn}}</span>
+					</h3>
+					<Tag v-if="attendanceData.status == 0" color="blue">未提交</Tag>
+					<Tag v-else-if="attendanceData.status == 1" color="yellow">已提交</Tag>
+					<Tag v-else-if="attendanceData.status == 2" color="green">已通过</Tag>
+					<Tag v-else-if="attendanceData.status == -1" color="red">已驳回</Tag>
+					<Tag v-if="attendanceData.is_missing == 1" color="red">漏签</Tag>
+					<Tag v-if="attendanceData.is_late == 1" color="red">迟到</Tag>
+					<Tag v-if="attendanceData.is_early_out == 1" color="red">早退</Tag>
+					<h4 slot="desc">
 						<Row>
-							<i-col span="8">
-								<p style="line-height:26px;">
-									{{staffAttendance.staff_name}}&nbsp;
-									<span style="color:#999;">{{staffAttendance.staff_sn}}</span>
-								</p>
+							<i-col span="6">
+								考勤日期：
 							</i-col>
-							<i-col span="16">
-								<Tag v-if="staffAttendance.is_missing" color="red">漏签</Tag>
-								<template v-else>
-									<Tag v-if="staffAttendance.late_time > 0" color="red">迟到</Tag>
-									<Tag v-if="staffAttendance.early_out_time > 0" color="red">早退</Tag>
+							<i-col span="18">
+								{{attendanceData.attendance_date}}
+							</i-col>
+						</Row>
+						<Row>
+							<i-col span="6">
+								店铺业绩：
+							</i-col>
+							<i-col span="18">
+								￥{{attendanceData.sales_performance}}
+							</i-col>
+						</Row>
+					</h4>
+				</Alert>
+				<template v-if="typeof attendanceData.detail == 'string' ">
+					<Alert type="error">
+						<h4 style="text-align:center">{{attendanceData.detail}}</h4>
+					</Alert>
+				</template>
+				<template v-else>
+					<Card v-for="(staffAttendance,index) in attendanceData.detail" style="margin:5px 2px;">
+						<template slot="title">
+							<Row>
+								<i-col span="10">
+									<p style="line-height:26px;">
+										{{staffAttendance.staff_name}}&nbsp;
+										<span style="color:#999;">{{staffAttendance.staff_sn}}</span>
+									</p>
+								</i-col>
+								<i-col span="5">
+									<Tag :color="staffAttendance.shop_duty_id==1? 'green' : null">
+										{{staffAttendance.shop_duty.name}}
+									</Tag>
+								</i-col>
+								<i-col span="9">
 									<Tag v-if="staffAttendance.is_leaving" color="yellow">请假</Tag>
 									<Tag v-if="staffAttendance.is_transferring > 0" color="blue">调动</Tag>
-								</template>
-							</i-col>
-						</Row>
-						<ClockLine v-if="!staffAttendance.is_missing"
-						           :clockLog="staffAttendance.clock_log"
-						           :shopStartAt="currentUser.shop.clock_in"
-						           :shopEndAt="currentUser.shop.clock_out"></ClockLine>
-					</template>
-					<template v-if="staffAttendance.is_missing">
-						<Alert type="error">
-							<h4 style="text-align:center">请先补签</h4>
-						</Alert>
-					</template>
-					<template v-else-if="staffAttendance.working_hours == 0">
-						<Alert type="error">
-							<h4 style="text-align:center">没有上班</h4>
-						</Alert>
-					</template>
-					<template v-else>
-						<Row>
-							<i-col span="10" style="line-height:24px;">
-								销售业绩(利鲨)：
-							</i-col>
-							<i-col span="12">
-								<i-input v-model="attendanceData.detail[index].sales_performance_lisha" type="number"
-								         placeholder="请填写业绩"
-								         size="small">
-									<span slot="prepend">￥</span>
-								</i-input>
-							</i-col>
-						</Row>
-						<Row>
-							<i-col span="10" style="line-height:24px;">
-								销售业绩(GO)：
-							</i-col>
-							<i-col span="12">
-								<i-input v-model="attendanceData.detail[index].sales_performance_go" type="number"
-								         placeholder="请填写业绩" size="small">
-									<span slot="prepend">￥</span>
-								</i-input>
-							</i-col>
-						</Row>
-						<Row>
-							<i-col span="10" style="line-height:24px;">
-								销售业绩(公司)：
-							</i-col>
-							<i-col span="12">
-								<i-input v-model="attendanceData.detail[index].sales_performance_group" type="number"
-								         placeholder="请填写业绩"
-								         size="small">
-									<span slot="prepend">￥</span>
-								</i-input>
-							</i-col>
-						</Row>
-						<Row>
-							<i-col span="10" style="line-height:24px;">
-								销售业绩(合作方)：
-							</i-col>
-							<i-col span="12">
-								<i-input v-model="attendanceData.detail[index].sales_performance_partner" type="number"
-								         placeholder="请填写业绩"
-								         size="small">
-									<span slot="prepend">￥</span>
-								</i-input>
-							</i-col>
-						</Row>
-					</template>
-				</Card>
-			</template>
+								</i-col>
+							</Row>
+							<Row>
+								<i-col span="24">
+									<Tag v-if="staffAttendance.is_missing" color="red">漏签</Tag>
+									<template v-else>
+										<Tag v-if="staffAttendance.late_time > 0" color="red">迟到</Tag>
+										<Tag v-if="staffAttendance.early_out_time > 0" color="red">早退</Tag>
+									</template>
+								</i-col>
+							</Row>
+							<ClockLine v-if="!staffAttendance.is_missing"
+							           :clockLog="staffAttendance.clock_log"
+							           :workingStartAt="currentUser.working_start_at"
+							           :workingEndAt="currentUser.working_end_at"></ClockLine>
+						</template>
+						<template v-if="staffAttendance.is_missing">
+							<Alert type="error">
+								<h4 style="text-align:center">请先补签</h4>
+							</Alert>
+						</template>
+						<template v-else>
+							<Row>
+								<i-col span="10" style="line-height:24px;">
+									销售业绩(利鲨)：
+								</i-col>
+								<i-col span="12">
+									<i-input v-model="attendanceData.detail[index].sales_performance_lisha"
+									         type="number"
+									         placeholder="请填写业绩"
+									         size="small" @on-focus="clearContent">
+										<span slot="prepend">￥</span>
+									</i-input>
+								</i-col>
+							</Row>
+							<Row>
+								<i-col span="10" style="line-height:24px;">
+									销售业绩(GO)：
+								</i-col>
+								<i-col span="12">
+									<i-input v-model="attendanceData.detail[index].sales_performance_go"
+									         type="number"
+									         placeholder="请填写业绩"
+									         size="small" @on-focus="clearContent">
+										<span slot="prepend">￥</span>
+									</i-input>
+								</i-col>
+							</Row>
+							<Row>
+								<i-col span="10" style="line-height:24px;">
+									销售业绩(公司)：
+								</i-col>
+								<i-col span="12">
+									<i-input v-model="attendanceData.detail[index].sales_performance_group"
+									         type="number"
+									         placeholder="请填写业绩"
+									         size="small" @on-focus="clearContent">
+										<span slot="prepend">￥</span>
+									</i-input>
+								</i-col>
+							</Row>
+							<Row>
+								<i-col span="10" style="line-height:24px;">
+									销售业绩(合作方)：
+								</i-col>
+								<i-col span="12">
+									<i-input v-model="attendanceData.detail[index].sales_performance_partner"
+									         type="number"
+									         placeholder="请填写业绩"
+									         size="small" @on-focus="clearContent">
+										<span slot="prepend">￥</span>
+									</i-input>
+								</i-col>
+							</Row>
+						</template>
+					</Card>
+					<div style="margin:10px 20px;">
+						<Button v-if="attendanceData.status == 0" type="primary" long size="large" @click="submit">
+							<!--:disabled="attendanceData.is_missing == 1">-->
+							提交
+						</Button>
+						<Button v-else-if="attendanceData.status == 1" type="warning" long size="large" @click="submit">
+							撤回
+						</Button>
+					</div>
+				</template>
+			</mt-loadmore>
 		</template>
 	</div>
 </template>
 
 <script>
-    import {Field} from 'mint-ui';
+    import {Field, Loadmore} from 'mint-ui';
     import clockLineComponent from './clockLine.vue';
 
     let components = {};
     components[Field.name] = Field;
+    components[Loadmore.name] = Loadmore;
     components['ClockLine'] = clockLineComponent;
 
     export default {
@@ -230,11 +254,22 @@
                 Indicator.open('加载中...');
                 axios.post('/attendance/sheet').then((response) => {
                     this.attendanceData = response.data;
-                    let match = this.attendanceData.detail[0].clock_log.match(/\d{4}\w\d{5}/);
                     Indicator.close();
                 }).catch((error) => {
                     document.write(error);
                 });
+            },
+            refreshAttendanceRecord() {
+                if (this.attendanceData.status > 0) {
+                    this.$refs.loadmore.onTopLoaded();
+                } else {
+                    axios.post('/attendance/refresh').then((response) => {
+                        this.attendanceData = response.data;
+                        this.$refs.loadmore.onTopLoaded();
+                    }).catch((error) => {
+                        document.write(error);
+                    });
+                }
             },
             dingtalkInit() {
                 let url = '/js_config';
@@ -247,6 +282,19 @@
                         document.write(JSON.stringify(error));
                     });
                 });
+            },
+            submit() {
+                Indicator.open('处理中...');
+                let url = '/attendance/submit';
+                axios.post(url, this.attendanceData).then((response) => {
+                    this.attendanceData = response.data;
+                    Indicator.close();
+                }).catch((error) => {
+                    document.write(error);
+                });
+            },
+            clearContent(e) {
+                if (e.target.value == 0) e.target.value = '';
             }
         },
         computed: {}

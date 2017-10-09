@@ -126,6 +126,8 @@
                 transfer: false,	    //调动信息
                 leave: false,		    //请假信息
 
+                workingStart: false,
+                workingEnd: false,
                 hasCommit: false,	    //已经提交
                 aLocation: false,	    //定位信息
                 locationErr: false,	    //定位失败信息
@@ -149,7 +151,7 @@
                 return this.date === this.today && this.aLocation !== false && !this.locationErr;
             },
             inTime: function () {
-                return (this.hasClockIn && this.curTime > this.currentUser.shop.clock_out) || (!this.hasClockIn && this.curTime < this.currentUser.shop.clock_in);
+                return (this.hasClockIn && this.curTime > this.currentUser.working_end_at) || (!this.hasClockIn && this.curTime < this.currentUser.working_start_at);
             },
             /* 状态判断 start */
             hasTransfer: function () {

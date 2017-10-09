@@ -8,13 +8,16 @@ use Illuminate\Http\Request;
 class OAService
 {
 
-    protected $appId = 7; /* AppId 本地 */
-//    protected $appId = 5; /* AppId */
+    protected $appId = 5; /* AppId */
     protected $appTicket = '8Fdhj4B8PqLgsAzolxOcsExofolNZaTK'; /* AppTicket */
-    protected $oaApiPath = 'http://192.168.1.20:8001/api/'; /* OA接口根路由 本地 */
-//    protected $oaApiPath = 'http://of.xigemall.com/api/'; /* OA接口根路由 */
+    protected $oaApiPath; /* OA接口根路由 本地 */
     protected $receiptUrl = null; /* 重定向地址 应指向getAppToken方法 */
     protected $passport = true;
+
+    public function __construct()
+    {
+        $this->oaApiPath = 'http://' . env('OA_PATH', '192.168.1.20') . '/api/';
+    }
 
     /**
      * 使用app_token与OA接口交互

@@ -36,7 +36,7 @@ class CreateAttendanceManageTables extends Migration
             $table->integer('attendance_shop_id')->unsigned()->comment('店铺考勤表id');
             $table->mediumInteger('staff_sn')->unsigned()->comment('员工编号');
             $table->char('staff_name', 10)->comment('员工姓名');
-            $table->tinyInteger('position')->comment('职务');
+            $table->tinyInteger('shop_duty_id')->comment('职务');
             $table->decimal('sales_performance_lisha', 10, 2)->comment('销售业绩(利鲨)');
             $table->decimal('sales_performance_go', 10, 2)->comment('销售业绩(GO)');
             $table->decimal('sales_performance_group', 10, 2)->comment('销售业绩(总公司)');

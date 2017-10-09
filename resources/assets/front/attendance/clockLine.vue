@@ -1,7 +1,7 @@
 <template>
 	<Row>
 		<i-col span="4" style="text-align:center">
-			{{shopStartAt}}
+			{{workingStartAt.substring(0, 5)}}
 		</i-col>
 		<i-col span="16">
 			<div class="ivu-progress-inner" style="overflow:hidden;margin-bottom:2px;">
@@ -10,7 +10,7 @@
 			</div>
 		</i-col>
 		<i-col span="4" style="text-align:center">
-			{{shopEndAt}}
+			{{workingEndAt.substring(0, 5)}}
 		</i-col>
 	</Row>
 </template>
@@ -29,12 +29,12 @@
                 let response = [];
                 while (match) {
                     let clock = this.clockLogDecode(match[0]);
-                    if (response.length == 0 && clock.start_at > this.shopStartAt) {
-                        let startTimestamp = new Date('2000/01/01 ' + this.shopStartAt + ':00').getTime();
-                        let endTimestamp = new Date('2000/01/01 ' + clock.start_at + ':00').getTime();
+                    if (response.length == 0 && clock.start_at > this.workingStartAt) {
+                        let startTimestamp = new Date('2000/01/01 ' + this.workingStartAt).getTime();
+                        let endTimestamp = new Date('2000/01/01 ' + clock.start_at).getTime();
                         let duration = (endTimestamp - startTimestamp) / 3600 / 1000;
                         response.push({
-                            'start_at': this.shopStartAt,
+                            'start_at': this.workingStartAt,
                             'end_at': clock.start_at,
                             'duration': duration,
                             'color': ''
@@ -47,22 +47,22 @@
                 return response;
             },
             duration() {
-                let startTimestamp = new Date('2000/01/01 ' + this.shopStartAt + ':00').getTime();
-                let endTimestamp = new Date('2000/01/01 ' + this.shopEndAt + ':00').getTime();
+                let startTimestamp = new Date('2000/01/01 ' + this.workingStartAt).getTime();
+                let endTimestamp = new Date('2000/01/01 ' + this.workingEndAt).getTime();
                 let duration = (endTimestamp - startTimestamp) / 3600 / 1000;
                 return duration;
             }
         },
-        props: ['clockLog', 'shopStartAt', 'shopEndAt'],
+        props: ['clockLog', 'workingStartAt', 'workingEndAt'],
         mounted() {
         },
         methods: {
             clockLogDecode(log) {
-                let start = log.replace(/^(\d{2})(\d{2}).*$/, '$1:$2');
-                let end = log.replace(/^.*(\d{2})(\d{2})$/, '$1:$2');
+                let start = log.replace(/^(\d{2})(\d{2}).*$/, '$1:$2:00');
+                let end = log.replace(/^.*(\d{2})(\d{2})$/, '$1:$2:00');
                 let type = log.replace(/^\d{4}(\w)\d{4}$/, '$1');
-                let startTimestamp = new Date('2000/01/01 ' + start + ':00').getTime();
-                let endTimestamp = new Date('2000/01/01 ' + end + ':00').getTime();
+                let startTimestamp = new Date('2000/01/01 ' + start).getTime();
+                let endTimestamp = new Date('2000/01/01 ' + end).getTime();
                 let duration = (endTimestamp - startTimestamp) / 3600 / 1000;
                 return {
                     'start_at': start,

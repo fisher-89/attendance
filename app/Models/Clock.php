@@ -28,7 +28,8 @@ class Clock extends Model
     public function __construct(array $attributes = [])
     {
         parent::__construct($attributes);
-        $this->table = $this->table . date('Ym');
+        $ym = array_has($attributes, 'ym') ? $attributes['ym'] : app('Clock')->getAttendanceDate('Ym');
+        $this->table .= $ym;
     }
 
     /* 关联 Start */

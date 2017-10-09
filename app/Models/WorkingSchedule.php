@@ -8,9 +8,11 @@ class WorkingSchedule extends Model
 {
     protected $table = 'working_schedule_';
 
-    public function __construct()
+    public function __construct(array $attributes = [])
     {
-        $this->table .= app('Clock')->getAttendanceDate('Ymd');
+        parent::__construct($attributes);
+        $ymd = array_has($attributes, 'ym') ? $attributes['ymd'] : app('Clock')->getAttendanceDate('Ymd');
+        $this->table .= $ymd;
     }
 
     /* 关联 Start */

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Attendance;
 use App\Models\Attendance_staff;
+use App\Models\AttendanceStaff;
 use App\Models\Holiday;
 use App\Models\Sign;
 use App\Models\Statistic;
@@ -47,11 +48,51 @@ class AttendanceController extends Controller
      * 获取店铺考勤表数据
      * @return mixed
      */
-    public function getAttendanceSheet()
+    public function getAttendanceForm()
     {
         if (app('CurrentUser')->isShopManager()) {
-            return app('AttendanceRepos')->makeAttendanceDataByShop();
+            return app('AttendanceRepos')->getAttendanceForm();
         }
+    }
+
+
+    /**
+     * 刷新店铺考勤表数据
+     * @return mixed
+     */
+    public function refreshAttendanceForm()
+    {
+        if (app('CurrentUser')->isShopManager()) {
+            return app('AttendanceRepos')->refreshAttendanceForm();
+        }
+    }
+
+
+    public function submit(Request $request)
+    {
+        $salesPerformance = [
+            'sales_performance_lisha' => 0,
+            'sales_performance_go' => 0,
+            'sales_performance_group' => 0,
+            'sales_performance_partner' => 0,
+        ];
+        foreach ($request->detail as $detail) {
+            AttendanceStaff::find($detail['id'])->update(array_only($detail, [
+                'sales_performance_lisha',
+                'sales_performance_go',
+                'sales_performance_group',
+                'sales_performance_partner',
+            ]));
+            $salesPerformance['sales_performance_lisha'] += $detail['sales_performance_lisha'];
+            $salesPerformance['sales_performance_go'] += $detail['sales_performance_go'];
+            $salesPerformance['sales_performance_group'] += $detail['sales_performance_group'];
+            $salesPerformance['sales_performance_partner'] += $detail['sales_performance_partner'];
+        }
+        $form = Attendance::with('detail')->find($request->id);
+        $form->status = 1;
+        $form->submitted_at = date('Y-m-d H:i:s');
+        $form->update($salesPerformance);
+        return $form;
     }
 
     /**

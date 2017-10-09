@@ -7,6 +7,8 @@
 
 namespace App\Services;
 
+use App\Models\WorkingSchedule;
+
 class CurrentUserService
 {
 
@@ -31,8 +33,23 @@ class CurrentUserService
     {
         $userInfo = app('OA')->getDataFromApi('get_current_user');
         if ($userInfo['status'] == 1) {
-            session()->put('staff_sn', $userInfo['message']['staff_sn']);
-            session()->put('staff', $userInfo['message']);
+            $staffFromApi = $userInfo['message'];
+            if (!empty($staffFromApi['shop_sn'])) {
+                $schedule = WorkingSchedule::where([
+                    'staff_sn' => $staffFromApi['staff_sn'],
+                    'shop_sn' => $staffFromApi['shop_sn']
+                ])->first();
+
+                $staffFromApi['working_start_at'] = empty($schedule->clock_in) ?
+                    $staffFromApi['shop']['clock_in'] :
+                    $schedule->clock_in;
+                $staffFromApi['working_end_at'] = empty($schedule->clock_out) ?
+                    $staffFromApi['shop']['clock_out'] :
+                    $schedule->clock_out;
+            }
+            session()->put('staff_sn', $staffFromApi['staff_sn']);
+            session()->put('staff', $staffFromApi);
+            $this->userInfo = $staffFromApi;
         }
     }
 

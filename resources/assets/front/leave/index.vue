@@ -23,9 +23,9 @@
 					       placeholder="请输入..."></Input>
 				</Form-item>
 				<Row>
-					<Col span="18" offset="3">
-					<Button type="primary" @click="submit" long>提交</Button>
-					</Col>
+					<i-col span="18" offset="3">
+						<Button type="primary" @click="submit" long>提交</Button>
+					</i-col>
 				</Row>
 			</Form>
 		</Card>
@@ -58,28 +58,36 @@
 					<Tag v-else-if="record.status == -2" type="border">已取消</Tag>
 				</Row>
 				<Row>
-					<Col span="6">
-					开始时间：</Col>
-					<Col span="18">
-					{{record.start_at | withoutSeconds}}</Col>
+					<i-col span="6">
+						开始时间：
+					</i-col>
+					<i-col span="18">
+						{{record.start_at | withoutSeconds}}
+					</i-col>
 				</Row>
 				<Row>
-					<Col span="6">
-					结束时间：</Col>
-					<Col span="18">
-					{{record.end_at | withoutSeconds}}</Col>
+					<i-col span="6">
+						结束时间：
+					</i-col>
+					<i-col span="18">
+						{{record.end_at | withoutSeconds}}
+					</i-col>
 				</Row>
 				<Row>
-					<Col span="6">
-					请假时长：</Col>
-					<Col span="18">
-					{{record.duration}}</Col>
+					<i-col span="6">
+						请假时长：
+					</i-col>
+					<i-col span="18">
+						{{record.duration}}
+					</i-col>
 				</Row>
 				<Row>
-					<Col span="6">
-					请假原因：</Col>
-					<Col span="18">
-					{{record.reason}}</Col>
+					<i-col span="6">
+						请假原因：
+					</i-col>
+					<i-col span="18">
+						{{record.reason}}
+					</i-col>
 				</Row>
 			</Card>
 			<div style="width:100%;height:60px;"></div>
@@ -181,21 +189,21 @@
                     let startTimeStr = value.start_at.replace(/^.*(\d{2}):(\d{2})$/, '$1:$2');
                     let endTimeStr = value.end_at.replace(/^.*(\d{2}):(\d{2})$/, '$1:$2');
                     if (this.currentUser.shop) {
-                        if (startTimeStr > this.currentUser.shop.clock_out) {
-                            startTimeStr = this.currentUser.shop.clock_out;
-                        } else if (startTimeStr < this.currentUser.shop.clock_in) {
-                            startTimeStr = this.currentUser.shop.clock_in;
+                        if (startTimeStr > this.currentUser.working_end_at) {
+                            startTimeStr = this.currentUser.working_end_at;
+                        } else if (startTimeStr < this.currentUser.working_start_at) {
+                            startTimeStr = this.currentUser.working_start_at;
                         }
-                        if (endTimeStr > this.currentUser.shop.clock_out) {
-                            endTimeStr = this.currentUser.shop.clock_out;
-                        } else if (endTimeStr < this.currentUser.shop.clock_in) {
-                            endTimeStr = this.currentUser.shop.clock_in;
+                        if (endTimeStr > this.currentUser.working_end_at) {
+                            endTimeStr = this.currentUser.working_end_at;
+                        } else if (endTimeStr < this.currentUser.working_start_at) {
+                            endTimeStr = this.currentUser.working_start_at;
                         }
                     }
                     let startTime = new Date('2000/01/01 ' + startTimeStr);
                     let endTime = new Date('2000/01/01 ' + endTimeStr);
                     let hourDiff = (endTime - startTime) / 3600 / 1000;
-                    let workingHours = this.currentUser.shop ? this.currentUser.shop.working_hours : 12;
+                    let workingHours = this.currentUser.shop ? this.currentUser.working_hours : 12;
                     value.duration = workingHours * dayBetween + hourDiff;
                 },
                 deep: true
@@ -234,11 +242,11 @@
                 };
                 this.start_at_picker = {
                     date: defaultDate,
-                    time: this.currentUser.shop ? this.currentUser.shop.clock_in : '9:00'
+                    time: this.currentUser.shop ? this.currentUser.working_start_at : '9:00'
                 };
                 this.end_at_picker = {
                     date: defaultDate,
-                    time: this.currentUser.shop ? this.currentUser.shop.clock_out : '21:00'
+                    time: this.currentUser.shop ? this.currentUser.working_end_at : '21:00'
                 };
             },
             openDatetimePicker(column) {
