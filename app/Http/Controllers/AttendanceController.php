@@ -75,7 +75,7 @@ class AttendanceController extends Controller
      */
     public function submit(Request $request)
     {
-        $form = Attendance::with('detail')->find($request->id);
+        $form = Attendance::with('details')->find($request->id);
         if ($form->status <= 0) {
             $salesPerformance = [
                 'sales_performance_lisha' => 0,
@@ -83,7 +83,7 @@ class AttendanceController extends Controller
                 'sales_performance_group' => 0,
                 'sales_performance_partner' => 0,
             ];
-            foreach ($request->detail as $detail) {
+            foreach ($request->details as $detail) {
                 AttendanceStaff::find($detail['id'])->update(array_only($detail, [
                     'sales_performance_lisha',
                     'sales_performance_go',
@@ -113,7 +113,7 @@ class AttendanceController extends Controller
      */
     public function withdraw(Request $request)
     {
-        $form = Attendance::with('detail')->find($request->id);
+        $form = Attendance::with('details')->find($request->id);
         if ($form->status == 1) {
             $form->status = 0;
             $form->save();

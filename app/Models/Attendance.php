@@ -30,7 +30,7 @@ class Attendance extends Model
 
     /* 定义关联 Start */
 
-    public function detail()
+    public function details()
     {
         $ym = date('Ym', strtotime($this->attendance_date));
         return $this->hasMany(new \App\Models\AttendanceStaff(['ym' => $ym]), 'attendance_shop_id')

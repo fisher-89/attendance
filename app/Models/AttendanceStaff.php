@@ -51,20 +51,4 @@ class AttendanceStaff extends Model
 
     /* 定义关联 End */
 
-    /* 访问器 Start */
-
-    public function getClockInAttribute($value)
-    {
-        $timestamp = strtotime($value);
-        return date('H:i', $timestamp);
-    }
-
-    public function getClockOutAttribute($value)
-    {
-        $timestamp = strtotime($value);
-        return date('H:i', $timestamp);
-    }
-
-    /* 访问器 End */
-
 }

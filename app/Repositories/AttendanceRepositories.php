@@ -84,9 +84,9 @@ class AttendanceRepositories
         if ($this->shopRecord->status == 0) {
             //@TODO 下班时间锁定,取消注释
 //            if ($this->shopEndAt > time()) {
-//            $this->shopRecord->detail = '未到下班时间';
+//            $this->shopRecord->details = '未到下班时间';
 //            } else
-            if ($this->shopRecord->detail()->count() == 0) {
+            if ($this->shopRecord->details()->count() == 0) {
                 $this->makeAttendanceDetail();
                 $this->shopRecord = $this->getShopAttendanceForm();
             }
@@ -101,7 +101,7 @@ class AttendanceRepositories
     public function refreshAttendanceForm()
     {
         $this->shopRecord = $this->getShopAttendanceForm();
-        $this->shopRecord->detail()->forceDelete();
+        $this->shopRecord->details()->forceDelete();
         if ($this->shopRecord->status <= 0) {
             $this->shopRecord->is_missing = 0;
             $this->shopRecord->is_late = 0;
@@ -120,7 +120,7 @@ class AttendanceRepositories
      */
     protected function getShopAttendanceForm()
     {
-        $attendance = Attendance::with('detail')
+        $attendance = Attendance::with('details')
             ->where([
                 'shop_sn' => $this->shopSn,
                 'attendance_date' => $this->date,
@@ -148,7 +148,7 @@ class AttendanceRepositories
         foreach ($staffGroup as $staff) {
             $this->getAttendanceDataByStaff($staff);
         }
-        $this->shopRecord->detail;
+        $this->shopRecord->details;
         $this->shopRecord->save();
     }
 
@@ -256,7 +256,7 @@ class AttendanceRepositories
         $this->shopRecord->is_late = $this->staffRecord['late_time'] > 0 ? 1 : $this->shopRecord['is_late'];
         $this->shopRecord->is_early_out = $this->staffRecord['early_out_time'] > 0 ? 1 : $this->shopRecord['is_early_out'];
 
-        $this->shopRecord->detail()->create($this->staffRecord);
+        $this->shopRecord->details()->create($this->staffRecord);
     }
 
     /**

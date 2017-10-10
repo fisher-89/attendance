@@ -46,13 +46,13 @@
 						</Row>
 					</h4>
 				</Alert>
-				<template v-if="typeof attendanceData.detail == 'string' ">
+				<template v-if="typeof attendanceData.details == 'string' ">
 					<Alert type="error">
-						<h4 style="text-align:center">{{attendanceData.detail}}</h4>
+						<h4 style="text-align:center">{{attendanceData.details}}</h4>
 					</Alert>
 				</template>
 				<template v-else>
-					<Card v-for="(staffAttendance,index) in attendanceData.detail" style="margin:5px 2px;">
+					<Card v-for="(staffAttendance,index) in attendanceData.details" style="margin:5px 2px;">
 						<template slot="title">
 							<Row>
 								<i-col span="10">
@@ -96,7 +96,7 @@
 									销售业绩(利鲨)：
 								</i-col>
 								<i-col span="12">
-									<i-input v-model="attendanceData.detail[index].sales_performance_lisha"
+									<i-input v-model="attendanceData.details[index].sales_performance_lisha"
 									         type="number"
 									         placeholder="请填写业绩"
 									         size="small" @on-focus="clearContent">
@@ -109,7 +109,7 @@
 									销售业绩(GO)：
 								</i-col>
 								<i-col span="12">
-									<i-input v-model="attendanceData.detail[index].sales_performance_go"
+									<i-input v-model="attendanceData.details[index].sales_performance_go"
 									         type="number"
 									         placeholder="请填写业绩"
 									         size="small" @on-focus="clearContent">
@@ -122,7 +122,7 @@
 									销售业绩(公司)：
 								</i-col>
 								<i-col span="12">
-									<i-input v-model="attendanceData.detail[index].sales_performance_group"
+									<i-input v-model="attendanceData.details[index].sales_performance_group"
 									         type="number"
 									         placeholder="请填写业绩"
 									         size="small" @on-focus="clearContent">
@@ -135,7 +135,7 @@
 									销售业绩(合作方)：
 								</i-col>
 								<i-col span="12">
-									<i-input v-model="attendanceData.detail[index].sales_performance_partner"
+									<i-input v-model="attendanceData.details[index].sales_performance_partner"
 									         type="number"
 									         placeholder="请填写业绩"
 									         size="small" @on-focus="clearContent">
@@ -191,8 +191,8 @@
                     let sales_performance_go = 0;
                     let sales_performance_group = 0;
                     let sales_performance_partner = 0;
-                    for (let i in value.detail) {
-                        let staffAttendance = value.detail[i];
+                    for (let i in value.details) {
+                        let staffAttendance = value.details[i];
                         sales_performance_lisha += parseFloat(staffAttendance.sales_performance_lisha) || 0;
                         sales_performance_go += parseFloat(staffAttendance.sales_performance_go) || 0;
                         sales_performance_group += parseFloat(staffAttendance.sales_performance_group) || 0;

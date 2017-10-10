@@ -6,6 +6,8 @@ use App\Models\Transfer;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
+/*@TODO 正式上线后删除此任务 */
+
 class TransferTmp extends Command
 {
     /**
@@ -40,27 +42,29 @@ class TransferTmp extends Command
     public function handle()
     {
         Log::info('daily:transfer');
-        Transfer::where(['status' => 0, 'leaving_date' => date('Y-m-d')])->each(function ($model) {
-            $response = app('OA')->withoutPassport()->getDataFromApi('hr/staff_update', [
-                'staff_sn' => $model->staff_sn,
-                'shop_sn' => $model->arriving_shop_sn,
-            ]);
-            if ($response['status'] == 1) {
-                if ($model->arriving_shop_duty_id == 1) {
-                    app('OA')->withoutPassport()->getDataFromApi('hr/shop_update', [
-                        'shop_sn' => $model->arriving_shop_sn,
-                        'manager_sn' => $model->staff_sn,
-                        'manager_name' => $model->staff_name,
-                    ]);
+        Transfer::where('status', 0)
+            ->where('leaving_date', '<=', date('Y-m-d'))
+            ->each(function ($model) {
+                $response = app('OA')->withoutPassport()->getDataFromApi('hr/staff_update', [
+                    'staff_sn' => $model->staff_sn,
+                    'shop_sn' => $model->arriving_shop_sn,
+                ]);
+                if ($response['status'] == 1) {
+                    if ($model->arriving_shop_duty_id == 1) {
+                        app('OA')->withoutPassport()->getDataFromApi('hr/shop_update', [
+                            'shop_sn' => $model->arriving_shop_sn,
+                            'manager_sn' => $model->staff_sn,
+                            'manager_name' => $model->staff_name,
+                        ]);
+                    }
+                    $model->status = 2;
+                    $model->left_at = date('Y-m-d H:i:s');
+                    $model->arrived_at = date('Y-m-d H:i:s');
+                    $model->save();
+                } else {
+                    Log::info('Update staff info fail');
+                    $this->info('bug');
                 }
-                $model->status = 2;
-                $model->left_at = date('Y-m-d H:i:s');
-                $model->arrived_at = date('Y-m-d H:i:s');
-                $model->save();
-            } else {
-                Log::info('Update staff info fail');
-                $this->info('bug');
-            }
-        });
+            });
     }
 }
