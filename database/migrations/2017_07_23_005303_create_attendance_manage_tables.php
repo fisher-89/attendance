@@ -26,7 +26,7 @@ class CreateAttendanceManageTables extends Migration
             $table->decimal('sales_performance_group', 10, 2)->comment('销售业绩(总公司)');
             $table->decimal('sales_performance_partner', 10, 2)->comment('销售业绩(合作方)');
             $table->char('attachment', 100)->comment('附件');
-            $table->tinyInteger('status')->unsigned()->comment('状态 0:未提交 1:已提交 2:已通过 -1:已驳回');
+            $table->tinyInteger('status')->comment('状态 0:未提交 1:已提交 2:已通过 -1:已驳回');
             $table->dateTime('submitted_at')->comment('提交时间');
             $table->timestamps();
             $table->softDeletes();

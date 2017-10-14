@@ -31,9 +31,9 @@ class ClockService
                     mkdir(public_path($saveDir), 0755, true);
                 }
                 $img = Image::make($picPath);
-                $img->widen(300);
+                $img->fit(300, 400);
                 $img->save(public_path($photoPath));
-                $img->widen(100)->crop(100, 100);
+                $img->fit(100, 100);
                 $img->save(public_path($thumbPath));
                 $clockData['photo'] = $photoPath;
                 $clockData['thumb'] = $thumbPath;

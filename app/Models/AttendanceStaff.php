@@ -33,6 +33,8 @@ class AttendanceStaff extends Model
         'is_leaving',
         'is_transferring',
         'clock_log',
+        'working_start_at',
+        'working_end_at',
     ];
 
     public function __construct(array $attributes = [])

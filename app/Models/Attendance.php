@@ -34,7 +34,7 @@ class Attendance extends Model
     {
         $ym = date('Ym', strtotime($this->attendance_date));
         return $this->hasMany(new \App\Models\AttendanceStaff(['ym' => $ym]), 'attendance_shop_id')
-            ->with('shop_duty')->orderBy('shop_duty_id', 'desc');
+            ->with('shop_duty')->orderBy('shop_duty_id', 'asc');
     }
 
     /* 定义关联 End */
