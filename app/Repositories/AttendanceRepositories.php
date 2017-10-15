@@ -62,13 +62,12 @@ class AttendanceRepositories
      */
     protected $staffRecord;
 
-    public function __construct()
+    public function __construct($date = null)
     {
-        $this->date = app('Clock')->getAttendanceDate();
+        $date = empty($date) ? date('Y-m-d') : $date;
+        $timestamp = date('Y-m-d H:i:s') >= $date . ' ' . app('CurrentUser')->shop['clock_out'] ? strtotime($date) : strtotime($date) - 24 * 3600;
+        $this->date = date('Y-m-d', $timestamp);
         list($this->dayStartAt, $this->dayEndAt) = app('Clock')->getAttendanceDay($this->date);
-        /* start @TODO 开发配置时间 */
-        $this->dayEndAt = date('Y-m-d H:i:s', strtotime($this->dayStartAt) + 60 * 60 * 24 - 1);
-        /* end */
         $this->shopSn = app('CurrentUser')->shop_sn;
         $this->shopStartAt = strtotime($this->date . ' ' . app('CurrentUser')->shop['clock_in']);
         $this->shopEndAt = strtotime($this->date . ' ' . app('CurrentUser')->shop['clock_out']);
@@ -81,15 +80,9 @@ class AttendanceRepositories
     public function getAttendanceForm()
     {
         $this->shopRecord = $this->getShopAttendanceForm();
-        if ($this->shopRecord->status == 0) {
-            //@TODO 下班时间锁定,取消注释
-//            if ($this->shopEndAt > time()) {
-//            $this->shopRecord->details = '未到下班时间';
-//            } else
-            if ($this->shopRecord->details()->count() == 0) {
-                $this->makeAttendanceDetail();
-                $this->shopRecord = $this->getShopAttendanceForm();
-            }
+        if ($this->shopRecord->status == 0 && $this->shopRecord->details()->count() == 0) {
+            $this->makeAttendanceDetail();
+            $this->shopRecord = $this->getShopAttendanceForm();
         }
         return $this->shopRecord;
     }

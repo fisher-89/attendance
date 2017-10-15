@@ -1,12 +1,6 @@
-<style scoped>
+<style>
 	@import '../../flatpickr/css/airbnb.css';
 
-	#calendar {
-		float: right;
-		margin-top: -34px;
-	}
-</style>
-<style>
 	#calendar + .flatpickr-calendar {
 		width: 100%;
 		max-width: 400px;
@@ -51,10 +45,13 @@
 			</template>
 		</Alert>
 		<Card :shadow="true">
-			<Row style="text-align:center;">
-				<h2 style="margin-bottom:2px;">{{date}}</h2>
+			<Row>
+				<i-col span="12" offset="6">
+					<h2 style="text-align:center;">{{date}}</h2>
+				</i-col>
 				<Button id="calendar" :class="showCalendar?'calendar-show':'calendar-hide'"
 				        :icon="showCalendar?'close':'calendar'" type="primary" shape="circle"
+				        style="float:right"
 				        @click="showCalendar = !showCalendar"></Button>
 			</Row>
 			<br>

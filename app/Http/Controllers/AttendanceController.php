@@ -48,10 +48,10 @@ class AttendanceController extends Controller
      * 获取店铺考勤表数据
      * @return mixed
      */
-    public function getAttendanceForm()
+    public function getAttendanceForm(Request $request)
     {
         if (app('CurrentUser')->isShopManager()) {
-            return app('AttendanceRepos')->getAttendanceForm();
+            return app('AttendanceRepos', ['date' => $request->date])->getAttendanceForm();
         }
     }
 
@@ -60,10 +60,10 @@ class AttendanceController extends Controller
      * 刷新店铺考勤表数据
      * @return mixed
      */
-    public function refreshAttendanceForm()
+    public function refreshAttendanceForm(Request $request)
     {
         if (app('CurrentUser')->isShopManager()) {
-            return app('AttendanceRepos')->refreshAttendanceForm();
+            return app('AttendanceRepos', ['date' => $request->date])->refreshAttendanceForm();
         }
     }
 

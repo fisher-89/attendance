@@ -14,36 +14,40 @@
 			</div>
 		</template>
 		<template v-else>
-			<mt-loadmore :top-method="refreshAttendanceRecord" ref="loadmore">
+			<mt-loadmore :top-method="refreshAttendanceRecord" ref="loadmore" disabled>
 				<Alert banner :type="statusColor[attendanceData.status]">
-					<h3>
+					<h4>
 						{{attendanceData.shop_name}}&nbsp;
 						<span style="color:#999;">{{attendanceData.shop_sn}}</span>
-					</h3>
-					<Tag v-if="attendanceData.status == 0" color="blue">未提交</Tag>
-					<Tag v-else-if="attendanceData.status == 1" color="yellow">已提交</Tag>
-					<Tag v-else-if="attendanceData.status == 2" color="green">已通过</Tag>
-					<Tag v-else-if="attendanceData.status == -1" color="red">已驳回</Tag>
-					<Tag v-if="attendanceData.is_missing == 1" color="red">漏签</Tag>
-					<Tag v-if="attendanceData.is_late == 1" color="red">迟到</Tag>
-					<Tag v-if="attendanceData.is_early_out == 1" color="red">早退</Tag>
+					</h4>
+					<p>
+						<Tag v-if="attendanceData.status == 0" color="blue">未提交</Tag>
+						<Tag v-else-if="attendanceData.status == 1" color="yellow">已提交</Tag>
+						<Tag v-else-if="attendanceData.status == 2" color="green">已通过</Tag>
+						<Tag v-else-if="attendanceData.status == -1" color="red">已驳回</Tag>
+						<Tag v-if="attendanceData.is_missing == 1" color="red">漏签</Tag>
+						<Tag v-if="attendanceData.is_late == 1" color="red">迟到</Tag>
+						<Tag v-if="attendanceData.is_early_out == 1" color="red">早退</Tag>
+					</p>
+
 					<h4 slot="desc">
 						<Row>
+							<Button icon="calendar" type="primary" shape="circle" style="float:right"
+							        @click="showCalendar = true"></Button>
 							<i-col span="6">
 								考勤日期：
 							</i-col>
-							<i-col span="18">
+							<i-col span="13">
 								{{attendanceData.attendance_date}}
 							</i-col>
-						</Row>
-						<Row>
 							<i-col span="6">
 								店铺业绩：
 							</i-col>
-							<i-col span="18">
+							<i-col span="13">
 								￥{{attendanceData.sales_performance}}
 							</i-col>
 						</Row>
+
 					</h4>
 				</Alert>
 				<template v-if="typeof attendanceData.details == 'string' ">
@@ -158,24 +162,37 @@
 				</template>
 			</mt-loadmore>
 		</template>
+		<mt-popup v-model="showCalendar" style="width:100%;" position="top">
+			<div>
+				<span id="calendar"></span>
+			</div>
+		</mt-popup>
 	</div>
 </template>
 
 <script>
-    import {Field, Loadmore} from 'mint-ui';
+    import {Field, Loadmore, Popup} from 'mint-ui';
     import clockLineComponent from './clockLine.vue';
+    import Flatpickr from 'flatpickr';
+
+    const Chinese = require('../../flatpickr/l10ns/zh.js').zh;
 
     let components = {};
     components[Field.name] = Field;
     components[Loadmore.name] = Loadmore;
+    components[Popup.name] = Popup;
     components['ClockLine'] = clockLineComponent;
 
     export default {
         data() {
             return {
-                attendanceData: [],
+                attendanceData: {
+                    status: 0
+                },
+                date: null,
                 statusColor: {'0': 'info', '1': 'warning', '2': 'success', '-1': 'error'},
                 searchStaffStatus: false,
+                showCalendar: false,
             }
         },
         props: ['currentUser'],
@@ -183,6 +200,19 @@
         beforeMount() {
             this.dingtalkInit();
             this.getAttendanceRecord();
+        },
+        mounted() {
+            Flatpickr("#calendar", {
+                inline: true,
+                locale: Chinese,
+                defaultDate: 'today',
+                maxDate: 'today',
+                onChange: (selectedDates, dateStr) => {
+                    this.date = dateStr;
+                    this.getAttendanceRecord();
+                    this.showCalendar = false;
+                }
+            });
         },
         watch: {
             attendanceData: {
@@ -253,7 +283,7 @@
             },
             getAttendanceRecord() {
                 Indicator.open('加载中...');
-                axios.post('/attendance/sheet').then((response) => {
+                axios.post('/attendance/sheet', {date: this.date}).then((response) => {
                     this.attendanceData = response.data;
                     Indicator.close();
                 }).catch((error) => {
@@ -262,14 +292,14 @@
             },
             refreshAttendanceRecord() {
                 if (this.attendanceData.status > 0) {
-                    axios.post('/attendance/sheet').then((response) => {
+                    axios.post('/attendance/sheet', {date: this.date}).then((response) => {
                         this.attendanceData = response.data;
                         this.$refs.loadmore.onTopLoaded();
                     }).catch((error) => {
                         document.write(error);
                     });
                 } else {
-                    axios.post('/attendance/refresh').then((response) => {
+                    axios.post('/attendance/refresh', {date: this.date}).then((response) => {
                         this.attendanceData = response.data;
                         this.$refs.loadmore.onTopLoaded();
                     }).catch((error) => {
