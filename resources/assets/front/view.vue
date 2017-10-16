@@ -4,7 +4,7 @@
 			<router-view :currentUser="currentUser"></router-view>
 			<div style="width:100%;height:60px;"></div>
 		</div>
-		<mt-tabbar v-model="tabbar" style="z-index: 10;">
+		<mt-tabbar v-model="tabbar" fixed="true" style="z-index: 10;">
 			<mt-tab-item id="/f/sign">
 				<router-link to="/f/sign">
 					<Row>

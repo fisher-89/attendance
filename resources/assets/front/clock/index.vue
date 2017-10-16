@@ -55,7 +55,7 @@
 					<Button style="float:right;" size="small" @click="reLogin" icon="loop" shape="circle"></Button>
 				</i-col>
 			</Row>
-			<Row>
+			<Row style="border-bottom:1px solid #e9eaec;">
 				<i-col span="16">
 					<h4>{{currentUser.shop.name}}</h4>
 				</i-col>
@@ -67,7 +67,7 @@
 					</p>
 				</i-col>
 			</Row>
-			<Timeline>
+			<Timeline style="margin-top:20px;">
 				<template v-for="clock in clocks">
 					<Timeline-item :color="setIconColor(clock)"
 					               :style="clock.is_abandoned?'color:lightgrey;':''">
@@ -85,6 +85,12 @@
 						</Button>
 					</Timeline-item>
 				</template>
+				<Timeline-item v-if="aLocation == false && locationErr == false" color="lightgrey">
+					<p style="padding:5px;">
+						<mt-spinner type="fading-circle" size="28"></mt-spinner>
+					</p>
+					<p style="color:lightgrey">定位中...	</p>
+				</Timeline-item>
 				<Timeline-item v-if="clockAvailable && inShop && !hasClockOut && !isTransferring && !hasLeave"
 				               :color="inTime?'green':'red'">
 					<Button :type="inTime?'success':'error'" size="large" shape="circle" @click="uploadClock">
@@ -126,6 +132,10 @@
 
 <script>
     import Flatpickr from 'flatpickr';
+    import {Spinner} from 'mint-ui';
+
+    var components = {};
+    components[Spinner.name] = Spinner;
 
     const Chinese = require('../../flatpickr/l10ns/zh.js').zh;
     export default {
@@ -148,6 +158,7 @@
             };
         },
         props: ['currentUser'],
+        components: components,
         computed: {
             inShop: function () { //员工是否有所属店铺;
                 if (this.currentUser) {
@@ -215,9 +226,7 @@
             }
         },
         beforeMount() {
-            this.getClockRecord();
-            this.getTransferRecord();
-            this.getLeaveRecord();
+            this.getRecord();
             this.getCurTime();
             setInterval(this.getCurTime, 1000);
         },
@@ -230,11 +239,18 @@
                 maxDate: 'today',
                 onChange: (selectedDates, dateStr) => {
                     this.date = dateStr;
+                    Indicator.open('加载中...');
                     this.getClockRecord(dateStr);
                 }
             });
         },
         methods: {
+            getRecord() {
+                Indicator.open('加载中...');
+                this.getClockRecord();
+                this.getTransferRecord();
+                this.getLeaveRecord();
+            },
             getClockRecord() {
                 let _this = this;
                 let dateStr = arguments[0] ? arguments[0] : null;
@@ -243,6 +259,7 @@
                     _this.clocks = response.data.record;
                     _this.today = response.data.today;
                     _this.date = !_this.date ? _this.today : _this.date;
+                    Indicator.close();
                 });
             },
             getTransferRecord() {
@@ -259,8 +276,7 @@
                     _this.leave = response.data == '' ? false : response.data;
                 });
             },
-            getLocation(first) {
-                if (!arguments[0]) first = false;
+            getLocation() {
                 dd.device.geolocation.get({
                     targetAccuracy: 15,
                     coordinate: 1,
@@ -280,15 +296,9 @@
                         } finally {
                             this.locationErr = false;
                         }
-                        if (first) {
-                            Indicator.close();
-                        }
                     },
                     onFail: (err) => {
                         this.locationErr = err.errorMessage;
-                        if (first) {
-                            Indicator.close();
-                        }
                     }
                 });
             },
@@ -411,8 +421,7 @@
                     jsConfig['jsApiList'] = ['biz.util.uploadImageFromCamera', 'device.geolocation.get'];
                     dd.config(jsConfig);
                     dd.ready(() => {
-                        Indicator.open('定位中...');
-                        this.getLocation(true);
+                        this.getLocation();
                         setInterval(this.getLocation, 10000);
                     });
                     dd.error(function (error) {
@@ -436,9 +445,7 @@
                 sessionStorage.clear();
                 axios('/re_login').then((response) => {
                     sessionStorage.setItem('staff', response.data);
-                    this.getClockRecord();
-                    this.getTransferRecord();
-                    this.getLeaveRecord();
+                    this.getRecord();
                 });
             }
         }
