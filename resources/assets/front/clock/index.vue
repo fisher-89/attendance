@@ -1,6 +1,4 @@
 <style>
-	@import '../../flatpickr/css/airbnb.css';
-
 	#calendar + .flatpickr-calendar {
 		width: 100%;
 		max-width: 400px;
@@ -46,15 +44,29 @@
 		</Alert>
 		<Card :shadow="true">
 			<Row>
-				<i-col span="12" offset="6">
-					<h2 style="text-align:center;">{{date}}</h2>
+				<i-col span="4">
+					<Avatar icon="person" size="large"/>
 				</i-col>
-				<Button id="calendar" :class="showCalendar?'calendar-show':'calendar-hide'"
-				        :icon="showCalendar?'close':'calendar'" type="primary" shape="circle"
-				        style="float:right"
-				        @click="showCalendar = !showCalendar"></Button>
+				<i-col span="12">
+					<h3>{{currentUser.realname}}</h3>
+					<span>{{currentUser.staff_sn}}</span>
+				</i-col>
+				<i-col span="8">
+					<Button style="float:right;" size="small" @click="reLogin" icon="loop" shape="circle"></Button>
+				</i-col>
 			</Row>
-			<br>
+			<Row>
+				<i-col span="16">
+					<h4>{{currentUser.shop.name}}</h4>
+				</i-col>
+				<i-col span="8" :class="showCalendar?'calendar-show':'calendar-hide'"
+				       id="calendar">
+					<p @click="showCalendar = !showCalendar" style="text-align:right;">
+						{{date}}
+						<Icon :type="showCalendar?'arrow-up-b':'arrow-down-b'"/>
+					</p>
+				</i-col>
+			</Row>
 			<Timeline>
 				<template v-for="clock in clocks">
 					<Timeline-item :color="setIconColor(clock)"
@@ -203,7 +215,6 @@
             }
         },
         beforeMount() {
-            let _this = this;
             this.getClockRecord();
             this.getTransferRecord();
             this.getLeaveRecord();
@@ -420,6 +431,15 @@
             },
             showPhoto(clock) {
                 this.bigPhoto = clock;
+            },
+            reLogin: function () {
+                sessionStorage.clear();
+                axios('/re_login').then((response) => {
+                    sessionStorage.setItem('staff', response.data);
+                    this.getClockRecord();
+                    this.getTransferRecord();
+                    this.getLeaveRecord();
+                });
             }
         }
     }

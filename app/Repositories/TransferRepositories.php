@@ -2,8 +2,8 @@
 
 namespace App\Repositories;
 
-use App\Models\Clock;
 use App\Models\Transfer;
+use App\Models\WorkingSchedule;
 
 class TransferRepositories
 {
@@ -68,6 +68,23 @@ class TransferRepositories
                     'shop_sn' => $transfer->arriving_shop_sn,
                 ];
                 app('OA')->getDataFromApi('hr/staff_update', $params);
+                $params['staff_name'] = $transfer->staff_name;
+                $params['shop_duty_id'] = 3;
+                WorkingSchedule::create($params);
+            } elseif ($transfer->status == 2) {
+                if ($transfer->arriving_shop_duty_id == 1) {
+                    $params = [
+                        'manager_sn' => $transfer->staff_sn,
+                        'manager_name' => $transfer->staff_name,
+                    ];
+                    app('OA')->getDataFromApi('hr/shop_update', $params);
+                    $shopManager = WorkingSchedule::where('shop_sn', $transfer->arriving_shop_sn)
+                        ->where('shop_duty_id', 1)->first();
+                    if (empty($shopManager)) {
+                        WorkingSchedule::where('shop_sn', $transfer->arriving_shop_sn)
+                            ->where('staff_sn', $transfer->staff_sn)->update(['shop_duty_id' => 1]);
+                    }
+                }
             }
             $transfer->save();
             app('CurrentUser')->login();

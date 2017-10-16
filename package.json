@@ -7,13 +7,13 @@
     "production": "node node_modules/cross-env/dist/bin/cross-env.js NODE_ENV=production node_modules/webpack/bin/webpack.js --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js"
   },
   "devDependencies": {
-    "flatpickr": "^3.0.6",
+    "flatpickr": "^4.0.4",
     "vuex": "^2.1.2"
   },
   "dependencies": {
-    "axios": "^0.15.2",
+    "axios": "^0.16.2",
     "bootstrap-sass": "^3.3.7",
-    "iview": "^2.1.0",
+    "iview": "^2.4.0",
     "jquery": "^3.1.0",
     "laravel-mix": "^0.6.0",
     "lodash": "^4.16.2",

@@ -7,6 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 class WorkingSchedule extends Model
 {
     protected $table = 'working_schedule_';
+    protected $fillable = [
+        'shop_sn',
+        'staff_sn',
+        'staff_name',
+        'shop_duty_id',
+    ];
 
     public function __construct(array $attributes = [])
     {

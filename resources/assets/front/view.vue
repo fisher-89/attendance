@@ -78,9 +78,7 @@
             },
             isManager: function () {
                 if (this.inShop) {
-                    let managerSn = this.currentUser.shop.manager_sn;
-                    let staffSn = this.currentUser.staff_sn;
-                    return staffSn == managerSn;
+                    return this.currentUser.shop_duty_id == 1;
                 } else {
                     return false;
                 }
@@ -90,11 +88,6 @@
             getCurrentUser: function () {
                 let staff = sessionStorage.getItem('staff');
                 let currentUser = JSON.parse(staff);
-                if (currentUser.shop) {
-                    let clockIn = new Date('2000/01/01 ' + currentUser.working_start_at);
-                    let clockOut = new Date('2000/01/01 ' + currentUser.working_end_at);
-                    currentUser.working_hours = (clockOut - clockIn) / 3600 / 1000;
-                }
                 return currentUser;
             }
         }

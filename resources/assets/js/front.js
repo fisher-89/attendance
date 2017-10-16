@@ -7,8 +7,10 @@ Vue.use(VueRouter);
 Vue.use(iView);
 /* Packages End */
 /* StyleSheets Start */
-import '../css/mint-ui.min.css';
-import '../css/iview.css';
+import 'mint-ui/lib/style.min.css';
+import 'iview/dist/styles/iview.css';
+import 'flatpickr/dist/themes/airbnb.css';
+import '../css/front.css';
 /* StyleSheets End */
 /* Global Packages Start */
 import axios from 'axios';

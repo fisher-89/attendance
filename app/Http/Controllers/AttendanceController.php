@@ -130,5 +130,6 @@ class AttendanceController extends Controller
     public function reLogin()
     {
         app('CurrentUser')->login();
+        return app('CurrentUser')->getInfo();
     }
 }

@@ -1,0 +1,19 @@
+.flatpickr-days {
+    width: 100%;
+}
+
+.dayContainer {
+    width: 100%;
+    min-width: inherit;
+    max-width: none;
+}
+
+.flatpickr-day.disabled,
+.flatpickr-day.disabled:hover,
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.nextMonthDay,
+.flatpickr-day.notAllowed,
+.flatpickr-day.notAllowed.prevMonthDay,
+.flatpickr-day.notAllowed.nextMonthDay {
+    border-right-color: transparent;
+}

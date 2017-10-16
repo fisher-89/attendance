@@ -46,6 +46,8 @@ class CurrentUserService
                 $staffFromApi['working_end_at'] = empty($schedule->clock_out) ?
                     $staffFromApi['shop']['clock_out'] :
                     $schedule->clock_out;
+                $staffFromApi['working_hours'] = (strtotime($staffFromApi['working_end_at']) - strtotime($staffFromApi['working_start_at'])) / 3600;
+                $staffFromApi['shop_duty_id'] = $schedule->shop_duty_id;
             }
             session()->put('staff_sn', $staffFromApi['staff_sn']);
             session()->put('staff', $staffFromApi);
@@ -60,7 +62,7 @@ class CurrentUserService
     public function isShopManager()
     {
         if ($this->inShop()) {
-            return $this->userInfo['shop']['manager_sn'] == $this->userInfo['staff_sn'];
+            return $this->userInfo['shop_duty_id'] == 1;
         } else {
             return false;
         }
