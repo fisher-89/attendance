@@ -33,25 +33,30 @@ class CurrentUserService
     {
         $userInfo = app('OA')->getDataFromApi('get_current_user');
         if ($userInfo['status'] == 1) {
-            $staffFromApi = $userInfo['message'];
-            if (!empty($staffFromApi['shop_sn'])) {
+            $staff = $userInfo['message'];
+            if (!empty($staff['shop_sn'])) {
                 $schedule = WorkingSchedule::where([
-                    'staff_sn' => $staffFromApi['staff_sn'],
-                    'shop_sn' => $staffFromApi['shop_sn']
+                    'staff_sn' => $staff['staff_sn'],
+                    'shop_sn' => $staff['shop_sn']
+                ])->first();
+                $shopManager = WorkingSchedule::where([
+                    'shop_sn' => $staff['shop_sn'],
+                    'shop_duty_id' => 1,
                 ])->first();
 
-                $staffFromApi['working_start_at'] = empty($schedule->clock_in) ?
-                    $staffFromApi['shop']['clock_in'] :
-                    $schedule->clock_in;
-                $staffFromApi['working_end_at'] = empty($schedule->clock_out) ?
-                    $staffFromApi['shop']['clock_out'] :
-                    $schedule->clock_out;
-                $staffFromApi['working_hours'] = (strtotime($staffFromApi['working_end_at']) - strtotime($staffFromApi['working_start_at'])) / 3600;
-                $staffFromApi['shop_duty_id'] = $schedule->shop_duty_id;
+                $staff['working_start_at'] = empty($schedule->clock_in) ? $staff['shop']['clock_in'] : $schedule->clock_in;
+                $staff['working_end_at'] = empty($schedule->clock_out) ? $staff['shop']['clock_out'] : $schedule->clock_out;
+                $staff['working_hours'] = (strtotime($staff['working_end_at']) - strtotime($staff['working_start_at'])) / 3600;
+                $staff['shop_duty_id'] = $schedule->shop_duty_id;
+                $staff['shop_manager_name'] = empty($shopManager) ? '无' : $shopManager->staff_name;
+                $staff['is_manager'] = $staff['shop_duty_id'] == 1;
+                if ($staff['is_manager']) {
+                    $staff['shop_staff'] = WorkingSchedule::where('shop_sn', $staff['shop_sn'])->get()->toArray();
+                }
             }
-            session()->put('staff_sn', $staffFromApi['staff_sn']);
-            session()->put('staff', $staffFromApi);
-            $this->userInfo = $staffFromApi;
+            session()->put('staff_sn', $staff['staff_sn']);
+            session()->put('staff', $staff);
+            $this->userInfo = $staff;
         }
     }
 

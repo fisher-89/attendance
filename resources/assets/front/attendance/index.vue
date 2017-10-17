@@ -59,18 +59,19 @@
 					<Card v-for="(staffAttendance,index) in attendanceData.details" style="margin:5px 2px;">
 						<template slot="title">
 							<Row>
-								<i-col span="10">
-									<p style="line-height:26px;">
-										{{staffAttendance.staff_name}}&nbsp;
-										<span style="color:#999;">{{staffAttendance.staff_sn}}</span>
-									</p>
+								<i-col span="4">
+									<p style="line-height:26px;white-space:nowrap;over-flow:hidden;text-overflow:ellipsis;">
+										{{staffAttendance.staff_name}}&nbsp;</p>
+								</i-col>
+								<i-col span="4">
+									<small style="color:#999;line-height:26px;">{{staffAttendance.staff_sn}}</small>
 								</i-col>
 								<i-col span="5">
 									<Tag :color="staffAttendance.shop_duty_id==1? 'green' : null">
 										{{staffAttendance.shop_duty.name}}
 									</Tag>
 								</i-col>
-								<i-col span="9">
+								<i-col span="8">
 									<Tag v-if="staffAttendance.is_leaving" color="yellow">请假</Tag>
 									<Tag v-if="staffAttendance.is_transferring > 0" color="blue">调动</Tag>
 								</i-col>

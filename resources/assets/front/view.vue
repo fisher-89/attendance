@@ -4,7 +4,7 @@
 			<router-view :currentUser="currentUser"></router-view>
 			<div style="width:100%;height:60px;"></div>
 		</div>
-		<mt-tabbar v-model="tabbar" fixed="true" style="z-index: 10;">
+		<mt-tabbar v-model="tabbar" :fixed="true" style="z-index: 10;">
 			<mt-tab-item id="/f/sign">
 				<router-link to="/f/sign">
 					<Row>
@@ -35,7 +35,7 @@
 					</Row>
 				</router-link>
 			</mt-tab-item>
-			<mt-tab-item v-if="isManager" id="/f/attend">
+			<mt-tab-item v-if="currentUser.is_manager" id="/f/attend">
 				<router-link to="/f/attend">
 					<Row>
 						<Icon type="person" size="30"/>
@@ -76,13 +76,6 @@
                     return false;
                 }
             },
-            isManager: function () {
-                if (this.inShop) {
-                    return this.currentUser.shop_duty_id == 1;
-                } else {
-                    return false;
-                }
-            }
         },
         methods: {
             getCurrentUser: function () {

@@ -86,7 +86,7 @@ class LeaveController extends Controller
         }
         $params = [
             'process_code' => $this->processCode,
-            'approvers' => $approvers,
+            'approvers' => $approvers['staff_sn'],
             'form_data' => $formData,
             'callback_url' => url('/api/leave/callback'),
         ];
@@ -95,8 +95,12 @@ class LeaveController extends Controller
             $leaveData = $request->input();
             $leaveData['staff_sn'] = session()->get('staff.staff_sn');
             $leaveData['staff_name'] = session()->get('staff.realname');
+            $leaveData['approver_sn'] = $approvers['staff_sn'];
+            $leaveData['approver_name'] = $approvers['name'];
             $leaveData['process_instance_id'] = $response['message'];
             Leave::create($leaveData);
+        } else {
+            return $response['message'];
         }
         return returnRes($response['status'], 'hints.130', 'hints.131');
     }
@@ -105,13 +109,22 @@ class LeaveController extends Controller
     {
         $staff = app('CurrentUser');
         if ($staff->inShop() && !$staff->isShopManager()) {
-            $approvers = $staff->shop['manager_sn'];
+            $approvers = [
+                'staff_sn' => $staff->shop['manager_sn'],
+                'name' => $staff->shop['manager_name']
+            ];
         } elseif ($staff->staff_sn != $staff->department['manager_sn']) {
-            $approvers = $staff->department['manager_sn'];
+            $approvers = [
+                'staff_sn' => $staff->department['manager_sn'],
+                'name' => $staff->department['manager_name']
+            ];
         } elseif ($staff->department['parent_id'] > 0) {
-            $approvers = $staff->department['_parent']['manager_sn'];
+            $approvers = [
+                'staff_sn' => $staff->department['_parent']['manager_sn'],
+                'name' => $staff->department['_parent']['manager_name']
+            ];
         } else {
-            $approvers = '';
+            $approvers = [];
         }
         return $approvers;
     }
