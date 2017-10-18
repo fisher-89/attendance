@@ -17,7 +17,8 @@ class SignController extends Controller
     public function getRecord(Request $request)
     {
         $date = $request->get('date');
-        return $this->signRepos->getRecord($date);
+        $staffSn = $request->get('staff_sn');
+        return $this->signRepos->getRecord($date,$staffSn);
     }
 
     public function save(Request $request)

@@ -193,7 +193,7 @@
             getClockRecord() {
                 let dateStr = this.date ? this.date : null;
                 let url = '/clock/info';
-                axios.post(url, {date: dateStr}).then((response) => {
+                axios.post(url, {date: dateStr, staff_sn: this.currentUser.staff_sn}).then((response) => {
                     this.clocks = response.data.record;
                     this.today = response.data.today;
                     if (!this.date) {
@@ -205,14 +205,14 @@
             getTransferRecord() {
                 let _this = this;
                 let url = '/transfer/next';
-                axios.post(url).then(function (response) {
+                axios.post(url, {staff_sn: this.currentUser.staff_sn}).then(function (response) {
                     _this.transfer = response.data == '' ? false : response.data;
                 });
             },
             getLeaveRecord() {
                 let _this = this;
                 let url = '/leave/next';
-                axios.post(url).then(function (response) {
+                axios.post(url, {staff_sn: this.currentUser.staff_sn}).then(function (response) {
                     _this.leave = response.data == '' ? false : response.data;
                 });
             },
@@ -363,7 +363,9 @@
                         setInterval(this.getLocation, 10000);
                     });
                     dd.error(function (error) {
-                        document.write(JSON.stringify(error));
+                        let html = JSON.stringify(error);
+                        html += '<h2 onClick="location.reload()" style="text-align:center;margin-top:20px;color:#333;">点此刷新</h2>';
+                        document.write(html);
                     });
                 });
             },

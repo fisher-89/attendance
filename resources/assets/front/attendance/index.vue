@@ -60,8 +60,9 @@
 						<template slot="title">
 							<Row>
 								<i-col span="4">
-									<p style="line-height:26px;white-space:nowrap;over-flow:hidden;text-overflow:ellipsis;">
-										{{staffAttendance.staff_name}}&nbsp;</p>
+									<h4 style="line-height:26px;white-space:nowrap;over-flow:hidden;text-overflow:ellipsis;">
+										{{staffAttendance.staff_name}}
+									</h4>
 								</i-col>
 								<i-col span="4">
 									<small style="color:#999;line-height:26px;">{{staffAttendance.staff_sn}}</small>
@@ -96,9 +97,14 @@
 							</Alert>
 						</template>
 						<template v-else>
+							<!--<Row>-->
+							<!--<i-col span="20" offset="1">-->
+							<!--<h4>销售业绩</h4>-->
+							<!--</i-col>-->
+							<!--</Row>-->
 							<Row>
-								<i-col span="10" style="line-height:24px;">
-									销售业绩(利鲨)：
+								<i-col span="9" style="line-height:24px;" offset="1">
+									<small>利鲨货品</small>
 								</i-col>
 								<i-col span="12">
 									<i-input v-model="attendanceData.details[index].sales_performance_lisha"
@@ -110,8 +116,8 @@
 								</i-col>
 							</Row>
 							<Row>
-								<i-col span="10" style="line-height:24px;">
-									销售业绩(GO)：
+								<i-col span="9" style="line-height:24px;" offset="1">
+									<small>GO货品</small>
 								</i-col>
 								<i-col span="12">
 									<i-input v-model="attendanceData.details[index].sales_performance_go"
@@ -123,8 +129,8 @@
 								</i-col>
 							</Row>
 							<Row>
-								<i-col span="10" style="line-height:24px;">
-									销售业绩(公司)：
+								<i-col span="9" style="line-height:24px;" offset="1">
+									<small>公司购买货品</small>
 								</i-col>
 								<i-col span="12">
 									<i-input v-model="attendanceData.details[index].sales_performance_group"
@@ -136,8 +142,8 @@
 								</i-col>
 							</Row>
 							<Row>
-								<i-col span="10" style="line-height:24px;">
-									销售业绩(合作方)：
+								<i-col span="9" style="line-height:24px;" offset="1">
+									<small>合作方货品</small>
 								</i-col>
 								<i-col span="12">
 									<i-input v-model="attendanceData.details[index].sales_performance_partner"
@@ -316,7 +322,9 @@
                     dd.config(jsConfig);
 
                     dd.error(function (error) {
-                        document.write(JSON.stringify(error));
+                        let html = JSON.stringify(error);
+                        html += '<h2 onClick="location.reload()" style="text-align:center;margin-top:20px;color:#333;">点此刷新</h2>';
+                        document.write(html);
                     });
                 });
             },

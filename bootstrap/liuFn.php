@@ -17,9 +17,9 @@ function mkDirs($dir)
 //随机数
 function randChar($length)
 {
-    $str    = null;
+    $str = null;
     $strPol = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz";
-    $max    = strlen($strPol) - 1;
+    $max = strlen($strPol) - 1;
     for ($i = 0; $i < $length; $i++) {
         $str .= $strPol[rand(0, $max)];
     }
@@ -62,22 +62,22 @@ function array_pushData($arr, $keyName)
 function upImage($file)
 {
 
-    $str       = explode(',', $file);
-    $start     = strpos($str[0], '/');
-    $end       = strpos($str[0], ';');
+    $str = explode(',', $file);
+    $start = strpos($str[0], '/');
+    $end = strpos($str[0], ';');
     $extension = substr($str[0], $start + 1, $end - $start - 1);
 
-    $start     = strpos($file, ',');
+    $start = strpos($file, ',');
     $imgorigin = substr($file, $start + 1);
 
-    $imgFile  = base64_decode($imgorigin);
-    $curTime  = time();
+    $imgFile = base64_decode($imgorigin);
+    $curTime = time();
     $rootPath = public_path();
     $filepath = '/upfile/' . Date('Y', $curTime) . '/' . Date('Y-m', $curTime) . '/' . Date('Y-m-d', $curTime);
     mkDirs($rootPath . $filepath);
     $filename = $filepath . '/' . randChar(10) . uniqid() . '.' . $extension;
 
-    $res['strleng']  = file_put_contents($rootPath . $filename, $imgFile);
+    $res['strleng'] = file_put_contents($rootPath . $filename, $imgFile);
     $res['filename'] = $filename;
 
     return $res;
@@ -115,8 +115,9 @@ if (!function_exists('source')) {
 
     function source($path, $secure = null)
     {
-        if (file_exists($path)) {
-            $path .= '?ver=' . date('md.H.i', filemtime($path));
+        $realPath = public_path($path);
+        if (file_exists($realPath)) {
+            $path .= '?ver=' . date('md.H.i', filemtime($realPath));
         }
         return app('url')->asset($path, $secure);
     }

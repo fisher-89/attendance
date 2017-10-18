@@ -47,7 +47,7 @@ class CurrentUserService
                 $staff['working_start_at'] = empty($schedule->clock_in) ? $staff['shop']['clock_in'] : $schedule->clock_in;
                 $staff['working_end_at'] = empty($schedule->clock_out) ? $staff['shop']['clock_out'] : $schedule->clock_out;
                 $staff['working_hours'] = (strtotime($staff['working_end_at']) - strtotime($staff['working_start_at'])) / 3600;
-                $staff['shop_duty_id'] = $schedule->shop_duty_id;
+                $staff['shop_duty_id'] = empty($schedule) ? 0 : $schedule->shop_duty_id;
                 $staff['shop_manager_name'] = empty($shopManager) ? '无' : $shopManager->staff_name;
                 $staff['is_manager'] = $staff['shop_duty_id'] == 1;
                 if ($staff['is_manager']) {

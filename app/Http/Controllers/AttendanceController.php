@@ -123,13 +123,4 @@ class AttendanceController extends Controller
         }
 
     }
-
-    /**
-     * 重新获取用户信息
-     */
-    public function reLogin()
-    {
-        app('CurrentUser')->login();
-        return app('CurrentUser')->getInfo();
-    }
 }

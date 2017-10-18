@@ -7,16 +7,18 @@ use App\Models\Clock;
 class SignRepositories
 {
 
-    public function getRecord($date = null)
+    public function getRecord($date = null, $staffSn = null)
     {
         $today = app('Clock')->getAttendanceDate();
         if (empty($date)) {
             $date = $today;
         }
+        if (empty($staffSn)) {
+            $staffSn = app('CurrentUser')->staff_sn;
+        }
         $tableName = 'clock_' . date('Ym', strtotime($date));
         list($startTime,
             $endTime) = app('Clock')->getAttendanceDay($date);
-        $staffSn = session()->get('staff.staff_sn');
         $where = [
             ['staff_sn', '=', $staffSn],
             ['clock_at', '>=', $startTime],
