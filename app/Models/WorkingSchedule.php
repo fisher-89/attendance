@@ -3,10 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use \App\Traits\HasCompositePrimaryKey;
 
 class WorkingSchedule extends Model
 {
+//    use HasCompositePrimaryKey;
+
     protected $table = 'working_schedule_';
+    protected $primaryKey = ['shop_sn', 'staff_sn'];
+    public $incrementing = false;
     protected $fillable = [
         'shop_sn',
         'staff_sn',

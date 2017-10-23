@@ -38,7 +38,7 @@
 					</Button>
 				</Timeline-item>
 			</template>
-			<Timeline-item v-if="aLocation == false && locationErr == false" color="lightgrey">
+			<Timeline-item v-if="aLocation == false && locationErr == false && locating" color="lightgrey">
 				<p style="padding:5px;">
 					<mt-spinner type="fading-circle" :size="28"></mt-spinner>
 				</p>
@@ -107,6 +107,7 @@
                 transfer: false,	    //调动信息
                 leave: false,		    //请假信息
 
+                locating: false,        //定位中提示
                 aLocation: false,	    //定位信息
                 locationErr: false,	    //定位失败信息
                 today: false,		    //当前的考勤日
@@ -233,8 +234,9 @@
                 });
             },
             getLocation() {
+                this.locating = true;
                 dd.device.geolocation.get({
-                    targetAccuracy: 100,
+                    targetAccuracy: 200,
                     coordinate: 1,
                     withReGeocode: true,
                     useCache: false,

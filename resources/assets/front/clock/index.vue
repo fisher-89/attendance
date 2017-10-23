@@ -22,49 +22,47 @@
 
 <template>
 	<div>
-		<Card :shadow="true">
-			<Row>
-				<i-col span="4">
-					<Avatar icon="person" size="large"/>
-				</i-col>
-				<i-col span="9">
-					<h3>{{currentUser.realname}}</h3>
-					<small>{{currentUser.staff_sn}}</small>
-				</i-col>
-				<i-col span="7">
-					<p style="text-align:right;">
-						&nbsp;
-						<!--<Button v-if="currentUser.is_manager" @click="staffPicker = true" type="ghost" size="small">-->
-						<!--店长代签-->
-						<!--</Button>-->
-					</p>
-				</i-col>
-				<i-col span="4" style="text-align:right;">
-					<Button type="warning" size="small" @click="reLogin" icon="loop"
-					        shape="circle"></Button>
-				</i-col>
-			</Row>
-			<Row style="border-bottom:1px solid #e9eaec;">
-				<i-col span="16" v-if="currentUser.shop_sn">
-					<h4 style="white-space:nowrap;over-flow:hidden;text-overflow:ellipsis;">
-						{{currentUser.shop.name}}
-					</h4>
-					<small>店铺编码:{{currentUser.shop_sn}}&nbsp;&nbsp;店长:{{currentUser.shop_manager_name}}</small>
-				</i-col>
-				<i-col span="16" v-else>
-					<h4>&nbsp;</h4>
-					<small>&nbsp;</small>
-				</i-col>
-				<i-col span="8" :class="showCalendar?'calendar-show':'calendar-hide'" id="calendar">
-					<Button @click="showCalendar = !showCalendar" size="small" type="primary"
-					        style="float:right;white-space:nowrap;margin-top:6px;">
-						{{date}}
-						<Icon :type="showCalendar?'arrow-up-b':'arrow-down-b'"/>
-					</Button>
-				</i-col>
-			</Row>
-			<Clock :current-user="currentUser" :date.sync="date"></Clock>
-		</Card>
+		<mt-loadmore :top-method="reLogin" ref="loadmore" disabled style="overflow:visible;">
+			<Card :shadow="true">
+				<Row>
+					<i-col span="4">
+						<Avatar icon="person" size="large"/>
+					</i-col>
+					<i-col span="9">
+						<h3>{{currentUser.realname}}</h3>
+						<small>{{currentUser.staff_sn}}</small>
+					</i-col>
+					<i-col span="7">
+						<p style="text-align:right;">
+							&nbsp;
+							<!--<Button v-if="currentUser.is_manager" @click="staffPicker = true" type="ghost" size="small">-->
+							<!--店长代签-->
+							<!--</Button>-->
+						</p>
+					</i-col>
+				</Row>
+				<Row style="border-bottom:1px solid #e9eaec;">
+					<i-col span="16" v-if="currentUser.shop_sn">
+						<h4 style="white-space:nowrap;over-flow:hidden;text-overflow:ellipsis;">
+							{{currentUser.shop.name}}
+						</h4>
+						<small>店铺编码:{{currentUser.shop_sn}}&nbsp;&nbsp;店长:{{currentUser.shop_manager_name}}</small>
+					</i-col>
+					<i-col span="16" v-else>
+						<h4>&nbsp;</h4>
+						<small>&nbsp;</small>
+					</i-col>
+					<i-col span="8" :class="showCalendar?'calendar-show':'calendar-hide'" id="calendar">
+						<Button @click="showCalendar = !showCalendar" size="small" type="primary"
+						        style="float:right;white-space:nowrap;margin-top:6px;">
+							{{date}}
+							<Icon :type="showCalendar?'arrow-up-b':'arrow-down-b'"/>
+						</Button>
+					</i-col>
+				</Row>
+				<Clock :current-user.sync="currentUserClock" :date.sync="date"></Clock>
+			</Card>
+		</mt-loadmore>
 		<!--<mt-actionsheet v-if="currentUser.is_manager" v-model="staffPicker" :actions="selectStaff"></mt-actionsheet>-->
 		<!--<mt-popup position="right" v-model="assistPage" style="width:100%;top:37.5%;bottom:-12.5%;overflow:scroll;">-->
 		<!--<Assist :staff-sn="selectedStaffSn"></Assist>-->
@@ -77,11 +75,12 @@
     import Flatpickr from 'flatpickr';
     import timeLineComponent from './timeLine.vue';
     import assistComponent from './assist.vue';
-    import {Actionsheet, Popup} from 'mint-ui';
+    import {Loadmore, Actionsheet, Popup} from 'mint-ui';
 
     var components = {};
     components['Clock'] = timeLineComponent;
     components['Assist'] = assistComponent;
+    components[Loadmore.name] = Loadmore;
     components[Actionsheet.name] = Actionsheet;
     components[Popup.name] = Popup;
 
@@ -111,12 +110,17 @@
                 selectStaff: selectStaff,
                 selectedStaffSn: false,
                 assistPage: false,
+                currentUserClock: this.currentUser,
             };
         },
         props: ['currentUser'],
         components: components,
         computed: {},
-        filters: {},
+        watch: {
+            currentUserClock(newValue) {
+                this.$emit('update:currentUser', newValue);
+            }
+        },
         beforeMount() {
         },
         mounted() {
@@ -132,12 +136,11 @@
         },
         methods: {
             reLogin() {
-                Indicator.open('重新登录中...');
                 sessionStorage.clear();
                 axios('/re_login').then((response) => {
                     sessionStorage.setItem('staff', JSON.stringify(response.data));
                     this.$emit('update:currentUser', response.data);
-                    Indicator.close();
+                    this.$refs.loadmore.onTopLoaded();
                 });
             },
             toggleStaffPicker() {

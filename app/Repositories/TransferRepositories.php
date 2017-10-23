@@ -68,14 +68,14 @@ class TransferRepositories
         $response = app('Clock')->clock($clockData, $checkDistance);
         if ($response['status'] == 1) {
             if ($transfer->status == 1) {
-                $params = [
+                $params = $where = [
                     'staff_sn' => $transfer->staff_sn,
                     'shop_sn' => $transfer->arriving_shop_sn,
                 ];
                 app('OA')->getDataFromApi('hr/staff_update', $params);
                 $params['staff_name'] = $transfer->staff_name;
                 $params['shop_duty_id'] = 3;
-                WorkingSchedule::create($params);
+                WorkingSchedule::updateOrCreate($where, $params);
             } elseif ($transfer->status == 2) {
                 if ($transfer->arriving_shop_duty_id == 1) {
                     $params = [

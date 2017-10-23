@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<div>
-			<router-view :currentUser.sync="currentUser"></router-view>
+			<router-view :current-user.sync="currentUser"></router-view>
 			<div style="width:100%;height:60px;"></div>
 		</div>
 		<mt-tabbar v-model="tabbar" :fixed="true" style="z-index: 10;">
