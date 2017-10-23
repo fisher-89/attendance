@@ -283,8 +283,8 @@ class AttendanceRepositories
             'is_leaving' => 0,
             'is_transferring' => 0,
             'clock_log' => '',
-            'working_start_at' => $this->staffStartAt,
-            'working_end_at' => $this->staffEndAt,
+            'working_start_at' => date('H:i:s', $this->staffStartAt),
+            'working_end_at' => date('H:i:s', $this->staffEndAt),
         ];
     }
 

@@ -12,6 +12,8 @@ class WorkingSchedule extends Model
         'staff_sn',
         'staff_name',
         'shop_duty_id',
+        'clock_in',
+        'clock_out',
     ];
 
     public function __construct(array $attributes = [])

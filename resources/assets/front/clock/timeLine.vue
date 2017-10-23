@@ -21,7 +21,7 @@
 			</template>
 		</Alert>
 		<Timeline style="margin-top:20px;">
-			<template v-for="clock in clocks">
+			<template v-for="(clock,key) in clocks">
 				<Timeline-item :color="setIconColor(clock)"
 				               :style="clock.is_abandoned?'color:lightgrey;':''">
 					<h3>
@@ -33,7 +33,7 @@
 					<p v-if="clock.thumb != '' && !clock.is_abandoned">
 						<img :src="clock.thumb" @click="showPhoto(clock)">
 					</p>
-					<Button v-if="clockAvailable && inShop && clock.attendance_type == 1 && clock.type == 2 && !clock.is_abandoned"
+					<Button v-if="clockAvailable && inShop && clock.attendance_type == 1 && clock.type == 2 && !clock.is_abandoned && (key+1) == clocks.length"
 					        type="ghost" shape="circle" @click="uploadClock">更新打卡
 					</Button>
 				</Timeline-item>
@@ -50,18 +50,30 @@
 					<h3 style="display:inline;">&nbsp;{{hasClockIn ? '下班打卡' : '上班打卡'}}&nbsp;</h3>
 					<p style="display:inline;">{{curTime}}</p>
 				</Button>
+				<p>
+					<Icon type="location"/>
+					{{aLocation.formattedAddress}}
+				</p>
 			</Timeline-item>
 			<Timeline-item v-else-if="clockAvailable && hasLeave" color="orange">
 				<Button type="warning" size="large" shape="circle" @click="uploadLeaveClock">
 					<h3 style="display:inline;">&nbsp;{{isLeaving ? '请假返回' : '请假外出'}}&nbsp;</h3>
 					<p style="display:inline;">{{curTime}}</p>
 				</Button>
+				<p>
+					<Icon type="location"/>
+					{{aLocation.formattedAddress}}
+				</p>
 			</Timeline-item>
 			<Timeline-item v-if="clockAvailable && hasTransfer && !isLeaving">
 				<Button type="primary" size="large" shape="circle" @click="uploadTransferClock">
 					<h3 style="display:inline;">&nbsp;{{transfer.status == 1 ? '调动到达' : '调动出发'}}&nbsp;</h3>
 					<p style="display:inline;">{{curTime}}</p>
 				</Button>
+				<p>
+					<Icon type="location"/>
+					{{aLocation.formattedAddress}}
+				</p>
 				<p>至：{{transfer.arriving_shop_name}}</p>
 			</Timeline-item>
 		</Timeline>
@@ -153,7 +165,7 @@
                 let clock;
                 for (let i in this.clocks) {
                     clock = this.clocks[i];
-                    if (clock.type === 1) {
+                    if (clock.type === 1 && clock.shop_sn == this.currentUser.shop_sn) {
                         return true;
                     }
                 }
@@ -163,7 +175,7 @@
                 let clock;
                 for (let i in this.clocks) {
                     clock = this.clocks[i];
-                    if (clock.type === 2 && clock.attendance_type === 1) {
+                    if (clock.type == 2 && clock.attendance_type == 1 && clock.shop_sn == this.currentUser.shop_sn) {
                         return true;
                     }
                 }
@@ -182,6 +194,10 @@
         },
         mounted() {
             this.dingtalkInit();
+//            dd.ready(() => {
+//                this.getLocation();
+//                setInterval(this.getLocation, 10000);
+//            });
         },
         methods: {
             getRecord() {
@@ -218,7 +234,7 @@
             },
             getLocation() {
                 dd.device.geolocation.get({
-                    targetAccuracy: 15,
+                    targetAccuracy: 100,
                     coordinate: 1,
                     withReGeocode: true,
                     useCache: false,
@@ -229,8 +245,9 @@
                                     lng: result.longitude,
                                     lat: result.latitude
                                 },
-                                formattedAddress: result.address
-                            };
+                                formattedAddress: result.address ? result.address : '获取地址失败'
+                            }
+                            ;
                         } catch (e) {
                             this.locationErr = e.message;
                         } finally {
@@ -342,6 +359,7 @@
                         }
                         if (response.data.status) {
                             this.$Message.success(response.data.msg);
+                            this.reLogin();
                         } else {
                             this.$Message.error(response.data.msg);
                         }
@@ -380,7 +398,16 @@
             },
             showPhoto(clock) {
                 this.bigPhoto = clock;
-            }
+            },
+            reLogin() {
+                Indicator.open('重新登录中...');
+                sessionStorage.clear();
+                axios('/re_login').then((response) => {
+                    sessionStorage.setItem('staff', JSON.stringify(response.data));
+                    this.$emit('update:currentUser', response.data);
+                    Indicator.close();
+                });
+            },
         }
     }
 </script>

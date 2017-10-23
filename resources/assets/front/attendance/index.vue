@@ -44,7 +44,7 @@
 								店铺业绩：
 							</i-col>
 							<i-col span="13">
-								￥{{attendanceData.sales_performance}}
+								￥{{total}}
 							</i-col>
 						</Row>
 
@@ -194,18 +194,32 @@
         data() {
             return {
                 attendanceData: {
-                    status: 0
+                    status: 0,
+                    details: []
                 },
                 date: null,
                 statusColor: {'0': 'info', '1': 'warning', '2': 'success', '-1': 'error'},
                 searchStaffStatus: false,
-                showCalendar: false,
+                showCalendar: false
             }
         },
         props: ['currentUser'],
         components: components,
+        computed: {
+            total: function () {
+                let total = 0;
+                let staffAttendance;
+                for (let i in this.attendanceData.details) {
+                    staffAttendance = this.attendanceData.details[i];
+                    total += parseFloat(staffAttendance.sales_performance_lisha) || 0;
+                    total += parseFloat(staffAttendance.sales_performance_go) || 0;
+                    total += parseFloat(staffAttendance.sales_performance_group) || 0;
+                    total += parseFloat(staffAttendance.sales_performance_partner) || 0;
+                }
+                return total.toFixed(2);
+            }
+        },
         beforeMount() {
-            this.dingtalkInit();
             this.getAttendanceRecord();
         },
         mounted() {
@@ -221,34 +235,14 @@
                 }
             });
         },
-        watch: {
-            attendanceData: {
-                handler: (value) => {
-                    let sales_performance_lisha = 0;
-                    let sales_performance_go = 0;
-                    let sales_performance_group = 0;
-                    let sales_performance_partner = 0;
-                    for (let i in value.details) {
-                        let staffAttendance = value.details[i];
-                        sales_performance_lisha += parseFloat(staffAttendance.sales_performance_lisha) || 0;
-                        sales_performance_go += parseFloat(staffAttendance.sales_performance_go) || 0;
-                        sales_performance_group += parseFloat(staffAttendance.sales_performance_group) || 0;
-                        sales_performance_partner += parseFloat(staffAttendance.sales_performance_partner) || 0;
-                    }
-                    value.sales_performance_lisha = sales_performance_lisha;
-                    value.sales_performance_go = sales_performance_go;
-                    value.sales_performance_group = sales_performance_group;
-                    value.sales_performance_partner = sales_performance_partner;
-                    value.sales_performance = (sales_performance_lisha +
-                        sales_performance_go +
-                        sales_performance_group +
-                        sales_performance_partner).toFixed(2);
-                },
-                deep: true
-            }
-        },
+        watch: {},
         methods: {
             locate() {
+//                let url = '/js_config';
+//                axios.post(url, {'current_url': location.href}).then((response) => {
+//                    let jsConfig = response.data;
+//                    jsConfig['jsApiList'] = ['device.geolocation.get'];
+//                    dd.config(jsConfig);
                 dd.ready(() => {
                     Indicator.open('定位中...');
                     dd.device.geolocation.get({
@@ -287,6 +281,13 @@
                         }
                     });
                 });
+//                    dd.error(function (error) {
+//                        let html = JSON.stringify(error);
+//                        html += '<h2 onClick="location.reload()" style="text-align:center;margin-top:20px;color:#333;">点此刷新</h2>';
+//                        document.write(html);
+//                    });
+//                });
+
             },
             getAttendanceRecord() {
                 Indicator.open('加载中...');
@@ -314,20 +315,6 @@
                     });
                 }
             },
-            dingtalkInit() {
-                let url = '/js_config';
-                axios.post(url, {'current_url': location.href}).then((response) => {
-                    let jsConfig = response.data;
-                    jsConfig['jsApiList'] = ['biz.util.uploadImageFromCamera', 'device.geolocation.get'];
-                    dd.config(jsConfig);
-
-                    dd.error(function (error) {
-                        let html = JSON.stringify(error);
-                        html += '<h2 onClick="location.reload()" style="text-align:center;margin-top:20px;color:#333;">点此刷新</h2>';
-                        document.write(html);
-                    });
-                });
-            },
             submit() {
                 Indicator.open('处理中...');
                 let url = '/attendance/submit';
@@ -353,7 +340,6 @@
             clearContent(e) {
                 if (e.target.value == 0) e.target.value = '';
             }
-        },
-        computed: {}
+        }
     }
 </script>

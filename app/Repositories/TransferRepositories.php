@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Transfer;
 use App\Models\WorkingSchedule;
+use DB;
 
 class TransferRepositories
 {
@@ -44,12 +45,15 @@ class TransferRepositories
         $transfer = Transfer::find($transferID);
         if ($transfer->status == 0) {
             $prevClockRecord = app('Clock')->getLatestClock();
-            $checkDistance = !empty($transfer->leaving_shop_sn) && (!empty($prevClockRecord) && $prevClockRecord->type == 1);
+//出发距离限制
+//$checkDistance = !empty($transfer->leaving_shop_sn) && (!empty($prevClockRecord) && $prevClockRecord->type == 1);
+            $checkDistance = false;
             $type = 2;
             $transfer->status = 1;
             $transfer->left_at = date('Y-m-d H:i:s');
         } elseif ($transfer->status == 1) {
-            $checkDistance = !empty($transfer->arriving_shop_sn) && time() > strtotime(app('Clock')->getAttendanceDate() . ' ' . app('CurrentUser')->shop['clock_out']);
+//            $checkDistance = !empty($transfer->arriving_shop_sn) && time() > strtotime(app('Clock')->getAttendanceDate() . ' ' . app('CurrentUser')->shop['clock_out']);
+            $checkDistance = false;
             $type = 1;
             $transfer->status = 2;
             $transfer->arrived_at = date('Y-m-d H:i:s');
@@ -60,6 +64,7 @@ class TransferRepositories
         $clockData = $request->input();
         $clockData['attendance_type'] = 2;
         $clockData['type'] = $type;
+        DB::beginTransaction();
         $response = app('Clock')->clock($clockData, $checkDistance);
         if ($response['status'] == 1) {
             if ($transfer->status == 1) {
@@ -74,20 +79,34 @@ class TransferRepositories
             } elseif ($transfer->status == 2) {
                 if ($transfer->arriving_shop_duty_id == 1) {
                     $params = [
+                        'shop_sn' => $transfer->arriving_shop_sn,
                         'manager_sn' => $transfer->staff_sn,
                         'manager_name' => $transfer->staff_name,
                     ];
-                    app('OA')->getDataFromApi('hr/shop_update', $params);
-                    $shopManager = WorkingSchedule::where('shop_sn', $transfer->arriving_shop_sn)
-                        ->where('shop_duty_id', 1)->first();
-                    if (empty($shopManager)) {
-                        WorkingSchedule::where('shop_sn', $transfer->arriving_shop_sn)
-                            ->where('staff_sn', $transfer->staff_sn)->update(['shop_duty_id' => 1]);
+                    $changeShop = app('OA')->getDataFromApi('hr/shop_update', $params);
+                    if (is_string($changeShop)) {
+                        DB::rollBack();
+                        echo $changeShop;
+                        die;
+                    } elseif ($changeShop['status'] && $changeShop['status'] == 1) {
+                        $shopManager = WorkingSchedule::where('shop_sn', $transfer->arriving_shop_sn)
+                            ->where('shop_duty_id', 1)->first();
+                        if (empty($shopManager)) {
+                            WorkingSchedule::where('shop_sn', $transfer->arriving_shop_sn)
+                                ->where('staff_sn', $transfer->staff_sn)->update(['shop_duty_id' => 1]);
+                        }
+                    } else {
+                        DB::rollBack();
+                        return ['status' => 0, 'msg' => $changeShop['message']];
                     }
                 }
             }
             $transfer->save();
             app('CurrentUser')->login();
+            DB::commit();
+        } else {
+            DB::rollBack();
+            return ['status' => 0, 'msg' => '打卡失败'];
         }
         return $response;
     }

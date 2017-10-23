@@ -49,7 +49,7 @@
 					<h4 style="white-space:nowrap;over-flow:hidden;text-overflow:ellipsis;">
 						{{currentUser.shop.name}}
 					</h4>
-					<small>店长：{{currentUser.shop_manager_name}}</small>
+					<small>店铺编码:{{currentUser.shop_sn}}&nbsp;&nbsp;店长:{{currentUser.shop_manager_name}}</small>
 				</i-col>
 				<i-col span="16" v-else>
 					<h4>&nbsp;</h4>
@@ -132,10 +132,12 @@
         },
         methods: {
             reLogin() {
+                Indicator.open('重新登录中...');
                 sessionStorage.clear();
                 axios('/re_login').then((response) => {
                     sessionStorage.setItem('staff', JSON.stringify(response.data));
                     this.$emit('update:currentUser', response.data);
+                    Indicator.close();
                 });
             },
             toggleStaffPicker() {
