@@ -157,7 +157,7 @@
 						</template>
 					</Card>
 					<div style="margin:10px 20px;">
-						<Button v-if="attendanceData.status == 0" type="primary" long size="large" @click="submit">
+						<Button v-if="attendanceData.status <= 0" type="primary" long size="large" @click="submit">
 							<!--:disabled="attendanceData.is_missing == 1">-->
 							提交
 						</Button>

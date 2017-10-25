@@ -28,16 +28,16 @@
 					<i-col span="4">
 						<Avatar icon="person" size="large"/>
 					</i-col>
-					<i-col span="9">
+					<i-col span="13">
 						<h3>{{currentUser.realname}}</h3>
 						<small>{{currentUser.staff_sn}}</small>
 					</i-col>
-					<i-col span="7">
+					<i-col span="7" v-if="currentUser.staff_sn == 110105">
 						<p style="text-align:right;">
 							&nbsp;
-							<!--<Button v-if="currentUser.is_manager" @click="staffPicker = true" type="ghost" size="small">-->
-							<!--店长代签-->
-							<!--</Button>-->
+							<Button v-if="currentUser.is_manager" @click="staffPicker = true" type="ghost" size="small">
+								店长代签
+							</Button>
 						</p>
 					</i-col>
 				</Row>
@@ -63,10 +63,10 @@
 				<Clock :current-user.sync="currentUserClock" :date.sync="date"></Clock>
 			</Card>
 		</mt-loadmore>
-		<!--<mt-actionsheet v-if="currentUser.is_manager" v-model="staffPicker" :actions="selectStaff"></mt-actionsheet>-->
-		<!--<mt-popup position="right" v-model="assistPage" style="width:100%;top:37.5%;bottom:-12.5%;overflow:scroll;">-->
-		<!--<Assist :staff-sn="selectedStaffSn"></Assist>-->
-		<!--</mt-popup>-->
+		<mt-actionsheet v-if="currentUser.is_manager" v-model="staffPicker" :actions="selectStaff"></mt-actionsheet>
+		<mt-popup position="right" v-model="assistPage" style="width:100%;top:37.5%;bottom:-12.5%;overflow:scroll;">
+			<Assist :staff-sn="selectedStaffSn"></Assist>
+		</mt-popup>
 	</div>
 </template>
 

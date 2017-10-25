@@ -21,31 +21,31 @@
 			</template>
 		</Alert>
 		<Timeline style="margin-top:20px;">
-			<template v-for="(clock,key) in clocks">
-				<Timeline-item :color="setIconColor(clock)"
-				               :style="clock.is_abandoned?'color:lightgrey;':''">
-					<h3>
-						{{clock.clock_at | hourAndMinute}} {{clock.clock_type}} {{clock.shop_sn ? clock.shop_sn.toUpperCase() : '无店铺'}}</h3>
-					<p v-if="clock.lng > 0">
-						<Icon type="location"/>
-						{{clock.address}}
-					</p>
-					<p v-if="clock.thumb != '' && !clock.is_abandoned">
-						<img :src="clock.thumb" @click="showPhoto(clock)">
-					</p>
-					<Button v-if="clockAvailable && inShop && clock.attendance_type == 1 && clock.type == 2 && !clock.is_abandoned && (key+1) == clocks.length"
-					        type="ghost" shape="circle" @click="uploadClock">更新打卡
-					</Button>
-				</Timeline-item>
-			</template>
-			<Timeline-item v-if="aLocation == false && locationErr == false && locating" color="lightgrey">
+			<Timeline-item v-for="(clock,key) in clocks" :key="clock.id" :color="setIconColor(clock)"
+			               :style="clock.is_abandoned?'color:lightgrey;':''">
+				<h3>
+					{{clock.clock_at | hourAndMinute}} {{clock.clock_type}} {{clock.shop_sn ? clock.shop_sn.toUpperCase() : '无店铺'}}</h3>
+				<p v-if="clock.lng > 0">
+					<Icon type="location"/>
+					{{clock.address}}
+				</p>
+				<p v-if="clock.thumb != '' && !clock.is_abandoned">
+					<img :src="clock.thumb" @click="showPhoto(clock)">
+				</p>
+				<Button v-if="clockAvailable && inShop && clock.attendance_type == 1 && clock.type == 2 && !clock.is_abandoned && (key+1) == clocks.length"
+				        type="ghost" shape="circle" @click="uploadClock">更新打卡
+				</Button>
+			</Timeline-item>
+			<Timeline-item
+					v-if="locating == true && this.date == this.today" color="lightgrey">
 				<p style="padding:5px;">
 					<mt-spinner type="fading-circle" :size="28"></mt-spinner>
 				</p>
 				<p style="color:lightgrey">定位中...	</p>
 			</Timeline-item>
-			<Timeline-item v-if="clockAvailable && inShop && !hasClockOut && !isTransferring && !hasLeave"
-			               :color="inTime?'green':'red'">
+			<Timeline-item
+					v-else-if="clockAvailable && inShop && !hasClockOut && !isTransferring && !hasLeave && currentUser.shop.lng"
+					:color="inTime?'green':'red'">
 				<Button :type="inTime?'success':'error'" size="large" shape="circle" @click="uploadClock">
 					<h3 style="display:inline;">&nbsp;{{hasClockIn ? '下班打卡' : '上班打卡'}}&nbsp;</h3>
 					<p style="display:inline;">{{curTime}}</p>
@@ -55,7 +55,7 @@
 					{{aLocation.formattedAddress}}
 				</p>
 			</Timeline-item>
-			<Timeline-item v-else-if="clockAvailable && hasLeave" color="orange">
+			<Timeline-item v-else-if="clockAvailable && hasLeave && currentUser.shop.lng" color="orange">
 				<Button type="warning" size="large" shape="circle" @click="uploadLeaveClock">
 					<h3 style="display:inline;">&nbsp;{{isLeaving ? '请假返回' : '请假外出'}}&nbsp;</h3>
 					<p style="display:inline;">{{curTime}}</p>
@@ -65,7 +65,7 @@
 					{{aLocation.formattedAddress}}
 				</p>
 			</Timeline-item>
-			<Timeline-item v-if="clockAvailable && hasTransfer && !isLeaving">
+			<Timeline-item v-if="clockAvailable && !isLeaving && hasTransfer ">
 				<Button type="primary" size="large" shape="circle" @click="uploadTransferClock">
 					<h3 style="display:inline;">&nbsp;{{transfer.status == 1 ? '调动到达' : '调动出发'}}&nbsp;</h3>
 					<p style="display:inline;">{{curTime}}</p>
@@ -154,12 +154,16 @@
             },
             isLeaving: function () {
                 if (this.hasLeave) {
-                    let current = new Date(this.today.replace(/-/g, "/") + ' ' + this.curTime);
-                    let clockIn = new Date(this.leave.clock_in_at.replace(/-/g, "/"));
-                    return this.leave.clock_out_at && (!this.leave.clock_in_at || clockIn > current);
-                } else {
-                    return false;
+                    if (this.leave.clock_in_at) {
+                        let current = new Date(this.today.replace(/-/g, "/") + ' ' + this.curTime);
+                        let clockIn = new Date(this.leave.clock_in_at.replace(/-/g, "/"));
+                        return this.leave.clock_out_at && (clockIn > current);
+                    } else {
+                        return this.leave.clock_out_at;
+                    }
                 }
+                return false;
+
             },
             /* 状态判断 end */
             hasClockIn: function () { //是否已经打完上班卡
@@ -176,7 +180,7 @@
                 let clock;
                 for (let i in this.clocks) {
                     clock = this.clocks[i];
-                    if (clock.type == 2 && clock.attendance_type == 1 && clock.shop_sn == this.currentUser.shop_sn) {
+                    if (clock.type == 2 && clock.attendance_type == 1) {
                         return true;
                     }
                 }
@@ -195,10 +199,6 @@
         },
         mounted() {
             this.dingtalkInit();
-//            dd.ready(() => {
-//                this.getLocation();
-//                setInterval(this.getLocation, 10000);
-//            });
         },
         methods: {
             getRecord() {
@@ -220,41 +220,42 @@
                 });
             },
             getTransferRecord() {
-                let _this = this;
                 let url = '/transfer/next';
-                axios.post(url, {staff_sn: this.currentUser.staff_sn}).then(function (response) {
-                    _this.transfer = response.data == '' ? false : response.data;
+                axios.post(url, {staff_sn: this.currentUser.staff_sn}).then((response) => {
+                    this.transfer = response.data == '' ? false : response.data;
                 });
             },
             getLeaveRecord() {
-                let _this = this;
                 let url = '/leave/next';
-                axios.post(url, {staff_sn: this.currentUser.staff_sn}).then(function (response) {
-                    _this.leave = response.data == '' ? false : response.data;
+                axios.post(url, {staff_sn: this.currentUser.staff_sn}).then((response) => {
+                    this.leave = response.data == '' ? false : response.data;
                 });
             },
             getLocation() {
-                this.locating = true;
                 dd.device.geolocation.get({
                     targetAccuracy: 200,
                     coordinate: 1,
                     withReGeocode: true,
                     useCache: false,
                     onSuccess: (result) => {
+                        this.locating = false;
                         try {
+                            if (result.location) {
+                                result = result.location;
+                            }
                             this.aLocation = {
                                 position: {
                                     lng: result.longitude,
                                     lat: result.latitude
                                 },
-                                formattedAddress: result.address ? result.address : '获取地址失败'
-                            }
-                            ;
+                                formattedAddress: result.address ? result.address : '获取地址信息失败，可正常打卡',
+                                accuracy: result.accuracy
+                            };
+                            this.locationErr = false;
                         } catch (e) {
                             this.locationErr = e.message;
-                        } finally {
-                            this.locationErr = false;
                         }
+
                     },
                     onFail: (err) => {
                         this.locationErr = err.errorMessage;
@@ -297,6 +298,7 @@
                         lng: this.aLocation.position.lng,
                         lat: this.aLocation.position.lat,
                         address: this.aLocation.formattedAddress,
+                        accuracy: this.aLocation.accuracy,
                         photo: picPath[0]
                     };
                     axios.post(url, params).then((response) => {
@@ -325,6 +327,7 @@
                         lng: this.aLocation.position.lng,
                         lat: this.aLocation.position.lat,
                         address: this.aLocation.formattedAddress,
+                        accuracy: this.aLocation.accuracy,
                         photo: picPath[0]
                     };
                     axios.post(url, params).then((response) => {
@@ -353,6 +356,7 @@
                         lng: this.aLocation.position.lng,
                         lat: this.aLocation.position.lat,
                         address: this.aLocation.formattedAddress,
+                        accuracy: this.aLocation.accuracy,
                         photo: picPath[0]
                     };
                     axios.post(url, params).then((response) => {
@@ -379,6 +383,7 @@
                     jsConfig['jsApiList'] = ['biz.util.uploadImageFromCamera', 'device.geolocation.get'];
                     dd.config(jsConfig);
                     dd.ready(() => {
+                        this.locating = true;
                         this.getLocation();
                         setInterval(this.getLocation, 10000);
                     });
