@@ -122,6 +122,7 @@ class AttendanceRepositories
             $attendance = Attendance::create([
                 'shop_sn' => $this->shopSn,
                 'shop_name' => app('CurrentUser')->shop['name'],
+                'department_id' => app('CurrentUser')->shop['department_id'],
                 'manager_sn' => app('CurrentUser')->staff_sn,
                 'manager_name' => app('CurrentUser')->realname,
                 'attendance_date' => $this->date,

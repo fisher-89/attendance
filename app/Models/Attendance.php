@@ -13,6 +13,7 @@ class Attendance extends Model
     protected $fillable = [
         'shop_sn',
         'shop_name',
+        'department_id',
         'manager_sn',
         'manager_name',
         'attendance_date',

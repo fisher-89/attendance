@@ -3,11 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use \App\Traits\HasCompositePrimaryKey;
 
 class WorkingSchedule extends Model
 {
-//    use HasCompositePrimaryKey;
 
     protected $table = 'working_schedule_';
     protected $primaryKey = ['shop_sn', 'staff_sn'];
@@ -24,7 +22,7 @@ class WorkingSchedule extends Model
     public function __construct(array $attributes = [])
     {
         parent::__construct($attributes);
-        $ymd = array_has($attributes, 'ym') ? $attributes['ymd'] : app('Clock')->getAttendanceDate('Ymd');
+        $ymd = array_has($attributes, 'ymd') ? $attributes['ymd'] : app('Clock')->getAttendanceDate('Ymd');
         $this->table .= $ymd;
     }
 
