@@ -137,7 +137,8 @@ class AttendanceRepositories
 
     protected function makeAttendanceDetail()
     {
-        $staffGroup = WorkingSchedule::where('shop_sn', app('CurrentUser')->shop_sn)->get();
+        $scheduleModel = new WorkingSchedule(['ymd' => str_replace('-', '', $this->date)]);
+        $staffGroup = $scheduleModel->where('shop_sn', app('CurrentUser')->shop_sn)->get();
         foreach ($staffGroup as $staff) {
             $this->getAttendanceDataByStaff($staff);
         }
@@ -258,8 +259,8 @@ class AttendanceRepositories
     protected function initStaffRecord($staff)
     {
         $this->lastClock = false;
-        $this->staffStartAt = empty($staff->clock_in) ? $this->shopStartAt : strtotime($staff->clock_in);
-        $this->staffEndAt = empty($staff->clock_out) ? $this->shopEndAt : strtotime($staff->clock_out);
+        $this->staffStartAt = empty($staff->clock_in) ? $this->shopStartAt : strtotime($this->date . ' ' . $staff->clock_in);
+        $this->staffEndAt = empty($staff->clock_out) ? $this->shopEndAt : strtotime($this->date . ' ' . $staff->clock_out);
         $this->workingHours = $this->countHoursBetween($this->staffStartAt, $this->staffEndAt);
         $this->staffRecord = [
             'attendance_shop_id' => $this->attendanceId,
