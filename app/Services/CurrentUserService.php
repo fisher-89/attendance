@@ -51,7 +51,7 @@ class CurrentUserService
                 $staff['shop_manager_name'] = empty($shopManager) ? '无' : $shopManager->staff_name;
                 $staff['is_manager'] = $staff['shop_duty_id'] == 1;
                 if ($staff['is_manager']) {
-                    $staff['shop_staff'] = WorkingSchedule::where('shop_sn', $staff['shop_sn'])->get()->toArray();
+                    $staff['shop_staff'] = app('OA')->getDataFromApi('get_user', ['shop_sn' => $staff['shop_sn']])['message'];
                 }
             }
             session()->put('staff_sn', $staff['staff_sn']);

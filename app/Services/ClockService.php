@@ -13,6 +13,7 @@ class ClockService
         $staffSn = array_has($clockData, 'staff_sn') ? $clockData['staff_sn'] : app('CurrentUser')->staff_sn;
         $shopSn = array_has($clockData, 'shop_sn') ? $clockData['shop_sn'] : app('CurrentUser')->shop_sn;
         $distance = $checkDistance ? $this->getDistanceToShop($clockData['lng'], $clockData['lat']) : 0;
+        $clockData['operator_sn'] = app('CurrentUser')->staff_sn;
         if ($distance > config('options.invalid_distance')) {
             return returnErr('hints.111');
         } else {

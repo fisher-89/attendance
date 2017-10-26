@@ -36,8 +36,7 @@
 				        type="ghost" shape="circle" @click="uploadClock">更新打卡
 				</Button>
 			</Timeline-item>
-			<Timeline-item
-					v-if="locating == true && this.date == this.today" color="lightgrey">
+			<Timeline-item v-if="locating == true && date == today" color="lightgrey">
 				<p style="padding:5px;">
 					<mt-spinner type="fading-circle" :size="28"></mt-spinner>
 				</p>
@@ -115,11 +114,13 @@
                 bigPhoto: false,
             };
         },
-        props: ['currentUser', 'date'],
+        props: ['currentUser', 'date', 'refresh'],
         components: components,
         watch: {
-            date() {
-                this.getRecord();
+            refresh(newValue) {
+                if (newValue == true) {
+                    this.getRecord();
+                }
             }
         },
         computed: {
@@ -131,7 +132,13 @@
                 }
             },
             clockAvailable() { //是否可以打卡
-                return this.date === this.today && this.aLocation !== false && !this.locationErr;
+                let avaliableError = true;
+                if (this.locationErr &&
+                    this.locationErr.match('error message = 取消') == null &&
+                    this.locationErr.match('error message = 定位错误') == null) {
+                    avaliableError = false;
+                }
+                return this.date === this.today && this.aLocation !== false && avaliableError;
             },
             inTime() {
                 return (this.hasClockIn && this.curTime > this.currentUser.working_end_at) || (!this.hasClockIn && this.curTime < this.currentUser.working_start_at);
@@ -206,6 +213,7 @@
                 this.getTransferRecord();
                 this.getLeaveRecord();
                 this.getClockRecord();
+                this.$emit('update:refresh', false);
             },
             getClockRecord() {
                 let dateStr = this.date ? this.date : null;
@@ -294,6 +302,8 @@
                     let clockType = this.hasClockIn ? 'clock_out' : 'clock_in';
                     let url = '/clock/save';
                     let params = {
+                        staff_sn: this.currentUser.staff_sn,
+                        shop_sn: this.currentUser.shop_sn,
                         type: clockType,
                         lng: this.aLocation.position.lng,
                         lat: this.aLocation.position.lat,
@@ -323,6 +333,8 @@
                     let leaveID = this.leave.id;
                     let url = '/leave/save';
                     let params = {
+                        staff_sn: this.currentUser.staff_sn,
+                        shop_sn: this.currentUser.shop_sn,
                         parent_id: leaveID,
                         lng: this.aLocation.position.lng,
                         lat: this.aLocation.position.lat,
@@ -352,6 +364,8 @@
                     let transferID = this.transfer.id;
                     let url = '/transfer/save';
                     let params = {
+                        staff_sn: this.currentUser.staff_sn,
+                        shop_sn: this.currentUser.shop_sn,
                         parent_id: transferID,
                         lng: this.aLocation.position.lng,
                         lat: this.aLocation.position.lat,

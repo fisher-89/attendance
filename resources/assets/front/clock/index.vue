@@ -32,7 +32,7 @@
 						<h3>{{currentUser.realname}}</h3>
 						<small>{{currentUser.staff_sn}}</small>
 					</i-col>
-					<i-col span="7" v-if="currentUser.staff_sn == 110105">
+					<i-col span="7">
 						<p style="text-align:right;">
 							&nbsp;
 							<Button v-if="currentUser.is_manager" @click="staffPicker = true" type="ghost" size="small">
@@ -60,7 +60,7 @@
 						</Button>
 					</i-col>
 				</Row>
-				<Clock :current-user.sync="currentUserClock" :date.sync="date"></Clock>
+				<Clock :current-user.sync="currentUserClock" :refresh.sync="clockRefresh" :date.sync="date"></Clock>
 			</Card>
 		</mt-loadmore>
 		<mt-actionsheet v-if="currentUser.is_manager" v-model="staffPicker" :actions="selectStaff"></mt-actionsheet>
@@ -87,35 +87,41 @@
     const Chinese = require('../../flatpickr/l10ns/zh.js').zh;
     export default {
         data() {
-            let selectStaff = [];
-            if (this.currentUser.is_manager) {
-                this.currentUser.shop_staff.map((item) => {
-                    if (item.shop_duty_id != 1) {
-                        selectStaff.push({
-                            name: item.staff_name,
-                            method: () => {
-                                this.selectedStaffSn = item.staff_sn;
-                                setTimeout(() => {
-                                    this.assistPage = true;
-                                }, 1000);
-                            }
-                        });
-                    }
-                });
-            }
             return {
                 date: '',			    //选择的日期
                 showCalendar: false,	//是否显示日历
                 staffPicker: false,
-                selectStaff: selectStaff,
                 selectedStaffSn: false,
                 assistPage: false,
                 currentUserClock: this.currentUser,
+                clockRefresh: false,
             };
         },
         props: ['currentUser'],
         components: components,
-        computed: {},
+        computed: {
+            selectStaff() {
+                if (this.currentUser.is_manager) {
+                    let response = [];
+                    this.currentUser.shop_staff.map((item) => {
+                        if (item.staff_sn !== this.currentUser.staff_sn) {
+                            response.push({
+                                name: item.realname,
+                                method: () => {
+                                    this.selectedStaffSn = item.staff_sn;
+                                    setTimeout(() => {
+                                        this.assistPage = true;
+                                    }, 800);
+                                }
+                            });
+                        }
+                    });
+                    return response;
+                } else {
+                    return [];
+                }
+            }
+        },
         watch: {
             currentUserClock(newValue) {
                 this.$emit('update:currentUser', newValue);
@@ -131,6 +137,7 @@
                 maxDate: 'today',
                 onChange: (selectedDates, dateStr) => {
                     this.date = dateStr;
+                    this.clockRefresh = true;
                 }
             });
         },
@@ -140,6 +147,7 @@
                 axios('/re_login').then((response) => {
                     sessionStorage.setItem('staff', JSON.stringify(response.data));
                     this.$emit('update:currentUser', response.data);
+                    this.clockRefresh = true;
                     this.$refs.loadmore.onTopLoaded();
                 });
             },

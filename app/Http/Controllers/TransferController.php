@@ -29,7 +29,7 @@ class TransferController extends Controller
      */
     public function getNextTransfer(Request $request)
     {
-        $staffSn = app('CurrentUser')->staff_sn;
+        $staffSn = $request->has('staff_sn') ? $request->get('staff_sn') : app('CurrentUser')->staff_sn;
         return $this->transferRepos->getNextRecord($staffSn);
     }
 

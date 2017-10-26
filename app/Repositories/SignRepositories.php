@@ -39,8 +39,8 @@ class SignRepositories
 
     public function sign($request)
     {
-        $staffSn = app('CurrentUser')->staff_sn;
-        $shopSn = app('CurrentUser')->shop_sn;
+        $staffSn = $request->has('staff_sn') ? $request->get('staff_sn') : app('CurrentUser')->staff_sn;
+        $shopSn = $request->has('shop_sn') ? $request->get('shop_sn') : app('CurrentUser')->shop_sn;
         switch ($request->get('type')) {
             case 'clock_in':
                 $type = 1;

@@ -113,7 +113,7 @@ class LeaveController extends Controller
                 'staff_sn' => $staff->shop['manager_sn'],
                 'name' => $staff->shop['manager_name']
             ];
-        } elseif ($staff->staff_sn != $staff->department['manager_sn']) {
+        } elseif ($staff->department['manager_sn'] > 0 && $staff->staff_sn != $staff->department['manager_sn']) {
             $approvers = [
                 'staff_sn' => $staff->department['manager_sn'],
                 'name' => $staff->department['manager_name']

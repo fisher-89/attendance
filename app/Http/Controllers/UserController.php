@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\WorkingSchedule;
 
 class UserController extends Controller
 {
@@ -57,7 +58,15 @@ class UserController extends Controller
         if (app('CurrentUser')->isShopManager()) {
             $staffSn = $request->staff_sn;
             $response = app('OA')->getDataFromApi('get_user', ['staff_sn' => $staffSn]);
-            return $response['message'][0];
+            $staff = $response['message'][0];
+            $schedule = WorkingSchedule::where([
+                'staff_sn' => $staff['staff_sn'],
+                'shop_sn' => $staff['shop_sn']
+            ])->first();
+            $staff['shop'] = app('CurrentUser')->shop;
+            $staff['working_start_at'] = empty($schedule->clock_in) ? $staff['shop']['clock_in'] : $schedule->clock_in;
+            $staff['working_end_at'] = empty($schedule->clock_out) ? $staff['shop']['clock_out'] : $schedule->clock_out;
+            return $staff;
         } else {
             return ['status' => -1, 'message' => '用户不是店长'];
         }
