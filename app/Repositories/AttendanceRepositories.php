@@ -362,6 +362,9 @@ class AttendanceRepositories
                 $prevClock = app('Clock')->getPrevClock($clock, date('Y-m-d H:i:s', $this->staffStartAt));
                 if ($prevClock && $prevClock->attendance_type == 2 && $prevClock->type == 2) {
                     $start = strtotime($prevClock->clock_at);
+                    if ($start > $this->staffEndAt) {
+                        $start = $this->staffEndAt;
+                    }
                 } else {
                     $start = $this->staffStartAt;
                 }

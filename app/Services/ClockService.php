@@ -73,7 +73,7 @@ class ClockService
     }
 
     /**
-     * 获取最近一条打卡记录
+     * 获取最近一条打卡记录（本店）
      * @param null $shopSn
      * @param null $staffSn
      * @return \Illuminate\Database\Eloquent\Model|null|static
@@ -92,7 +92,7 @@ class ClockService
     }
 
     /**
-     * 获取上一条打卡记录（当天）
+     * 获取上一条打卡记录
      * @param Clock $clock
      * @param bool $startAt 开始时间限制
      * @param bool $lockShop 是否锁定当前店铺
