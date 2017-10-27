@@ -203,20 +203,22 @@ class AttendanceRepositories
             $this->lastClock = $clock;
         });
 
-        if ($this->lastClock && $this->lastClock->clock_at < $this->shopEndAt) {
+        if ($this->lastClock && $this->lastClock->clock_at < $this->staffEndAt) {
             if ($this->lastClock->type == 1) {
                 $this->staffRecord['is_missing'] = 1;
             } else {
                 switch ($this->lastClock->attendance_type) {
                     case 2:
-                        $duration = $this->countHoursBetween($this->lastClock->clock_at, $this->shopEndAt);
+                        $duration = $this->countHoursBetween($this->lastClock->clock_at, $this->staffEndAt);
                         $this->staffRecord['transferring_hours'] += $duration;
                         $this->staffRecord['transferring_days'] += $duration / $this->workingHours;
+                        $this->addClockLog($this->lastClock->clock_at, $this->staffEndAt, 2);
                         break;
                     case 3:
-                        $duration = $this->countHoursBetween($this->lastClock->clock_at, $this->shopEndAt);
+                        $duration = $this->countHoursBetween($this->lastClock->clock_at, $this->staffEndAt);
                         $this->staffRecord['leaving_hours'] += $duration;
                         $this->staffRecord['leaving_days'] += $duration / $this->workingHours;
+                        $this->addClockLog($this->lastClock->clock_at, $this->staffEndAt, 3);
                         break;
                 }
             }
@@ -225,9 +227,8 @@ class AttendanceRepositories
         $oneDay = $this->staffRecord['working_days'] + $this->staffRecord['leaving_days'] + $this->staffRecord['transferring_days'];
         if ($oneDay == 0) {
             $latestClock = Clock::where([
-                ['shop_sn', '=', $this->shopSn],
                 ['staff_sn', '=', $staffSn],
-                ['clock_at', '<', $this->dayStartAt],
+                ['clock_at', '<', $this->dayEndAt],
                 ['is_abandoned', '=', 0],
             ])->orderBy('clock_at', 'desc')->first();
             if (!$latestClock || $latestClock->type == 1 || $latestClock->attendance_type == 1) {

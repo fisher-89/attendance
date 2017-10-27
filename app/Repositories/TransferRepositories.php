@@ -44,7 +44,7 @@ class TransferRepositories
     {
         $transfer = Transfer::find($transferID);
         if ($transfer->status == 0) {
-            $prevClockRecord = app('Clock')->getLatestClock();
+//$prevClockRecord = app('Clock')->getLatestClock();
 //出发距离限制
 //$checkDistance = !empty($transfer->leaving_shop_sn) && (!empty($prevClockRecord) && $prevClockRecord->type == 1);
             $checkDistance = false;
