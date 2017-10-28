@@ -157,12 +157,13 @@ class AttendanceRepositories
         $staffSn = $staff['staff_sn'];
         $this->initStaffRecord($staff);
         Clock::where([
-            ['shop_sn', '=', $this->shopSn],
             ['staff_sn', '=', $staffSn],
             ['clock_at', '>', $this->dayStartAt],
             ['clock_at', '<', $this->dayEndAt],
             ['is_abandoned', '=', 0],
-        ])->orderBy('clock_at', 'asc')->each(function ($clock) {
+        ])->where(function ($query) {
+            $query->where('shop_sn', $this->shopSn)->orWhere('shop_sn', '');
+        })->orderBy('clock_at', 'asc')->each(function ($clock) {
             $clock->clock_at = strtotime($clock->clock_at);
             $clock->punctual_time = strtotime($clock->punctual_time);
             $clock->combined_type = $clock->attendance_type . $clock->type;

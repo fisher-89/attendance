@@ -35,7 +35,11 @@ class LeaveRepositories
         $currentTime = date('Y-m-d H:i:s');
         $leaveRequest = Leave::where([['staff_sn', '=', $staffSn], ['status', '=', 1]])
             ->where(function ($query) use ($currentTime) {
-                $query->whereNull('clock_out_at')->orWhereNull('clock_in_at')->orWhere('clock_in_at', '>', $currentTime);
+                $query->where(function ($query) use ($currentTime) {
+                    $query->whereNull('clock_out_at')->where('end_at', '>', $currentTime);
+                })->orWhere(function ($query) use ($currentTime) {
+                    $query->whereNotNull('clock_out_at')->whereNull('clock_in_at');
+                });
             })
             ->orderBy('start_at', 'asc')
             ->first();

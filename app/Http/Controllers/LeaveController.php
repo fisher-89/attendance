@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Clock;
 use App\Models\Leave;
 use App\Models\LeaveType;
+use App\Models\WorkingSchedule;
 use Illuminate\Http\Request;
 
 class LeaveController extends Controller
@@ -41,6 +43,9 @@ class LeaveController extends Controller
         $leaveID = $request->parent_id;
         $leave = Leave::where('status', 1)->find($leaveID);
         $current = date('Y-m-d H:i:s');
+        Clock::where('parent_id', $request->parent_id)
+            ->where('shop_sn', '')
+            ->upload(['shop_sn' => app('CurrentUser')->shop_sn]);
         if (empty($leave->clock_out_at)) {
             $prevClockRecord = app('Clock')->getLatestClock();
             $checkDistance = !empty($prevClockRecord) && $prevClockRecord->type == 1;
@@ -79,6 +84,14 @@ class LeaveController extends Controller
             'type_id' => ['required', 'exists:leave_type,id'],
             'reason' => ['required', 'max:200'],
         ]);
+        $leaveRequestExist = Leave::where('staff_sn', app('CurrentUser')->staff_sn)
+            ->where('start_at', '<=', $request->end_at)
+            ->where('end_at', '>=', $request->start_at)
+            ->where('status', '<>', -1)
+            ->first();
+        if (!empty($leaveRequestExist)) {
+            return ['status' => 0, 'msg' => '与其他请假条时间冲突'];
+        }
         $formData = $this->makeFormData($request);
         $approvers = $this->getApprovers();
         if (empty($approvers)) {
@@ -93,8 +106,8 @@ class LeaveController extends Controller
         $response = app('OA')->getDataFromApi('dingtalk/start_approval', $params);
         if ($response['status'] == 1) {
             $leaveData = $request->input();
-            $leaveData['staff_sn'] = session()->get('staff.staff_sn');
-            $leaveData['staff_name'] = session()->get('staff.realname');
+            $leaveData['staff_sn'] = app('CurrentUser')->staff_sn;
+            $leaveData['staff_name'] = app('CurrentUser')->realname;
             $leaveData['approver_sn'] = $approvers['staff_sn'];
             $leaveData['approver_name'] = $approvers['name'];
             $leaveData['process_instance_id'] = $response['message'];
@@ -175,14 +188,18 @@ class LeaveController extends Controller
     protected function autoClock($leaveRequest)
     {
         $staff = app('OA')->withoutPassport()->getDataFromApi('get_user', ['staff_sn' => $leaveRequest->staff_sn])['message'][0];
+        $workingSchedule = WorkingSchedule::where('staff_sn', $staff['staff_sn'])
+            ->where('shop_sn', $staff['shop_sn'])->first();
+        $clockIn = empty($workingSchedule['clock_in']) ? $staff['shop']['clock_in'] : $workingSchedule['clock_in'];
+        $clockOut = empty($workingSchedule['clock_out']) ? $staff['shop']['clock_out'] : $workingSchedule['clock_out'];
         $basicClockData = [
             'parent_id' => $leaveRequest->id,
             'staff_sn' => $leaveRequest->staff_sn,
-            'shop_sn' => $staff['shop_sn'],
+            'shop_sn' => '',
             'attendance_type' => 3,
         ];
 
-        if (substr($leaveRequest->start_at, 11, 5) <= $staff['shop']['clock_in']) {
+        if (substr($leaveRequest->start_at, 11, 5) <= $clockIn) {
             $clockData = array_collapse([$basicClockData, [
                 'clock_at' => $leaveRequest->start_at,
                 'punctual_time' => $leaveRequest->start_at,
@@ -193,7 +210,7 @@ class LeaveController extends Controller
                 $leaveRequest->clock_out_at = $leaveRequest->start_at;
             }
         }
-        if (substr($leaveRequest->end_at, 11, 5) >= $staff['shop']['clock_out']) {
+        if (substr($leaveRequest->end_at, 11, 5) >= $clockOut) {
             $clockData = array_collapse([$basicClockData, [
                 'clock_at' => $leaveRequest->end_at,
                 'punctual_time' => $leaveRequest->end_at,
