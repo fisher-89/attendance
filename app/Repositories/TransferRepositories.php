@@ -44,16 +44,12 @@ class TransferRepositories
     {
         $transfer = Transfer::find($transferID);
         if ($transfer->status == 0) {
-//$prevClockRecord = app('Clock')->getLatestClock();
-//出发距离限制
-//$checkDistance = !empty($transfer->leaving_shop_sn) && (!empty($prevClockRecord) && $prevClockRecord->type == 1);
-            $checkDistance = false;
             $type = 2;
             $transfer->status = 1;
             $transfer->left_at = date('Y-m-d H:i:s');
+            $transfer->leaving_shop_sn = app('CurrentUser')->shop_sn;
+            $transfer->leaving_shop_name = empty(app('CurrentUser')->shop) ? '' : app('CurrentUser')->shop['name'];
         } elseif ($transfer->status == 1) {
-//            $checkDistance = !empty($transfer->arriving_shop_sn) && time() > strtotime(app('Clock')->getAttendanceDate() . ' ' . app('CurrentUser')->shop['clock_out']);
-            $checkDistance = false;
             $type = 1;
             $transfer->status = 2;
             $transfer->arrived_at = date('Y-m-d H:i:s');
@@ -65,7 +61,7 @@ class TransferRepositories
         $clockData['attendance_type'] = 2;
         $clockData['type'] = $type;
         DB::beginTransaction();
-        $response = app('Clock')->clock($clockData, $checkDistance);
+        $response = app('Clock')->clock($clockData, false);
         if ($response['status'] == 1) {
             if ($transfer->status == 1) {
                 $params = $where = [

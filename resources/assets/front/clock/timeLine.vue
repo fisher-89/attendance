@@ -303,7 +303,6 @@
                     let url = '/clock/save';
                     let params = {
                         staff_sn: this.currentUser.staff_sn,
-                        shop_sn: this.currentUser.shop_sn,
                         type: clockType,
                         lng: this.aLocation.position.lng,
                         lat: this.aLocation.position.lat,
@@ -334,7 +333,6 @@
                     let url = '/leave/save';
                     let params = {
                         staff_sn: this.currentUser.staff_sn,
-                        shop_sn: this.currentUser.shop_sn,
                         parent_id: leaveID,
                         lng: this.aLocation.position.lng,
                         lat: this.aLocation.position.lat,
@@ -365,7 +363,6 @@
                     let url = '/transfer/save';
                     let params = {
                         staff_sn: this.currentUser.staff_sn,
-                        shop_sn: this.currentUser.shop_sn,
                         parent_id: transferID,
                         lng: this.aLocation.position.lng,
                         lat: this.aLocation.position.lat,

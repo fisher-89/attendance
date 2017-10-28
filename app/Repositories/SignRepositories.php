@@ -44,7 +44,7 @@ class SignRepositories
         switch ($request->get('type')) {
             case 'clock_in':
                 $type = 1;
-                $punctualTime = app('CurrentUser')->shop['clock_in'];
+                $punctualTime = app('CurrentUser')->working_start_at;
                 break;
             case 'clock_out':
                 $lastClockOut = $this->getLastClockOut($staffSn, $shopSn);
@@ -53,7 +53,7 @@ class SignRepositories
                     $lastClockOut->save();
                 };
                 $type = 2;
-                $punctualTime = app('CurrentUser')->shop['clock_out'];
+                $punctualTime = app('CurrentUser')->working_end_at;
                 break;
             default:
                 return returnErr('hints.102');

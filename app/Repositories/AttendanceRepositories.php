@@ -297,10 +297,10 @@ class AttendanceRepositories
      */
     protected function recordWorkingClockIn(Clock $clock)
     {
-        if ($clock->clock_at > $this->staffStartAt) {
-            $lateTime = $this->countHoursBetween($this->staffStartAt, $clock->clock_at);
+        if ($clock->clock_at > $clock->punctual_time) {
+            $lateTime = $this->countHoursBetween($clock->punctual_time, $clock->clock_at);
             $this->addLateTime($lateTime);
-            $clock->clock_at = $this->staffStartAt;
+            $clock->clock_at = $clock->punctual_time;
         }
     }
 
@@ -314,9 +314,9 @@ class AttendanceRepositories
         if (!$lastClock || $lastClock->type != 1) {
             $this->staffRecord['is_missing'] = 1;
         } else {
-            if ($clock->clock_at < $this->staffEndAt) {
-                $this->staffRecord['early_out_time'] += $this->countHoursBetween($clock->clock_at, $this->staffEndAt);
-                $clock->clock_at = $this->staffEndAt;
+            if ($clock->clock_at < $clock->punctual_time) {
+                $this->staffRecord['early_out_time'] += $this->countHoursBetween($clock->clock_at, $clock->punctual_time);
+                $clock->clock_at = $clock->punctual_time;
             }
             $duration = $this->countHoursBetween($lastClock->clock_at, $clock->clock_at);
             $this->addClockLog($lastClock->clock_at, $clock->clock_at, 1);
