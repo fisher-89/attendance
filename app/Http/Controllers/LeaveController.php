@@ -45,7 +45,7 @@ class LeaveController extends Controller
         $current = date('Y-m-d H:i:s');
         Clock::where('parent_id', $request->parent_id)
             ->where('shop_sn', '')
-            ->upload(['shop_sn' => app('CurrentUser')->shop_sn]);
+            ->update(['shop_sn' => app('CurrentUser')->shop_sn]);
         if (empty($leave->clock_out_at)) {
             $prevClockRecord = app('Clock')->getLatestClock();
             $checkDistance = !empty($prevClockRecord) && $prevClockRecord->type == 1;
