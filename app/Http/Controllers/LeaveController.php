@@ -199,7 +199,7 @@ class LeaveController extends Controller
             'attendance_type' => 3,
         ];
 
-        if (substr($leaveRequest->start_at, 11, 5) <= $clockIn) {
+        if (substr($leaveRequest->start_at, 11, 5) <= $clockIn || strtotime($leaveRequest->start_at) < time()) {
             $clockData = array_collapse([$basicClockData, [
                 'clock_at' => $leaveRequest->start_at,
                 'punctual_time' => $leaveRequest->start_at,
@@ -210,7 +210,7 @@ class LeaveController extends Controller
                 $leaveRequest->clock_out_at = $leaveRequest->start_at;
             }
         }
-        if (substr($leaveRequest->end_at, 11, 5) >= $clockOut) {
+        if (substr($leaveRequest->end_at, 11, 5) >= $clockOut || strtotime($leaveRequest->end_at) < time()) {
             $clockData = array_collapse([$basicClockData, [
                 'clock_at' => $leaveRequest->end_at,
                 'punctual_time' => $leaveRequest->end_at,
