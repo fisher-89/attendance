@@ -62,8 +62,8 @@ class CreateAttendanceManageTables extends Migration
             $table->integer('parent_id')->unsigned()->default(0)->comment('对应考勤/请假ID');
             $table->mediumInteger('staff_sn')->unsigned()->comment('员工编号');
             $table->char('shop_sn', 10)->comment('店铺代码');
-            $table->timestamp('clock_at')->comment('打卡时间');
-            $table->timestamp('punctual_time')->nullable()->comment('标准打卡时间');
+            $table->dateTime('clock_at')->comment('打卡时间');
+            $table->dateTime('punctual_time')->nullable()->comment('标准打卡时间');
             $table->decimal('lng', 9, 6)->comment('经度');
             $table->decimal('lat', 9, 6)->comment('纬度');
             $table->char('address', 200)->comment('地址');
