@@ -30,11 +30,15 @@ trait HasCompositePrimaryKey
      */
     protected function setKeysForSaveQuery(Builder $query)
     {
-        foreach ($this->getKeyName() as $key) {
-            if ($this->$key)
-                $query->where($key, '=', $this->$key);
-            else
-                throw new Exception(__METHOD__ . 'Missing part of the primary key: ' . $key);
+        if (is_array($this->getKeyName())) {
+            foreach ($this->getKeyName() as $key) {
+                if ($this->$key)
+                    $query->where($key, '=', $this->$key);
+                else
+                    throw new Exception(__METHOD__ . 'Missing part of the primary key: ' . $key);
+            }
+        } else {
+            $query->where($this->getKeyName(), '=', $this->getKeyForSaveQuery());
         }
 
         return $query;

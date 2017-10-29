@@ -48,7 +48,7 @@ class TransferRepositories
             $transfer->status = 1;
             $transfer->left_at = date('Y-m-d H:i:s');
             $transfer->leaving_shop_sn = app('CurrentUser')->shop_sn;
-            $transfer->leaving_shop_name = empty(app('CurrentUser')->shop) ? '' : app('CurrentUser')->shop['name'];
+            $transfer->leaving_shop_name = empty(app('CurrentUser')->shop['name']) ? '' : app('CurrentUser')->shop['name'];
         } elseif ($transfer->status == 1) {
             $type = 1;
             $transfer->status = 2;

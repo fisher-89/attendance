@@ -139,7 +139,11 @@ class AttendanceRepositories
     protected function makeAttendanceDetail()
     {
         $scheduleModel = new WorkingSchedule(['ymd' => str_replace('-', '', $this->date)]);
-        $staffGroup = $scheduleModel->where('shop_sn', app('CurrentUser')->shop_sn)->get();
+        try {
+            $staffGroup = $scheduleModel->where('shop_sn', app('CurrentUser')->shop_sn)->get();
+        } catch (\PDOException $e) {
+            $staffGroup = [];
+        }
         foreach ($staffGroup as $staff) {
             $this->getAttendanceDataByStaff($staff);
         }
