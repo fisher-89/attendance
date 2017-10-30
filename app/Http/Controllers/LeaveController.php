@@ -221,5 +221,33 @@ class LeaveController extends Controller
                 $leaveRequest->clock_in_at = $leaveRequest->end_at;
             }
         }
+
+        if (strtotime($leaveRequest->end_at) < time()) {
+            Clock::where('staff_sn', $leaveRequest->staff_sn)
+                ->where('clock_at', '>', $leaveRequest->start_at)
+                ->where('clock_at', '<', $leaveRequest->end_at)
+                ->where('attendance_type', 1)->delete();
+            $endTimestamp = strtotime($leaveRequest->end_at);
+            Clock::where('staff_sn', $leaveRequest->staff_sn)
+                ->where('clock_at', '>', $leaveRequest->start_at)
+                ->where('clock_at', '<', $leaveRequest->end_at)
+                ->where('attendance_type', 2)
+                ->each(function ($model) use (&$endTimestamp) {
+                    $endTimestamp++;
+                    $model->update(['clock_at' => date('Y-m-d H:i:s', $endTimestamp)]);
+                });
+        } elseif (strtotime($leaveRequest->start_at) < time()) {
+            Clock::where('staff_sn', $leaveRequest->staff_sn)
+                ->where('clock_at', '>', $leaveRequest->start_at)
+                ->where('attendance_type', 1)->delete();
+            $startTimestamp = strtotime($leaveRequest->end_at);
+            Clock::where('staff_sn', $leaveRequest->staff_sn)
+                ->where('clock_at', '>', $leaveRequest->start_at)
+                ->where('attendance_type', 2)
+                ->each(function ($model) use (&$startTimestamp) {
+                    $startTimestamp--;
+                    $model->update(['clock_at' => date('Y-m-d H:i:s', $startTimestamp)]);
+                });
+        }
     }
 }
