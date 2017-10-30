@@ -121,7 +121,7 @@ class LeaveController extends Controller
     protected function getApprovers()
     {
         $staff = app('CurrentUser');
-        if ($staff->inShop() && !$staff->isShopManager()) {
+        if ($staff->inShop() && !$staff->isShopManager() && $staff->shop['manager_sn'] > 0) {
             $approvers = [
                 'staff_sn' => $staff->shop['manager_sn'],
                 'name' => $staff->shop['manager_name']
@@ -131,7 +131,7 @@ class LeaveController extends Controller
                 'staff_sn' => $staff->department['manager_sn'],
                 'name' => $staff->department['manager_name']
             ];
-        } elseif ($staff->department['parent_id'] > 0) {
+        } elseif ($staff->department['parent_id'] > 0 && $staff->department['_parent']['manager_sn']) {
             $approvers = [
                 'staff_sn' => $staff->department['_parent']['manager_sn'],
                 'name' => $staff->department['_parent']['manager_name']
