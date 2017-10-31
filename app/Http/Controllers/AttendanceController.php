@@ -75,7 +75,7 @@ class AttendanceController extends Controller
      */
     public function submit(Request $request)
     {
-        $form = Attendance::with('details')->find($request->id);
+        $form = Attendance::find($request->id);
         if ($form->status <= 0) {
             $salesPerformance = [
                 'sales_performance_lisha' => 0,
@@ -89,15 +89,16 @@ class AttendanceController extends Controller
                     'sales_performance_go',
                     'sales_performance_group',
                     'sales_performance_partner',
+                    'shop_duty_id',
                 ]));
                 $salesPerformance['sales_performance_lisha'] += $detail['sales_performance_lisha'];
                 $salesPerformance['sales_performance_go'] += $detail['sales_performance_go'];
                 $salesPerformance['sales_performance_group'] += $detail['sales_performance_group'];
                 $salesPerformance['sales_performance_partner'] += $detail['sales_performance_partner'];
             }
-
             $form->status = 1;
             $form->submitted_at = date('Y-m-d H:i:s');
+            $form->details;
             $form->update($salesPerformance);
             return $form;
         } else {

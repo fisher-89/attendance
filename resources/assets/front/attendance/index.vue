@@ -67,10 +67,12 @@
 								<i-col span="4">
 									<small style="color:#999;line-height:26px;">{{staffAttendance.staff_sn}}</small>
 								</i-col>
-								<i-col span="5">
-									<Tag :color="staffAttendance.shop_duty_id==1? 'green' : null">
+								<i-col span="8">
+									<Button :type="staffAttendance.shop_duty_id==1? 'success' :staffAttendance.shop_duty_id==2?'info': 'ghost'"
+									        size="small"
+									        @click="showSheet(index)">
 										{{staffAttendance.shop_duty.name}}
-									</Tag>
+									</Button>
 								</i-col>
 								<i-col span="8">
 									<Tag v-if="staffAttendance.is_leaving" color="yellow">请假</Tag>
@@ -174,11 +176,15 @@
 				<span id="calendar"></span>
 			</div>
 		</mt-popup>
+		<mt-actionsheet
+				:actions="shopDutyActions"
+				v-model="shopDutySheetVisible">
+		</mt-actionsheet>
 	</div>
 </template>
 
 <script>
-    import {Field, Loadmore, Popup} from 'mint-ui';
+    import {Field, Loadmore, Popup, Actionsheet} from 'mint-ui';
     import clockLineComponent from './clockLine.vue';
     import Flatpickr from 'flatpickr';
 
@@ -188,6 +194,7 @@
     components[Field.name] = Field;
     components[Loadmore.name] = Loadmore;
     components[Popup.name] = Popup;
+    components[Actionsheet.name] = Actionsheet;
     components['ClockLine'] = clockLineComponent;
 
     export default {
@@ -200,7 +207,12 @@
                 date: null,
                 statusColor: {'0': 'info', '1': 'warning', '2': 'success', '-1': 'error'},
                 searchStaffStatus: false,
-                showCalendar: false
+                showCalendar: false,
+                shopDutyActions: [
+                    {name: '设为店助', method: this.setShopDutyToAssistant}
+                ],
+                shopDutySheetVisible: false,
+                shopDutyStaffKey: false,
             }
         },
         props: ['currentUser'],
@@ -339,6 +351,40 @@
             },
             clearContent(e) {
                 if (e.target.value == 0) e.target.value = '';
+            },
+            setShopDutyToAssistant() {
+                let staffAttendance;
+                for (let i in this.attendanceData.details) {
+                    staffAttendance = this.attendanceData.details[i];
+                    if (staffAttendance.shop_duty_id == 2) {
+                        staffAttendance.shop_duty_id = 3;
+                        staffAttendance.shop_duty.id = 3;
+                        staffAttendance.shop_duty.name = '导购';
+                    }
+                }
+                this.attendanceData.details[this.shopDutyStaffKey].shop_duty_id = 2;
+                this.attendanceData.details[this.shopDutyStaffKey].shop_duty.id = 2;
+                this.attendanceData.details[this.shopDutyStaffKey].shop_duty.name = '店助';
+            },
+            setShopDutyToSalesperson() {
+                this.attendanceData.details[this.shopDutyStaffKey].shop_duty_id = 3;
+                this.attendanceData.details[this.shopDutyStaffKey].shop_duty.id = 3;
+                this.attendanceData.details[this.shopDutyStaffKey].shop_duty.name = '导购';
+            },
+            showSheet(key) {
+                let staffAttendance = this.attendanceData.details[key];
+                this.shopDutyStaffKey = key;
+                if (staffAttendance.shop_duty_id == 3) {
+                    this.shopDutyActions = [
+                        {name: '设为店助', method: this.setShopDutyToAssistant}
+                    ];
+                    this.shopDutySheetVisible = true;
+                } else if (staffAttendance.shop_duty_id == 2) {
+                    this.shopDutyActions = [
+                        {name: '设为导购', method: this.setShopDutyToSalesperson}
+                    ];
+                    this.shopDutySheetVisible = true;
+                }
             }
         }
     }
