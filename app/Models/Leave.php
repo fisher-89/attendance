@@ -18,6 +18,8 @@ class Leave extends Model
         'reason',
         'status',
         'process_instance_id',
+        'approver_sn',
+        'approver_name',
     ];
     protected $events = [
         'updating' => LeaveUpdating::class,

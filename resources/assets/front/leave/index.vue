@@ -83,6 +83,14 @@
 				</Row>
 				<Row>
 					<i-col span="6">
+						审批人：
+					</i-col>
+					<i-col span="18">
+						{{record.approver_name}}
+					</i-col>
+				</Row>
+				<Row>
+					<i-col span="6">
 						请假原因：
 					</i-col>
 					<i-col span="18">

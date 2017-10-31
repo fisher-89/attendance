@@ -169,7 +169,11 @@ class LeaveController extends Controller
         if (empty($leaveRequest)) {
             return 0;
         }
-        if ($request->type == 'finish') {
+        if ($request->type == 'start') {
+            $staff = app('OA')->withoutPassport()->getDataFromApi('get_user', ['dingding' => $request->staffId])['message'][0];
+            $leaveRequest->approver_sn = $staff['staff_sn'];
+            $leaveRequest->approver_name = $staff['realname'];
+        } elseif ($request->type == 'finish') {
             switch ($request->result) {
                 case 'agree':
                     $leaveRequest->status = 1;

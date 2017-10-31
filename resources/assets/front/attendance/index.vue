@@ -372,18 +372,20 @@
                 this.attendanceData.details[this.shopDutyStaffKey].shop_duty.name = '导购';
             },
             showSheet(key) {
-                let staffAttendance = this.attendanceData.details[key];
-                this.shopDutyStaffKey = key;
-                if (staffAttendance.shop_duty_id == 3) {
-                    this.shopDutyActions = [
-                        {name: '设为店助', method: this.setShopDutyToAssistant}
-                    ];
-                    this.shopDutySheetVisible = true;
-                } else if (staffAttendance.shop_duty_id == 2) {
-                    this.shopDutyActions = [
-                        {name: '设为导购', method: this.setShopDutyToSalesperson}
-                    ];
-                    this.shopDutySheetVisible = true;
+                if (this.attendanceData.status <= 0) {
+                    let staffAttendance = this.attendanceData.details[key];
+                    this.shopDutyStaffKey = key;
+                    if (staffAttendance.shop_duty_id == 3) {
+                        this.shopDutyActions = [
+                            {name: '设为店助', method: this.setShopDutyToAssistant}
+                        ];
+                        this.shopDutySheetVisible = true;
+                    } else if (staffAttendance.shop_duty_id == 2) {
+                        this.shopDutyActions = [
+                            {name: '设为导购', method: this.setShopDutyToSalesperson}
+                        ];
+                        this.shopDutySheetVisible = true;
+                    }
                 }
             }
         }
