@@ -114,7 +114,7 @@ class AttendanceController extends Controller
      */
     public function withdraw(Request $request)
     {
-        $form = Attendance::with('details')->find($request->id);
+        $form = Attendance::find($request->id);
         if ($form->status == 1) {
             $form->status = 0;
             $form->save();

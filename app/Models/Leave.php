@@ -4,9 +4,12 @@ namespace App\Models;
 
 use App\Events\LeaveUpdating;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Leave extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'leave_requests';
     protected $fillable = [
         'staff_sn',

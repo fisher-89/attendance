@@ -113,11 +113,10 @@ class AttendanceRepositories
      */
     protected function getShopAttendanceForm()
     {
-        $attendance = Attendance::with('details')
-            ->where([
-                'shop_sn' => $this->shopSn,
-                'attendance_date' => $this->date,
-            ])->first();
+        $attendance = Attendance::where([
+            'shop_sn' => $this->shopSn,
+            'attendance_date' => $this->date,
+        ])->first();
         if (empty($attendance)) {
             $attendance = Attendance::create([
                 'shop_sn' => $this->shopSn,
@@ -131,6 +130,8 @@ class AttendanceRepositories
                 'is_late' => 0,
                 'is_early_out' => 0,
             ]);
+        } else {
+            $attendance->details;
         }
         $this->attendanceId = $attendance->id;
         return $attendance;
@@ -160,7 +161,8 @@ class AttendanceRepositories
     {
         $staffSn = $staff['staff_sn'];
         $this->initStaffRecord($staff);
-        Clock::where([
+        $clockModel = new Clock(['ym' => date('Ym', strtotime($this->date))]);
+        $clockModel->where([
             ['staff_sn', '=', $staffSn],
             ['clock_at', '>', $this->dayStartAt],
             ['clock_at', '<', $this->dayEndAt],
@@ -231,11 +233,20 @@ class AttendanceRepositories
 
         $oneDay = $this->staffRecord['working_days'] + $this->staffRecord['leaving_days'] + $this->staffRecord['transferring_days'];
         if ($oneDay == 0) {
-            $latestClock = Clock::where([
+            $clockModel = new Clock(['ym' => date('Ym', strtotime($this->date))]);
+            $latestClock = $clockModel->where([
                 ['staff_sn', '=', $staffSn],
                 ['clock_at', '<', $this->dayEndAt],
                 ['is_abandoned', '=', 0],
             ])->orderBy('clock_at', 'desc')->first();
+            if (empty($latestClock)) {
+                $clockModel = new Clock(['ym' => date('Ym', strtotime($this->date . ' -1 month'))]);
+                $latestClock = $clockModel->where([
+                    ['staff_sn', '=', $staffSn],
+                    ['clock_at', '<', $this->dayEndAt],
+                    ['is_abandoned', '=', 0],
+                ])->orderBy('clock_at', 'desc')->first();
+            }
             if (!$latestClock || $latestClock->type == 1 || $latestClock->attendance_type == 1) {
                 $this->staffRecord['is_missing'] = 1;
             } elseif ($latestClock->attendance_type == 2) {

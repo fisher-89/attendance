@@ -11,6 +11,8 @@ class Transfer extends Model
     protected $table = 'transfer';
     protected $fillable = [
         'status',
+        'left_at',
+        'arrived_at',
     ];
 
     /* 关联 Start */

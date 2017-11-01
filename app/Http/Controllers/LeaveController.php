@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Clock;
 use App\Models\Leave;
 use App\Models\LeaveType;
+use App\Models\Transfer;
 use App\Models\WorkingSchedule;
 use Illuminate\Http\Request;
 
@@ -87,7 +88,7 @@ class LeaveController extends Controller
         $leaveRequestExist = Leave::where('staff_sn', app('CurrentUser')->staff_sn)
             ->where('start_at', '<=', $request->end_at)
             ->where('end_at', '>=', $request->start_at)
-            ->where('status', '<>', -1)
+            ->where('status', '>=', 0)
             ->first();
         if (!empty($leaveRequestExist)) {
             return ['status' => 0, 'msg' => '与其他请假条时间冲突'];
@@ -238,7 +239,13 @@ class LeaveController extends Controller
                 ->where('attendance_type', 2)
                 ->each(function ($model) use (&$endTimestamp) {
                     $endTimestamp++;
-                    $model->update(['clock_at' => date('Y-m-d H:i:s', $endTimestamp)]);
+                    $clockAt = date('Y-m-d H:i:s', $endTimestamp);
+                    $model->update(['clock_at' => $clockAt]);
+                    if ($model->type == 2) {
+                        Transfer::find($model->parent_id)->update(['left_at' => $clockAt]);
+                    } elseif ($model->type == 1) {
+                        Transfer::find($model->parent_id)->update(['arrived_at' => $clockAt]);
+                    }
                 });
         } elseif (strtotime($leaveRequest->start_at) < time()) {
             Clock::where('staff_sn', $leaveRequest->staff_sn)
@@ -250,7 +257,13 @@ class LeaveController extends Controller
                 ->where('attendance_type', 2)
                 ->each(function ($model) use (&$startTimestamp) {
                     $startTimestamp--;
-                    $model->update(['clock_at' => date('Y-m-d H:i:s', $startTimestamp)]);
+                    $clockAt = date('Y-m-d H:i:s', $startTimestamp);
+                    $model->update(['clock_at' => $clockAt]);
+                    if ($model->type == 2) {
+                        Transfer::find($model->parent_id)->update(['left_at' => $clockAt]);
+                    } elseif ($model->type == 1) {
+                        Transfer::find($model->parent_id)->update(['arrived_at' => $clockAt]);
+                    }
                 });
         }
     }
