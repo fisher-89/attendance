@@ -228,43 +228,126 @@ class LeaveController extends Controller
         }
 
         if (strtotime($leaveRequest->end_at) < time()) {
-            Clock::where('staff_sn', $leaveRequest->staff_sn)
-                ->where('clock_at', '>', $leaveRequest->start_at)
-                ->where('clock_at', '<', $leaveRequest->end_at)
-                ->where('attendance_type', 1)->delete();
-            $endTimestamp = strtotime($leaveRequest->end_at);
-            Clock::where('staff_sn', $leaveRequest->staff_sn)
-                ->where('clock_at', '>', $leaveRequest->start_at)
-                ->where('clock_at', '<', $leaveRequest->end_at)
-                ->where('attendance_type', 2)
-                ->each(function ($model) use (&$endTimestamp) {
-                    $endTimestamp++;
-                    $clockAt = date('Y-m-d H:i:s', $endTimestamp);
-                    $model->update(['clock_at' => $clockAt]);
-                    if ($model->type == 2) {
-                        Transfer::find($model->parent_id)->update(['left_at' => $clockAt]);
-                    } elseif ($model->type == 1) {
-                        Transfer::find($model->parent_id)->update(['arrived_at' => $clockAt]);
-                    }
-                });
+            if (substr($leaveRequest->start_at, 0, 7) == substr($leaveRequest->end_at, 0, 7)) {
+                $ym = date('Ym', strtotime($leaveRequest->start_at));
+                $clockModel = new Clock(['ym' => $ym]);
+                $clockModel->where('staff_sn', $leaveRequest->staff_sn)
+                    ->where('clock_at', '>', $leaveRequest->start_at)
+                    ->where('clock_at', '<', $leaveRequest->end_at)
+                    ->where('attendance_type', 1)->delete();
+                $endTimestamp = strtotime($leaveRequest->end_at);
+                $clockModel = new Clock(['ym' => $ym]);
+                $clockModel->where('staff_sn', $leaveRequest->staff_sn)
+                    ->where('clock_at', '>', $leaveRequest->start_at)
+                    ->where('clock_at', '<', $leaveRequest->end_at)
+                    ->where('attendance_type', 2)
+                    ->each(function ($model) use (&$endTimestamp) {
+                        $endTimestamp++;
+                        $clockAt = date('Y-m-d H:i:s', $endTimestamp);
+                        $model->update(['clock_at' => $clockAt]);
+                        if ($model->type == 2) {
+                            Transfer::find($model->parent_id)->update(['left_at' => $clockAt]);
+                        } elseif ($model->type == 1) {
+                            Transfer::find($model->parent_id)->update(['arrived_at' => $clockAt]);
+                        }
+                    });
+            } else {
+                $ymStart = date('Ym', strtotime($leaveRequest->start_at));
+                $ymEnd = date('Ym', strtotime($leaveRequest->end_at));
+                $startClockModel = new Clock(['ym' => $ymStart]);
+                $endClockModel = new Clock(['ym' => $ymEnd]);
+                $startClockModel->where('staff_sn', $leaveRequest->staff_sn)
+                    ->where('clock_at', '>', $leaveRequest->start_at)
+                    ->where('attendance_type', 1)->delete();
+                $endClockModel->where('staff_sn', $leaveRequest->staff_sn)
+                    ->where('clock_at', '<', $leaveRequest->end_at)
+                    ->where('attendance_type', 1)->delete();
+                $startTimestamp = strtotime($leaveRequest->start_at);
+                $endTimestamp = strtotime($leaveRequest->end_at);
+                $startClockModel = new Clock(['ym' => $ymStart]);
+                $endClockModel = new Clock(['ym' => $ymEnd]);
+                $startClockModel->where('staff_sn', $leaveRequest->staff_sn)
+                    ->where('clock_at', '>', $leaveRequest->start_at)
+                    ->where('attendance_type', 2)
+                    ->each(function ($model) use (&$startTimestamp) {
+                        $startTimestamp--;
+                        $clockAt = date('Y-m-d H:i:s', $startTimestamp);
+                        $model->update(['clock_at' => $clockAt]);
+                        if ($model->type == 2) {
+                            Transfer::find($model->parent_id)->update(['left_at' => $clockAt]);
+                        } elseif ($model->type == 1) {
+                            Transfer::find($model->parent_id)->update(['arrived_at' => $clockAt]);
+                        }
+                    });
+                $endClockModel->where('staff_sn', $leaveRequest->staff_sn)
+                    ->where('clock_at', '<', $leaveRequest->end_at)
+                    ->where('attendance_type', 2)
+                    ->each(function ($model) use (&$endTimestamp) {
+                        $endTimestamp++;
+                        $clockAt = date('Y-m-d H:i:s', $endTimestamp);
+                        $model->update(['clock_at' => $clockAt]);
+                        if ($model->type == 2) {
+                            Transfer::find($model->parent_id)->update(['left_at' => $clockAt]);
+                        } elseif ($model->type == 1) {
+                            Transfer::find($model->parent_id)->update(['arrived_at' => $clockAt]);
+                        }
+                    });
+            }
         } elseif (strtotime($leaveRequest->start_at) < time()) {
-            Clock::where('staff_sn', $leaveRequest->staff_sn)
-                ->where('clock_at', '>', $leaveRequest->start_at)
-                ->where('attendance_type', 1)->delete();
-            $startTimestamp = strtotime($leaveRequest->end_at);
-            Clock::where('staff_sn', $leaveRequest->staff_sn)
-                ->where('clock_at', '>', $leaveRequest->start_at)
-                ->where('attendance_type', 2)
-                ->each(function ($model) use (&$startTimestamp) {
-                    $startTimestamp--;
-                    $clockAt = date('Y-m-d H:i:s', $startTimestamp);
-                    $model->update(['clock_at' => $clockAt]);
-                    if ($model->type == 2) {
-                        Transfer::find($model->parent_id)->update(['left_at' => $clockAt]);
-                    } elseif ($model->type == 1) {
-                        Transfer::find($model->parent_id)->update(['arrived_at' => $clockAt]);
-                    }
-                });
+            if (substr($leaveRequest->start_at, 0, 7) == date('Y-m')) {
+                Clock::where('staff_sn', $leaveRequest->staff_sn)
+                    ->where('clock_at', '>', $leaveRequest->start_at)
+                    ->where('attendance_type', 1)->delete();
+                $startTimestamp = strtotime($leaveRequest->end_at);
+                Clock::where('staff_sn', $leaveRequest->staff_sn)
+                    ->where('clock_at', '>', $leaveRequest->start_at)
+                    ->where('attendance_type', 2)
+                    ->each(function ($model) use (&$startTimestamp) {
+                        $startTimestamp--;
+                        $clockAt = date('Y-m-d H:i:s', $startTimestamp);
+                        $model->update(['clock_at' => $clockAt]);
+                        if ($model->type == 2) {
+                            Transfer::find($model->parent_id)->update(['left_at' => $clockAt]);
+                        } elseif ($model->type == 1) {
+                            Transfer::find($model->parent_id)->update(['arrived_at' => $clockAt]);
+                        }
+                    });
+            } else {
+                $ym = date('Ym', strtotime($leaveRequest->start_at));
+                $clockModel = new Clock(['ym' => $ym]);
+                $clockModel->where('staff_sn', $leaveRequest->staff_sn)
+                    ->where('clock_at', '>', $leaveRequest->start_at)
+                    ->where('attendance_type', 1)->delete();
+                Clock::where('staff_sn', $leaveRequest->staff_sn)
+                    ->where('attendance_type', 1)->delete();
+                $startTimestamp = strtotime($leaveRequest->end_at);
+                $clockModel = new Clock(['ym' => $ym]);
+                $clockModel->where('staff_sn', $leaveRequest->staff_sn)
+                    ->where('clock_at', '>', $leaveRequest->start_at)
+                    ->where('attendance_type', 2)
+                    ->each(function ($model) use (&$startTimestamp) {
+                        $startTimestamp--;
+                        $clockAt = date('Y-m-d H:i:s', $startTimestamp);
+                        $model->update(['clock_at' => $clockAt]);
+                        if ($model->type == 2) {
+                            Transfer::find($model->parent_id)->update(['left_at' => $clockAt]);
+                        } elseif ($model->type == 1) {
+                            Transfer::find($model->parent_id)->update(['arrived_at' => $clockAt]);
+                        }
+                    });
+                Clock::where('staff_sn', $leaveRequest->staff_sn)
+                    ->where('attendance_type', 2)
+                    ->each(function ($model) use (&$startTimestamp) {
+                        $startTimestamp--;
+                        $clockAt = date('Y-m-d H:i:s', $startTimestamp);
+                        $model->update(['clock_at' => $clockAt]);
+                        if ($model->type == 2) {
+                            Transfer::find($model->parent_id)->update(['left_at' => $clockAt]);
+                        } elseif ($model->type == 1) {
+                            Transfer::find($model->parent_id)->update(['arrived_at' => $clockAt]);
+                        }
+                    });
+            }
         }
     }
 }
