@@ -210,17 +210,19 @@ class AttendanceRepositories
             $this->lastClock = $clock;
         });
 
+        $oneDay = $this->staffRecord['working_days'] + $this->staffRecord['leaving_days'] + $this->staffRecord['transferring_days'];
+
         if ($this->lastClock && $this->lastClock->clock_at < $this->staffEndAt) {
             if ($this->lastClock->type == 1) {
                 $this->staffRecord['is_missing'] = 1;
             } else {
                 switch ($this->lastClock->attendance_type) {
-                    case 2:
-                        $duration = $this->countHoursBetween($this->lastClock->clock_at, $this->staffEndAt);
-                        $this->staffRecord['transferring_hours'] += $duration;
-                        $this->staffRecord['transferring_days'] += $duration / $this->workingHours;
-                        $this->addClockLog($this->lastClock->clock_at, $this->staffEndAt, 2);
-                        break;
+//                    case 2:
+//                        $duration = $this->countHoursBetween($this->lastClock->clock_at, $this->staffEndAt);
+//                        $this->staffRecord['transferring_hours'] += $duration;
+//                        $this->staffRecord['transferring_days'] += $duration / $this->workingHours;
+//                        $this->addClockLog($this->lastClock->clock_at, $this->staffEndAt, 2);
+//                        break;
                     case 3:
                         $duration = $this->countHoursBetween($this->lastClock->clock_at, $this->staffEndAt);
                         $this->staffRecord['leaving_hours'] += $duration;
@@ -229,10 +231,7 @@ class AttendanceRepositories
                         break;
                 }
             }
-        }
-
-        $oneDay = $this->staffRecord['working_days'] + $this->staffRecord['leaving_days'] + $this->staffRecord['transferring_days'];
-        if ($oneDay == 0) {
+        } else if (!$this->lastClock) {
             $clockModel = new Clock(['ym' => date('Ym', strtotime($this->date))]);
             $latestClock = $clockModel->where([
                 ['staff_sn', '=', $staffSn],
@@ -265,8 +264,8 @@ class AttendanceRepositories
         }
 
         $this->shopRecord->is_missing = $this->staffRecord['is_missing'] == 1 ? 1 : $this->shopRecord['is_missing'];
-        $this->shopRecord->is_late = $this->staffRecord['late_time'] > 0 ? 1 : $this->shopRecord['is_late'];
-        $this->shopRecord->is_early_out = $this->staffRecord['early_out_time'] > 0 ? 1 : $this->shopRecord['is_early_out'];
+        $this->shopRecord->is_late = round($this->staffRecord['late_time'], 2) > 0 ? 1 : $this->shopRecord['is_late'];
+        $this->shopRecord->is_early_out = round($this->staffRecord['early_out_time'], 2) > 0 ? 1 : $this->shopRecord['is_early_out'];
 
         $this->shopRecord->details()->create($this->staffRecord);
     }
@@ -369,7 +368,7 @@ class AttendanceRepositories
      */
     protected function recordTransferringClockIn(Clock $clock, $lastClock)
     {
-        if ($lastClock && !$lastClock->combined_type == 31) {
+        if ($lastClock && $lastClock->combined_type != 31 && $lastClock->combined_type != 22) {
             $this->staffRecord['is_missing'] = 1;
         } else {
             if ($lastClock) {

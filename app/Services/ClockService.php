@@ -39,7 +39,9 @@ class ClockService
                 $clockData['photo'] = $photoPath;
                 $clockData['thumb'] = $thumbPath;
             }
-            $res = Clock::create($clockData);
+            $ym = $this->getAttendanceDate('Ym', $clockData['clock_at']);
+            $clockModel = new Clock(['ym' => $ym]);
+            $res = $clockModel->create($clockData);
             return returnRes($res->id, 'hints.112', 'hints.113');
         }
     }
@@ -55,9 +57,12 @@ class ClockService
         return $distance;
     }
 
-    public function getAttendanceDate($format = 'Y-m-d')
+    public function getAttendanceDate($format = 'Y-m-d', $date = null)
     {
-        $timestamp = date('H:i') >= config('options.attendance_midnight') ? time() : strtotime('-1 day');
+        if ($date == null) {
+            $date = date('Y-m-d H:i:s');
+        }
+        $timestamp = date('H:i', strtotime($date)) >= config('options.attendance_midnight') ? strtotime($date) : strtotime($date . ' -1 day');
         return date($format, $timestamp);
     }
 
@@ -73,7 +78,7 @@ class ClockService
     }
 
     /**
-     * 获取最近一条打卡记录（本店）
+     * 获取最近一条打卡记录（当店,当天）
      * @param null $shopSn
      * @param null $staffSn
      * @return \Illuminate\Database\Eloquent\Model|null|static
@@ -84,7 +89,7 @@ class ClockService
         $staffSn = empty($staffSn) ? app('CurrentUser')->staff_sn : $staffSn;
 
         list($startTime,
-            $endTime) = app('Clock')->getAttendanceDay();
+            $endTime) = $this->getAttendanceDay();
         $prevClockRecord = Clock::where('clock_at', '>', $startTime)
             ->where(['staff_sn' => $staffSn, 'shop_sn' => $shopSn, 'is_abandoned' => 0])
             ->orderBy('clock_at', 'desc')->first();
@@ -102,7 +107,7 @@ class ClockService
     {
         $clockAt = $clock->getOriginal('clock_at');
         $staffSn = $clock->staff_sn;
-        return Clock::where('staff_sn', $staffSn)
+        $response = Clock::where('staff_sn', $staffSn)
             ->where('is_abandoned', 0)
             ->where('clock_at', '<', $clockAt)
             ->when($startAt != false, function ($query) use ($startAt) {
@@ -110,6 +115,20 @@ class ClockService
             })->when($lockShop, function ($query) use ($clock) {
                 return $query->where('shop_sn', $clock->shop_sn);
             })->orderBy('clock_at', 'desc')->first();
+
+        if (empty($response)) {
+            $ym = date('Ym', strtotime('-1 month'));
+            $clockModel = new Clock(['ym' => $ym]);
+            $response = $clockModel->where('staff_sn', $staffSn)
+                ->where('is_abandoned', 0)
+                ->where('clock_at', '<', $clockAt)
+                ->when($startAt != false, function ($query) use ($startAt) {
+                    return $query->where('clock_at', '>', $startAt);
+                })->when($lockShop, function ($query) use ($clock) {
+                    return $query->where('shop_sn', $clock->shop_sn);
+                })->orderBy('clock_at', 'desc')->first();
+        }
+        return $response;
     }
 
 }

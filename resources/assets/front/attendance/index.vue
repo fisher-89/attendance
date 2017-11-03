@@ -95,7 +95,7 @@
 						</template>
 						<template v-if="staffAttendance.is_missing">
 							<Alert type="error">
-								<h4 style="text-align:center">请先补签</h4>
+								<h4 style="text-align:center">请先补签,下拉考勤表刷新</h4>
 							</Alert>
 						</template>
 						<template v-else>

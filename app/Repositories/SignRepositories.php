@@ -16,7 +16,6 @@ class SignRepositories
         if (empty($staffSn)) {
             $staffSn = app('CurrentUser')->staff_sn;
         }
-        $tableName = 'clock_' . date('Ym', strtotime($date));
         list($startTime,
             $endTime) = app('Clock')->getAttendanceDay($date);
         $where = [
@@ -24,7 +23,9 @@ class SignRepositories
             ['clock_at', '>=', $startTime],
             ['clock_at', '<=', $endTime],
         ];
-        $clockRecord = Clock::from($tableName)->where($where)
+        $ym = date('Ym', strtotime($date));
+        $clockModel = new Clock(['ym' => $ym]);
+        $clockRecord = $clockModel->where($where)
             ->orderBy('clock_at', 'asc')
             ->get()->map(function ($model) {
                 $model->setAttribute('clock_type', $model->clock_type);

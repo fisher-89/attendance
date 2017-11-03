@@ -38,7 +38,7 @@ class LeaveRepositories
                 $query->where(function ($query) use ($currentTime) {
                     $query->whereNull('clock_out_at')->where('end_at', '>', $currentTime);
                 })->orWhere(function ($query) use ($currentTime) {
-                    $query->whereNotNull('clock_out_at')->whereNull('clock_in_at');
+                    $query->whereNotNull('clock_out_at')->whereNull('clock_in_at')->orWhere('clock_in_at', '>', $currentTime);
                 });
             })
             ->orderBy('start_at', 'asc')

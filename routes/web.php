@@ -34,6 +34,7 @@ Route::group(['prefix' => 'f', 'namespace' => 'f'], function () {
 Route::group(['prefix' => 'clock'], function () {
     Route::post('info', 'SignController@getRecord'); //获取打卡记录
     Route::post('save', 'SignController@save'); //打卡
+    Route::post('flash', 'SignController@flash'); //上班急速打卡
     Route::post('get_shop_staff', 'UserController@getShopStaff');//获取店员信息
 });
 

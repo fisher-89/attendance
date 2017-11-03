@@ -60,7 +60,12 @@
 						</Button>
 					</i-col>
 				</Row>
-				<Clock :current-user.sync="currentUserClock" :refresh.sync="clockRefresh" :date.sync="date"></Clock>
+				<template v-if="clockInClose">
+					<Clock :current-user.sync="currentUserClock" :refresh.sync="clockRefresh" :date.sync="date"></Clock>
+				</template>
+				<template v-else>
+					<ClockIn :current-user="currentUserClock" :close.sync="clockInClose"></ClockIn>
+				</template>
 			</Card>
 		</mt-loadmore>
 		<mt-actionsheet v-if="currentUser.is_manager" v-model="staffPicker" :actions="selectStaff"></mt-actionsheet>
@@ -74,11 +79,13 @@
 <script>
     import Flatpickr from 'flatpickr';
     import timeLineComponent from './timeLine.vue';
+    import clockInComponent from './clockIn.vue';
     import assistComponent from './assist.vue';
     import {Loadmore, Actionsheet, Popup} from 'mint-ui';
 
     var components = {};
     components['Clock'] = timeLineComponent;
+    components['ClockIn'] = clockInComponent;
     components['Assist'] = assistComponent;
     components[Loadmore.name] = Loadmore;
     components[Actionsheet.name] = Actionsheet;
@@ -87,6 +94,9 @@
     const Chinese = require('../../flatpickr/l10ns/zh.js').zh;
     export default {
         data() {
+            let newDate = new Date();
+            let curTime = newDate.getHours() + '' + newDate.getMinutes();
+            let clockInTrigger = !(curTime >= 850 && curTime <= 905);
             return {
                 date: '',			    //选择的日期
                 showCalendar: false,	//是否显示日历
@@ -95,40 +105,46 @@
                 assistPage: false,
                 currentUserClock: this.currentUser,
                 clockRefresh: false,
+                clockInClose: clockInTrigger
             };
         },
         props: ['currentUser'],
-        components: components,
-        computed: {
-            selectStaff() {
-                if (this.currentUser.is_manager) {
-                    let response = [];
-                    this.currentUser.shop_staff.map((item) => {
-                        if (item.staff_sn !== this.currentUser.staff_sn) {
-                            response.push({
-                                name: item.realname,
-                                method: () => {
-                                    this.selectedStaffSn = item.staff_sn;
-                                    setTimeout(() => {
-                                        this.assistPage = true;
-                                    }, 800);
-                                }
-                            });
-                        }
-                    });
-                    return response;
-                } else {
-                    return [];
+        components:
+        components,
+        computed:
+            {
+                selectStaff() {
+                    if (this.currentUser.is_manager) {
+                        let response = [];
+                        this.currentUser.shop_staff.map((item) => {
+                            if (item.staff_sn !== this.currentUser.staff_sn) {
+                                response.push({
+                                    name: item.realname,
+                                    method: () => {
+                                        this.selectedStaffSn = item.staff_sn;
+                                        setTimeout(() => {
+                                            this.assistPage = true;
+                                        }, 800);
+                                    }
+                                });
+                            }
+                        });
+                        return response;
+                    } else {
+                        return [];
+                    }
                 }
             }
-        },
+        ,
         watch: {
             currentUserClock(newValue) {
                 this.$emit('update:currentUser', newValue);
             }
-        },
+        }
+        ,
         beforeMount() {
-        },
+        }
+        ,
         mounted() {
             Flatpickr("#calendar", {
                 inline: true,
@@ -140,7 +156,8 @@
                     this.clockRefresh = true;
                 }
             });
-        },
+        }
+        ,
         methods: {
             reLogin() {
                 sessionStorage.clear();
@@ -150,7 +167,8 @@
                     this.clockRefresh = true;
                     this.$refs.loadmore.onTopLoaded();
                 });
-            },
+            }
+            ,
             toggleStaffPicker() {
                 this.staffPicker = !this.staffPicker;
             }

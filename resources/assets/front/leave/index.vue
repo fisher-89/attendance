@@ -78,7 +78,7 @@
 						请假时长：
 					</i-col>
 					<i-col span="18">
-						{{record.duration}}
+						{{record.duration}}小时
 					</i-col>
 				</Row>
 				<Row>

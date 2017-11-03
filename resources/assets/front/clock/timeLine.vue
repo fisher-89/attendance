@@ -56,7 +56,7 @@
 			</Timeline-item>
 			<Timeline-item v-else-if="clockAvailable && hasLeave && currentUser.shop.lng" color="orange">
 				<Button type="warning" size="large" shape="circle" @click="uploadLeaveClock">
-					<h3 style="display:inline;">&nbsp;{{isLeaving ? '请假返回' : '请假外出'}}&nbsp;</h3>
+					<h3 style="display:inline;">&nbsp;{{isLeaving ? '请假结束' : '请假开始'}}&nbsp;</h3>
 					<p style="display:inline;">{{curTime}}</p>
 				</Button>
 				<p>
@@ -66,7 +66,7 @@
 			</Timeline-item>
 			<Timeline-item v-if="clockAvailable && !isLeaving && hasTransfer ">
 				<Button type="primary" size="large" shape="circle" @click="uploadTransferClock">
-					<h3 style="display:inline;">&nbsp;{{transfer.status == 1 ? '调动到达' : '调动出发'}}&nbsp;</h3>
+					<h3 style="display:inline;">&nbsp;{{transfer.status == 1 ? '到达店铺' : '调动出发'}}&nbsp;</h3>
 					<p style="display:inline;">{{curTime}}</p>
 				</Button>
 				<p>
