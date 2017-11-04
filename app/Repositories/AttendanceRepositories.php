@@ -279,6 +279,9 @@ class AttendanceRepositories
         $this->staffStartAt = empty($staff->clock_in) ? $this->shopStartAt : strtotime($this->date . ' ' . $staff->clock_in);
         $this->staffEndAt = empty($staff->clock_out) ? $this->shopEndAt : strtotime($this->date . ' ' . $staff->clock_out);
         $this->workingHours = $this->countHoursBetween($this->staffStartAt, $this->staffEndAt);
+        if ($this->workingHours == 0) {
+            abort(500, '上班时间和下班时间不能相同');
+        }
         $this->staffRecord = [
             'attendance_shop_id' => $this->attendanceId,
             'staff_sn' => $staff->staff_sn,
@@ -405,7 +408,9 @@ class AttendanceRepositories
             if ($clock->clock_at < $clock->punctual_time) {
                 $this->staffRecord['early_out_time'] += $this->countHoursBetween($clock->clock_at, $clock->punctual_time);
             }
-            $clock->clock_at = max($clock->punctual_time, $this->staffStartAt);
+            $clock->clock_at = $clock->punctual_time;
+            $clock->clock_at = min($clock->clock_at, $this->staffEndAt);
+            $clock->clock_at = max($clock->clock_at, $this->staffStartAt);
             if ($lastClock) {
                 $duration = $this->countHoursBetween($lastClock->clock_at, $clock->clock_at);
                 if ($lastClock->combined_type == 22) {
@@ -447,7 +452,9 @@ class AttendanceRepositories
                 $lateTime = $this->countHoursBetween($clock->punctual_time, $clock->clock_at);
                 $this->addLateTime($lateTime);
             }
-            $clock->clock_at = min($clock->punctual_time, $this->staffEndAt);
+            $clock->clock_at = $clock->punctual_time;
+            $clock->clock_at = min($clock->clock_at, $this->staffEndAt);
+            $clock->clock_at = max($clock->clock_at, $this->staffStartAt);
             if ($lastClock) {
                 $start = $lastClock->clock_at;
             } else {

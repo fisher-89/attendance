@@ -14,7 +14,7 @@ class AddAccuracyToClock extends Migration
     public function up()
     {
         Schema::table('clock_' . date('Ym'), function (Blueprint $table) {
-            $table->smallInteger('accuracy')->comment('定位精度');
+            $table->smallInteger('accuracy')->default(0)->comment('定位精度');
         });
     }
 
