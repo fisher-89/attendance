@@ -67,7 +67,7 @@ class CreateAttendanceManageTables extends Migration
             $table->decimal('lng', 9, 6)->default(0)->comment('经度');
             $table->decimal('lat', 9, 6)->default(0)->comment('纬度');
             $table->char('address', 200)->default('')->comment('地址');
-            $table->decimal('distance', 5, 2)->default(0)->unsigned()->comment('到店铺距离');
+            $table->decimal('distance', 6, 2)->default(0)->unsigned()->comment('到店铺距离');
             $table->tinyInteger('attendance_type')->comment('考勤类型 (1:上班,2:调动,3:请假)');
             $table->tinyInteger('type')->comment('打卡类型(1:开始,2:结束)');
             $table->tinyInteger('is_abandoned')->default(0)->comment('是否作废(1:是,0:否)');

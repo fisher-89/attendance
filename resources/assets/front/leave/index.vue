@@ -294,7 +294,9 @@
             submit() {
                 this.$refs['leaveRequest'].validate((valid) => {
                     if (valid) {
+                        Indicator.open('提交中...');
                         axios.post('/leave/submit', this.leaveRequest).then((response) => {
+                            Indicator.close();
                             if (typeof response.data == 'string') {
                                 document.write(response.data);
                             }

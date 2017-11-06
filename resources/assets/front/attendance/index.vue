@@ -95,7 +95,7 @@
 						</template>
 						<template v-if="staffAttendance.is_missing">
 							<Alert type="error">
-								<h4 style="text-align:center">请先补签,下拉考勤表刷新</h4>
+								<h4 style="text-align:center">请先补签，下拉考勤表刷新</h4>
 							</Alert>
 						</template>
 						<template v-else>
@@ -328,15 +328,19 @@
                 }
             },
             submit() {
-                Indicator.open('处理中...');
-                let url = '/attendance/submit';
-                axios.post(url, this.attendanceData).then((response) => {
-                    this.attendanceData = response.data;
-                    Indicator.close();
-                    this.$Message.success('提交成功');
-                }).catch((error) => {
-                    document.write(error);
-                });
+                if (this.attendanceData.is_missing) {
+                    this.$Message.error('存在漏签，请补全签卡后再提交');
+                } else {
+                    Indicator.open('处理中...');
+                    let url = '/attendance/submit';
+                    axios.post(url, this.attendanceData).then((response) => {
+                        this.attendanceData = response.data;
+                        Indicator.close();
+                        this.$Message.success('提交成功');
+                    }).catch((error) => {
+                        document.write(error);
+                    });
+                }
             },
             withdraw() {
                 Indicator.open('处理中...');
