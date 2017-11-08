@@ -143,6 +143,12 @@ class AttendanceRepositories
         $scheduleModel = new WorkingSchedule(['ymd' => str_replace('-', '', $this->date)]);
         try {
             $staffGroup = $scheduleModel->where('shop_sn', app('CurrentUser')->shop_sn)->get();
+            $staffSnGroup = $staffGroup->pluck('staff_sn');
+            $staffGroupFromApi = app('OA')->getDataFromApi('get_user', ['staff_sn' => $staffSnGroup])['message'];
+            $staffGroupFromApi = array_pluck($staffGroupFromApi, [], 'staff_sn');
+            foreach ($staffGroup as $k => $v) {
+                $staffGroup[$k] = array_collapse([$v->toArray(), $staffGroupFromApi[$v['staff_sn']]]);
+            }
         } catch (\PDOException $e) {
             $staffGroup = [];
         }
@@ -290,17 +296,17 @@ class AttendanceRepositories
     protected function initStaffRecord($staff)
     {
         $this->lastClock = false;
-        $this->staffStartAt = empty($staff->clock_in) ? $this->shopStartAt : strtotime($this->date . ' ' . $staff->clock_in);
-        $this->staffEndAt = empty($staff->clock_out) ? $this->shopEndAt : strtotime($this->date . ' ' . $staff->clock_out);
+        $this->staffStartAt = empty($staff['clock_in']) ? $this->shopStartAt : strtotime($this->date . ' ' . $staff['clock_in']);
+        $this->staffEndAt = empty($staff['clock_out']) ? $this->shopEndAt : strtotime($this->date . ' ' . $staff['clock_out']);
         $this->workingHours = $this->countHoursBetween($this->staffStartAt, $this->staffEndAt);
         if ($this->workingHours == 0) {
             abort(500, '上班时间和下班时间不能相同');
         }
         $this->staffRecord = [
             'attendance_shop_id' => $this->attendanceId,
-            'staff_sn' => $staff->staff_sn,
-            'staff_name' => $staff->staff_name,
-            'shop_duty_id' => $staff->shop_duty_id,
+            'staff_sn' => $staff['staff_sn'],
+            'staff_name' => $staff['staff_name'],
+            'shop_duty_id' => $staff['shop_duty_id'],
             'sales_performance_lisha' => '',
             'sales_performance_go' => '',
             'sales_performance_group' => '',
@@ -320,6 +326,12 @@ class AttendanceRepositories
             'clock_log' => '',
             'working_start_at' => date('H:i:s', $this->staffStartAt),
             'working_end_at' => date('H:i:s', $this->staffEndAt),
+            'staff_position_id' => $staff['position_id'],
+            'staff_position' => $staff['position']['name'],
+            'staff_department_id' => $staff['department_id'],
+            'staff_department' => $staff['department']['name'],
+            'staff_status_id' => $staff['status_id'],
+            'staff_status' => $staff['status']['name'],
         ];
     }
 

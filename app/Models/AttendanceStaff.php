@@ -35,6 +35,12 @@ class AttendanceStaff extends Model
         'clock_log',
         'working_start_at',
         'working_end_at',
+        'staff_position_id',
+        'staff_position',
+        'staff_department_id',
+        'staff_department',
+        'staff_status_id',
+        'staff_status',
     ];
 
     public function __construct(array $attributes = [])
