@@ -42,6 +42,10 @@ class SignRepositories
     {
         $staffSn = $request->has('staff_sn') ? $request->get('staff_sn') : app('CurrentUser')->staff_sn;
         $shopSn = $request->has('shop_sn') ? $request->get('shop_sn') : app('CurrentUser')->shop_sn;
+        $latestClock = app('Clock')->getLatestClock($shopSn, $staffSn, false);
+        if ($latestClock->type == 2 && $latestClock->attendance_type != 1) {
+            return ['status' => 0, 'msg' => '当前状态不可以打上/下班卡'];
+        }
         switch ($request->get('type')) {
             case 'clock_in':
                 $type = 1;

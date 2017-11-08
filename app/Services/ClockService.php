@@ -83,14 +83,16 @@ class ClockService
      * @param null $staffSn
      * @return \Illuminate\Database\Eloquent\Model|null|static
      */
-    public function getLatestClock($shopSn = null, $staffSn = null)
+    public function getLatestClock($shopSn = null, $staffSn = null, $today = true)
     {
         $shopSn = empty($shopSn) ? app('CurrentUser')->shop_sn : $shopSn;
         $staffSn = empty($staffSn) ? app('CurrentUser')->staff_sn : $staffSn;
 
         list($startTime,
             $endTime) = $this->getAttendanceDay();
-        $prevClockRecord = Clock::where('clock_at', '>', $startTime)
+        $prevClockRecord = Clock::when($today, function ($query) use ($startTime) {
+            return $query->where('clock_at', '>', $startTime);
+        })->where('clock_at', '<', date('Y-m-d H:i:s'))
             ->where(['staff_sn' => $staffSn, 'shop_sn' => $shopSn, 'is_abandoned' => 0])
             ->orderBy('clock_at', 'desc')->first();
         return $prevClockRecord;
