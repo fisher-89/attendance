@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Models\Clock;
 use App\Models\Transfer;
 use App\Models\WorkingSchedule;
 use DB;
@@ -75,6 +76,10 @@ class TransferRepositories
                         $params['staff_name'] = $transfer->staff_name;
                         $params['shop_duty_id'] = 3;
                         WorkingSchedule::updateOrCreate($where, $params);
+                        Clock::where([
+                            ['staff_sn', '=', $transfer->staff_sn],
+                            ['clock_at', '>', date('Y-m-d H:i:s')],
+                        ])->update(['shop_sn' => $transfer->arriving_shop_sn]);
                     } else {
                         DB::rollBack();
                         return ['status' => 0, 'msg' => $changeStaff['message']];

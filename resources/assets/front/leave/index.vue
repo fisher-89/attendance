@@ -115,7 +115,7 @@
         data() {
 
             let startDate = new Date();
-            startDate.setDate(startDate.getDate() - 5);
+            startDate.setDate(startDate.getDate() - 7);
 
             return {
                 records: [],
@@ -238,7 +238,6 @@
         methods: {
             init() {
                 let defaultDate = new Date();
-                defaultDate.setDate(defaultDate.getDate() + 1);
 
                 this.leaveRequest = {
                     start_at: '',
@@ -296,17 +295,18 @@
                     if (valid) {
                         Indicator.open('提交中...');
                         axios.post('/leave/submit', this.leaveRequest).then((response) => {
-                            Indicator.close();
                             if (typeof response.data == 'string') {
                                 document.write(response.data);
-                            }
-                            if (response.data.status) {
+                            } else if (response.data.status) {
                                 this.$Message.success(response.data.msg);
                                 this.init();
                                 this.getLeaveRecord();
-                            } else {
+                            } else if (response.data.msg) {
                                 this.$Message.error(response.data.msg);
+                            } else {
+                                document.write(JSON.stringify(response.data));
                             }
+                            Indicator.close();
                         });
                     } else {
                         this.$Message.error('表单验证失败!');

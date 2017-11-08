@@ -206,7 +206,7 @@ class LeaveController extends Controller
             $basicClockData = [
                 'parent_id' => $leaveRequest->id,
                 'staff_sn' => $leaveRequest->staff_sn,
-                'shop_sn' => '',
+                'shop_sn' => $staff['shop_sn'],
                 'attendance_type' => 3,
                 'is_abandoned' => 0,
             ];
