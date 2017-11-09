@@ -63,7 +63,7 @@ class AttendanceController extends Controller
     public function refreshAttendanceForm(Request $request)
     {
         if (app('CurrentUser')->isShopManager()) {
-            return app('AttendanceRepos', ['date' => $request->date])->refreshAttendanceForm();
+            return app('AttendanceRepos', ['date' => $request->attendance_date])->refreshAttendanceForm($request);
         }
     }
 
@@ -83,6 +83,9 @@ class AttendanceController extends Controller
                 'sales_performance_group' => 0,
                 'sales_performance_partner' => 0,
             ];
+            if (empty($request->details)) {
+                return ['status' => 0, 'msg' => '不可提交空考勤表'];
+            }
             foreach ($request->details as $detail) {
                 AttendanceStaff::find($detail['id'])->update(array_only($detail, [
                     'sales_performance_lisha',
@@ -100,9 +103,9 @@ class AttendanceController extends Controller
             $form->submitted_at = date('Y-m-d H:i:s');
             $form->details;
             $form->update($salesPerformance);
-            return $form;
+            return ['status' => 1, 'msg' => $form];
         } else {
-            abort(500, '考勤表已提交');
+            return ['status' => 0, 'msg' => '考勤表已提交'];
         }
     }
 
@@ -118,6 +121,7 @@ class AttendanceController extends Controller
         if ($form->status == 1) {
             $form->status = 0;
             $form->save();
+            $form->details;
             return $form;
         } else {
             abort(500, '考勤表不可撤回');

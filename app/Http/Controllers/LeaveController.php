@@ -9,6 +9,7 @@ use App\Models\LeaveType;
 use App\Models\WorkingSchedule;
 use Illuminate\Http\Request;
 use DB;
+use Log;
 
 class LeaveController extends Controller
 {
@@ -175,14 +176,19 @@ class LeaveController extends Controller
             return 0;
         }
         if ($request->type == 'start') {
-            $staff = app('OA')->withoutPassport()->getDataFromApi('get_user', ['dingding' => $request->staffId])['message'][0];
-            $leaveRequest->approver_sn = $staff['staff_sn'];
-            $leaveRequest->approver_name = $staff['realname'];
+            $staff = app('OA')->withoutPassport()->getDataFromApi('get_user', ['dingding' => $request->staffId])['message'];
+            if (!empty($staff)) {
+                $staff = $staff[0];
+                $leaveRequest->approver_sn = $staff['staff_sn'];
+                $leaveRequest->approver_name = $staff['realname'];
+            } else {
+                $leaveRequest->approver_name = '未知审批人';
+            }
         } elseif ($request->type == 'finish') {
             switch ($request->result) {
                 case 'agree':
                     $leaveRequest->status = 1;
-                    $this->autoClock($leaveRequest);
+                    $this->changeClockRecord($leaveRequest);
                     break;
                 case 'refuse';
                     $leaveRequest->status = -1;
@@ -194,7 +200,7 @@ class LeaveController extends Controller
         return $leaveRequest->save() ? 1 : 0;
     }
 
-    protected function autoClock($leaveRequest)
+    protected function changeClockRecord($leaveRequest)
     {
         DB::beginTransaction();
         try {
@@ -275,6 +281,7 @@ class LeaveController extends Controller
                 }
             }
         } catch (\Exception $err) {
+            Log::error($err->getMessage());
             DB::rollBack();
         }
         DB::commit();
@@ -298,5 +305,13 @@ class LeaveController extends Controller
                 Transfer::find($model->parent_id)->update(['arrived_at' => $clockAt]);
             }
         }
+    }
+
+    protected function autoClock($clock_at, $staff)
+    {
+        $ymd = date('Ymd', strtotime($clock_at));
+        $workingScheduleModel = new WorkingSchedule(['ymd' => $ymd]);
+        $workingSchedule = $workingScheduleModel->where('staff_sn', $staff['staff_sn'])
+            ->get();
     }
 }

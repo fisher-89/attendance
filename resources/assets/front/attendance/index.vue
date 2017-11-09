@@ -319,7 +319,7 @@
                         document.write(error);
                     });
                 } else {
-                    axios.post('/attendance/refresh', {date: this.date}).then((response) => {
+                    axios.post('/attendance/refresh', this.attendanceData).then((response) => {
                         this.attendanceData = response.data;
                         this.$refs.loadmore.onTopLoaded();
                     }).catch((error) => {
@@ -334,9 +334,13 @@
                     Indicator.open('处理中...');
                     let url = '/attendance/submit';
                     axios.post(url, this.attendanceData).then((response) => {
-                        this.attendanceData = response.data;
-                        Indicator.close();
-                        this.$Message.success('提交成功');
+                        if (response.data.status == 1) {
+                            this.attendanceData = response.data.msg;
+                            Indicator.close();
+                            this.$Message.success('提交成功');
+                        } else if (response.data.status == 0) {
+                            this.$Message.error(response.data.msg);
+                        }
                     }).catch((error) => {
                         document.write(error);
                     });

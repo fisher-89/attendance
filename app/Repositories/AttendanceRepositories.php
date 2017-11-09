@@ -91,10 +91,10 @@ class AttendanceRepositories
      * 刷新店铺考勤表
      * @return AttendanceRepositories|array|\Illuminate\Database\Eloquent\Model|mixed
      */
-    public function refreshAttendanceForm()
+    public function refreshAttendanceForm($attendance)
     {
         $this->shopRecord = $this->getShopAttendanceForm();
-        //@todo 刷新考勤表不清空业绩
+        $originalDetails = array_pluck($attendance->details, [], 'staff_sn');
         $this->shopRecord->details()->forceDelete();
         if ($this->shopRecord->status <= 0) {
             $this->shopRecord->is_missing = 0;
@@ -102,6 +102,22 @@ class AttendanceRepositories
             $this->shopRecord->is_early_out = 0;
             $this->makeAttendanceDetail();
             $this->shopRecord = $this->getShopAttendanceForm();
+            $this->shopRecord->details->each(function ($staffAttendance) use ($originalDetails) {
+                $origin = $originalDetails[$staffAttendance->staff_sn];
+                if (!empty($origin)) {
+                    $data = array_only($origin, [
+                        'sales_performance_lisha',
+                        'sales_performance_go',
+                        'sales_performance_group',
+                        'sales_performance_partner',
+                    ]);
+                    if ($origin['shop_duty_id'] == 2) {
+                        $data['shop_duty_id'] = 2;
+                    }
+                    $staffAttendance->fill($data)->save();
+                }
+            });
+
             return $this->shopRecord;
         } else {
             abort(500, '考勤表已提交，不可修改');
