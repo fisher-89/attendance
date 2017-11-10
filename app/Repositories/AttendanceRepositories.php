@@ -94,7 +94,7 @@ class AttendanceRepositories
     public function refreshAttendanceForm($attendance)
     {
         $this->shopRecord = $this->getShopAttendanceForm();
-        $originalDetails = array_pluck($attendance->details, [], 'staff_sn');
+        $originalDetails = empty($attendance->details) ? [] : array_pluck($attendance->details, [], 'staff_sn');
         $this->shopRecord->details()->forceDelete();
         if ($this->shopRecord->status <= 0) {
             $this->shopRecord->is_missing = 0;
@@ -103,8 +103,8 @@ class AttendanceRepositories
             $this->makeAttendanceDetail();
             $this->shopRecord = $this->getShopAttendanceForm();
             $this->shopRecord->details->each(function ($staffAttendance) use ($originalDetails) {
-                $origin = $originalDetails[$staffAttendance->staff_sn];
-                if (!empty($origin)) {
+                if (array_has($originalDetails, $staffAttendance->staff_sn)) {
+                    $origin = $originalDetails[$staffAttendance->staff_sn];
                     $data = array_only($origin, [
                         'sales_performance_lisha',
                         'sales_performance_go',
@@ -242,7 +242,7 @@ class AttendanceRepositories
                         $clockModel = new Clock(['ym' => date('Ym', strtotime($this->date . ' -1 month'))]);
                         $latestClock = $this->getLatestClock($clockModel, $staffSn);
                     }
-                    if ($latestClock->type == 2 || $latestClock->attendance_type == 2) {
+                    if ($latestClock && $latestClock->type == 2 || $latestClock->attendance_type == 2) {
                         $duration = $this->countHoursBetween($this->lastClock->clock_at, $this->staffEndAt);
                         $this->addClockLog($this->lastClock->clock_at, $this->staffEndAt, 2);
                         $this->staffRecord['is_transferring'] = 1;

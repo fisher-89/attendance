@@ -205,10 +205,16 @@ class LeaveController extends Controller
         DB::beginTransaction();
         try {
             $staff = app('OA')->withoutPassport()->getDataFromApi('get_user', ['staff_sn' => $leaveRequest->staff_sn])['message'][0];
-            $workingSchedule = WorkingSchedule::where('staff_sn', $staff['staff_sn'])
+            $ymdStart = date('Ymd', strtotime($leaveRequest->start_at));
+            $scheduleModelStart = new WorkingSchedule(['ymd' => $ymdStart]);
+            $ymdEnd = date('Ymd', strtotime($leaveRequest->end_at));
+            $scheduleModelEnd = new WorkingSchedule(['ymd' => $ymdEnd]);
+            $workingScheduleStart = $scheduleModelStart->where('staff_sn', $staff['staff_sn'])
                 ->where('shop_sn', $staff['shop_sn'])->first();
-            $clockIn = empty($workingSchedule['clock_in']) ? $staff['shop']['clock_in'] : $workingSchedule['clock_in'];
-            $clockOut = empty($workingSchedule['clock_out']) ? $staff['shop']['clock_out'] : $workingSchedule['clock_out'];
+            $workingScheduleEnd = $scheduleModelEnd->where('staff_sn', $staff['staff_sn'])
+                ->where('shop_sn', $staff['shop_sn'])->first();
+            $clockIn = empty($workingScheduleStart['clock_in']) ? $staff['shop']['clock_in'] : $workingScheduleStart['clock_in'];
+            $clockOut = empty($workingScheduleEnd['clock_out']) ? $staff['shop']['clock_out'] : $workingScheduleEnd['clock_out'];
             $basicClockData = [
                 'parent_id' => $leaveRequest->id,
                 'staff_sn' => $leaveRequest->staff_sn,
@@ -216,8 +222,16 @@ class LeaveController extends Controller
                 'attendance_type' => 3,
                 'is_abandoned' => 0,
             ];
+            $ymStart = app('Clock')->getAttendanceDate('Ym', $leaveRequest->start_at);
+            $ymEnd = app('Clock')->getAttendanceDate('Ym', $leaveRequest->end_at);
 
-            if (substr($leaveRequest->start_at, 11, 5) <= $clockIn || strtotime($leaveRequest->start_at) < time()) {
+            $clockModelStart = new Clock(['ym' => $ymStart]);
+            $clockModelEnd = new Clock(['ym' => $ymEnd]);
+            $startClockRecord = $clockModelStart->where(['parent_id' => $leaveRequest->id, 'attendance_type' => 3, 'type' => 2])->first();
+            $endClockRecord = $clockModelEnd->where(['parent_id' => $leaveRequest->id, 'attendance_type' => 3, 'type' => 1])->first();
+
+            if ((substr($leaveRequest->start_at, 11, 5) <= $clockIn || strtotime($leaveRequest->start_at) < time())
+                && empty($startClockRecord)) {
                 $clockData = array_collapse([$basicClockData, [
                     'clock_at' => $leaveRequest->start_at,
                     'punctual_time' => $leaveRequest->start_at,
@@ -228,7 +242,8 @@ class LeaveController extends Controller
                     $leaveRequest->clock_out_at = $leaveRequest->start_at;
                 }
             }
-            if (substr($leaveRequest->end_at, 11, 5) >= $clockOut || strtotime($leaveRequest->end_at) < time()) {
+            if ((substr($leaveRequest->end_at, 11, 5) >= $clockOut || strtotime($leaveRequest->end_at) < time())
+                && empty($endClockRecord)) {
                 $clockData = array_collapse([$basicClockData, [
                     'clock_at' => $leaveRequest->end_at,
                     'punctual_time' => $leaveRequest->end_at,
@@ -240,8 +255,6 @@ class LeaveController extends Controller
                 }
             }
 
-            $ymStart = app('Clock')->getAttendanceDate('Ym', $leaveRequest->start_at);
-            $ymEnd = app('Clock')->getAttendanceDate('Ym', $leaveRequest->end_at);
             $startTimestamp = strtotime($leaveRequest->start_at);
             $endTimestamp = strtotime($leaveRequest->end_at);
             $where = [

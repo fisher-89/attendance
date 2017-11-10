@@ -115,7 +115,7 @@
         data() {
 
             let startDate = new Date();
-            startDate.setDate(startDate.getDate() - 7);
+            startDate.setDate(startDate.getDate() - 30);
 
             return {
                 records: [],
@@ -131,8 +131,8 @@
                                 let start = new Date(value.replace(/-/g, '/')).getTime();
                                 let current = new Date().getTime();
                                 let diff = current - start;
-                                if (diff > 8 * 24 * 60 * 60 * 1000) {
-                                    callback(new Error('开始时间不能早于当前时间一周前'));
+                                if (diff > 30 * 24 * 60 * 60 * 1000) {
+                                    callback(new Error('开始时间不能早于30天前'));
                                 } else {
                                     callback();
                                 }

@@ -95,10 +95,11 @@
     export default {
         data() {
             let newDate = new Date();
+            let curDate = newDate.getFullYear() + '-' + (newDate.getMonth() + 1) + '-' + newDate.getDate();
             let curTime = newDate.getHours() + '' + newDate.getMinutes();
             let clockInTrigger = !(curTime >= 850 && curTime <= 905);
             return {
-                date: '',			    //选择的日期
+                date: curDate,			    //选择的日期
                 showCalendar: false,	//是否显示日历
                 staffPicker: false,
                 selectedStaffSn: false,

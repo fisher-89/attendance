@@ -77,11 +77,13 @@ class AttendanceController extends Controller
     {
         $form = Attendance::find($request->id);
         if ($form->status <= 0) {
-            $salesPerformance = [
+            $attendanceData = [
                 'sales_performance_lisha' => 0,
                 'sales_performance_go' => 0,
                 'sales_performance_group' => 0,
                 'sales_performance_partner' => 0,
+                'manager_sn' => app('CurrentUser')->staff_sn,
+                'manager_name' => app('CurrentUser')->realname,
             ];
             if (empty($request->details)) {
                 return ['status' => 0, 'msg' => '不可提交空考勤表'];
@@ -94,15 +96,15 @@ class AttendanceController extends Controller
                     'sales_performance_partner',
                     'shop_duty_id',
                 ]));
-                $salesPerformance['sales_performance_lisha'] += $detail['sales_performance_lisha'];
-                $salesPerformance['sales_performance_go'] += $detail['sales_performance_go'];
-                $salesPerformance['sales_performance_group'] += $detail['sales_performance_group'];
-                $salesPerformance['sales_performance_partner'] += $detail['sales_performance_partner'];
+                $attendanceData['sales_performance_lisha'] += $detail['sales_performance_lisha'];
+                $attendanceData['sales_performance_go'] += $detail['sales_performance_go'];
+                $attendanceData['sales_performance_group'] += $detail['sales_performance_group'];
+                $attendanceData['sales_performance_partner'] += $detail['sales_performance_partner'];
             }
             $form->status = 1;
             $form->submitted_at = date('Y-m-d H:i:s');
             $form->details;
-            $form->update($salesPerformance);
+            $form->update($attendanceData);
             return ['status' => 1, 'msg' => $form];
         } else {
             return ['status' => 0, 'msg' => '考勤表已提交'];

@@ -44,6 +44,7 @@ class TransferRepositories
      */
     public function clock($transferID, $request)
     {
+        $clockData = $request->input();
         $transfer = Transfer::find($transferID);
         if ($transfer->status == 0) {
             $type = 2;
@@ -55,11 +56,11 @@ class TransferRepositories
             $type = 1;
             $transfer->status = 2;
             $transfer->arrived_at = date('Y-m-d H:i:s');
+            $clockData['shop_sn'] = $transfer->arriving_shop_sn;
         } else {
             return returnErr('hints.113');
         }
 
-        $clockData = $request->input();
         $clockData['attendance_type'] = 2;
         $clockData['type'] = $type;
         DB::beginTransaction();
@@ -79,6 +80,7 @@ class TransferRepositories
                         Clock::where([
                             ['staff_sn', '=', $transfer->staff_sn],
                             ['clock_at', '>', date('Y-m-d H:i:s')],
+                            ['attendance_type', '=', 3],
                         ])->update(['shop_sn' => $transfer->arriving_shop_sn]);
                     } else {
                         DB::rollBack();
