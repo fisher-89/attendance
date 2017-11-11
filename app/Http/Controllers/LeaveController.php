@@ -205,9 +205,13 @@ class LeaveController extends Controller
         DB::beginTransaction();
         try {
             $staff = app('OA')->withoutPassport()->getDataFromApi('get_user', ['staff_sn' => $leaveRequest->staff_sn])['message'][0];
-            $ymdStart = date('Ymd', strtotime($leaveRequest->start_at));
+
+            $ymdStart = app('Clock')->getAttendanceDate('Ymd', min($leaveRequest->start_at, date('Y-m-d H:i:s')));
+            $ymdEnd = app('Clock')->getAttendanceDate('Ymd', min($leaveRequest->end_at, date('Y-m-d H:i:s')));
+            $ymStart = app('Clock')->getAttendanceDate('Ym', min($leaveRequest->start_at, date('Y-m-d H:i:s')));
+            $ymEnd = app('Clock')->getAttendanceDate('Ym', min($leaveRequest->end_at, date('Y-m-d H:i:s')));
+
             $scheduleModelStart = new WorkingSchedule(['ymd' => $ymdStart]);
-            $ymdEnd = date('Ymd', strtotime($leaveRequest->end_at));
             $scheduleModelEnd = new WorkingSchedule(['ymd' => $ymdEnd]);
             $workingScheduleStart = $scheduleModelStart->where('staff_sn', $staff['staff_sn'])
                 ->where('shop_sn', $staff['shop_sn'])->first();
@@ -222,8 +226,7 @@ class LeaveController extends Controller
                 'attendance_type' => 3,
                 'is_abandoned' => 0,
             ];
-            $ymStart = app('Clock')->getAttendanceDate('Ym', $leaveRequest->start_at);
-            $ymEnd = app('Clock')->getAttendanceDate('Ym', $leaveRequest->end_at);
+
 
             $clockModelStart = new Clock(['ym' => $ymStart]);
             $clockModelEnd = new Clock(['ym' => $ymEnd]);
