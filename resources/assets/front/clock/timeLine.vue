@@ -21,7 +21,8 @@
 			</template>
 		</Alert>
 		<Timeline style="margin-top:20px;">
-			<Timeline-item v-for="(clock,key) in clocks" :key="clock.id" :color="setIconColor(clock)"
+			<Timeline-item v-for="(clock,key) in clocks" v-if=" clock.clock_at < today+' '+curTime " :key="clock.id"
+			               :color="setIconColor(clock)"
 			               :style="clock.is_abandoned?'color:lightgrey;':''">
 				<h3>
 					{{clock.clock_at | hourAndMinute}} {{clock.clock_type}} {{clock.shop_sn ? clock.shop_sn.toUpperCase() : '无店铺'}}</h3>
@@ -75,6 +76,22 @@
 				</p>
 				<p>至：{{transfer.arriving_shop_name}}</p>
 			</Timeline-item>
+			<Timeline-item v-for="(clock,key) in clocks" v-if=" clock.clock_at >= today+' '+curTime " :key="clock.id"
+			               :color="setIconColor(clock)"
+			               style="color:lightgrey;">
+				<h3>
+					{{clock.clock_at | hourAndMinute}} {{clock.clock_type}} {{clock.shop_sn ? clock.shop_sn.toUpperCase() : '无店铺'}}</h3>
+				<p v-if="clock.lng > 0">
+					<Icon type="location"/>
+					{{clock.address}}
+				</p>
+				<p v-if="clock.thumb != '' && !clock.is_abandoned">
+					<img :src="clock.thumb" @click="showPhoto(clock)">
+				</p>
+				<Button v-if="clockAvailable && inShop && clock.attendance_type == 1 && clock.type == 2 && !clock.is_abandoned && (key+1) == clocks.length"
+				        type="ghost" shape="circle" @click="uploadClock">更新打卡
+				</Button>
+			</Timeline-item>
 		</Timeline>
 		<Modal v-model="bigPhoto" :styles="{top:'20px'}">
 			<img :src="bigPhoto.photo" width="100%">
@@ -101,6 +118,15 @@
 
     export default {
         data() {
+            let date = new Date();
+            let year = date.getFullYear();
+            let month = (Array(2).join(0) + (date.getMonth() + 1)).slice(-2);
+            let day = (Array(2).join(0) + date.getDate()).slice(-2);
+            let hour = (Array(2).join(0) + date.getHours()).slice(-2);
+            let minute = (Array(2).join(0) + date.getMinutes()).slice(-2);
+            let second = (Array(2).join(0) + date.getSeconds()).slice(-2);
+            let curTime = hour + ':' + minute + ':' + second;
+
             return {
                 clocks: [],		        //打卡信息
                 transfer: false,	    //调动信息
@@ -110,7 +136,7 @@
                 aLocation: false,	    //定位信息
                 locationErr: false,	    //定位失败信息
                 today: false,		    //当前的考勤日
-                curTime: '12:00:00',    //当前时间
+                curTime: curTime,    //当前时间
                 bigPhoto: false,
             };
         },
@@ -201,7 +227,6 @@
         },
         beforeMount() {
             this.getRecord();
-            this.getCurTime();
             setInterval(this.getCurTime, 1000);
         },
         mounted() {

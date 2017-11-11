@@ -72,7 +72,7 @@ class ClockService
             $date = $this->getAttendanceDate();
         }
         $startTime = $date . ' ' . config('options.attendance_midnight');
-        $endTimestamp = min(strtotime($startTime) + 60 * 60 * 24 - 1, time());
+        $endTimestamp = strtotime($startTime . ' +1 day') - 1;
         $endTime = date('Y-m-d H:i:s', $endTimestamp);
         return [$startTime, $endTime];
     }
