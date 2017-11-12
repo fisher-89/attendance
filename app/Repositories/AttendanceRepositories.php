@@ -80,7 +80,7 @@ class AttendanceRepositories
     public function getAttendanceForm()
     {
         $this->shopRecord = $this->getShopAttendanceForm();
-        if ($this->shopRecord->status == 0 && $this->shopRecord->details()->count() == 0) {
+        if ($this->shopRecord->status == 0 && $this->shopRecord->details->count() == 0) {
             $this->makeAttendanceDetail();
             $this->shopRecord = $this->getShopAttendanceForm();
         }
@@ -94,9 +94,11 @@ class AttendanceRepositories
     public function refreshAttendanceForm($attendance)
     {
         $this->shopRecord = $this->getShopAttendanceForm();
-        $originalDetails = empty($attendance->details) ? [] : array_pluck($attendance->details, [], 'staff_sn');
-        $this->shopRecord->details()->forceDelete();
         if ($this->shopRecord->status <= 0) {
+            $originalDetails = empty($attendance->details) ? [] : array_pluck($attendance->details, [], 'staff_sn');
+            $this->shopRecord->details->each(function ($staffAttendance) {
+                $staffAttendance->forceDelete();
+            });
             $this->shopRecord->is_missing = 0;
             $this->shopRecord->is_late = 0;
             $this->shopRecord->is_early_out = 0;
@@ -158,12 +160,12 @@ class AttendanceRepositories
     {
         $scheduleModel = new WorkingSchedule(['ymd' => str_replace('-', '', $this->date)]);
         try {
-            $staffGroup = $scheduleModel->where('shop_sn', app('CurrentUser')->shop_sn)->get();
-            $staffSnGroup = $staffGroup->pluck('staff_sn');
+            $staffGroup = $scheduleModel->where('shop_sn', app('CurrentUser')->shop_sn)->get()->toArray();
+            $staffSnGroup = array_pluck($staffGroup, 'staff_sn');
             $staffGroupFromApi = app('OA')->getDataFromApi('get_user', ['staff_sn' => $staffSnGroup])['message'];
             $staffGroupFromApi = array_pluck($staffGroupFromApi, [], 'staff_sn');
             foreach ($staffGroup as $k => $v) {
-                $staffGroup[$k] = array_collapse([$v->toArray(), $staffGroupFromApi[$v['staff_sn']]]);
+                $staffGroup[$k] = array_collapse([$v, $staffGroupFromApi[$v['staff_sn']]]);
             }
         } catch (\PDOException $e) {
             $staffGroup = [];
@@ -184,7 +186,8 @@ class AttendanceRepositories
     {
         $staffSn = $staff['staff_sn'];
         $this->initStaffRecord($staff);
-        $clockModel = new Clock(['ym' => date('Ym', strtotime($this->date))]);
+        $ym = app('Clock')->getAttendanceDate('Ym', $this->date);
+        $clockModel = new Clock(['ym' => $ym]);
         $clockModel->where([
             ['staff_sn', '=', $staffSn],
             ['clock_at', '>', $this->dayStartAt],
@@ -295,7 +298,9 @@ class AttendanceRepositories
         }
 
         $oneDay = $this->staffRecord['working_days'] + $this->staffRecord['leaving_days'] + $this->staffRecord['transferring_days'];
-        if (!$this->staffRecord['is_transferring'] && round($oneDay, 2) != 1) {
+        if (round($oneDay, 2) > 1) {
+            $this->staffRecord['is_missing'] = 1;
+        } elseif (!$this->staffRecord['is_transferring'] && round($oneDay, 2) != 1) {
             $this->staffRecord['is_missing'] = 1;
         }
 
@@ -303,7 +308,8 @@ class AttendanceRepositories
         $this->shopRecord->is_late = round($this->staffRecord['late_time'], 2) > 0 ? 1 : $this->shopRecord['is_late'];
         $this->shopRecord->is_early_out = round($this->staffRecord['early_out_time'], 2) > 0 ? 1 : $this->shopRecord['is_early_out'];
 
-        $this->shopRecord->details()->create($this->staffRecord);
+        $attendanceStaffModel = new AttendanceStaff(['ym' => $ym]);
+        $attendanceStaffModel->create($this->staffRecord);
     }
 
     /**

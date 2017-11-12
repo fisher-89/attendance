@@ -164,7 +164,7 @@
                 sessionStorage.clear();
                 axios('/re_login').then((response) => {
                     sessionStorage.setItem('staff', JSON.stringify(response.data));
-                    this.$emit('update:currentUser', response.data);
+                    this.currentUserClock = response.data;
                     this.clockRefresh = true;
                     this.$refs.loadmore.onTopLoaded();
                 });

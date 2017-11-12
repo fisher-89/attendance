@@ -201,10 +201,14 @@
             /* 状态判断 end */
             hasClockIn: function () { //是否已经打完上班卡
                 let clock;
+                let clockAtTimestamp;
+                let curTimestamp;
                 for (let i in this.clocks) {
                     clock = this.clocks[i];
                     if (clock.type === 1 && clock.shop_sn == this.currentUser.shop_sn) {
-                        return true;
+                        clockAtTimestamp = new Date(clock.clock_at.replace(/-/g, '/')).getTime();
+                        curTimestamp = new Date((this.today + ' ' + this.curTime).replace(/-/g, '/')).getTime();
+                        return clockAtTimestamp <= curTimestamp;
                     }
                 }
                 return false;
@@ -244,24 +248,47 @@
                 let dateStr = this.date ? this.date : null;
                 let url = '/clock/info';
                 axios.post(url, {date: dateStr, staff_sn: this.currentUser.staff_sn}).then((response) => {
-                    this.clocks = response.data.record;
-                    this.today = response.data.today;
-                    if (!this.date) {
-                        this.$emit('update:date', this.today);
+                    try {
+                        this.clocks = response.data.record;
+                        this.today = response.data.today;
+                        if (!this.date) {
+                            this.$emit('update:date', this.today);
+                        }
+                        Indicator.close();
+                    } catch (e) {
+                        this.$Message.error(e.message);
+                        this.locationErr(e.message);
                     }
-                    Indicator.close();
+                }).catch((error) => {
+                    if (error.response) {
+                        document.write('状态码：' + error.response.status + '返回值：' + JSON.stringify(error.response.data));
+                    } else {
+                        document.write(error.message);
+                    }
                 });
             },
             getTransferRecord() {
                 let url = '/transfer/next';
                 axios.post(url, {staff_sn: this.currentUser.staff_sn}).then((response) => {
                     this.transfer = response.data == '' ? false : response.data;
+                }).catch((error) => {
+                    if (error.response) {
+                        document.write('状态码：' + error.response.status + '返回值：' + JSON.stringify(error.response.data));
+                    } else {
+                        document.write(error.message);
+                    }
                 });
             },
             getLeaveRecord() {
                 let url = '/leave/next';
                 axios.post(url, {staff_sn: this.currentUser.staff_sn}).then((response) => {
                     this.leave = response.data == '' ? false : response.data;
+                }).catch((error) => {
+                    if (error.response) {
+                        document.write('状态码：' + error.response.status + '返回值：' + JSON.stringify(error.response.data));
+                    } else {
+                        document.write(error.message);
+                    }
                 });
             },
             getLocation() {
