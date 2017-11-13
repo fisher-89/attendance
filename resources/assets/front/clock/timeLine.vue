@@ -239,21 +239,17 @@
         methods: {
             getRecord() {
                 Indicator.open('加载中...');
-                this.getTransferRecord();
-                this.getLeaveRecord();
-                this.getClockRecord();
-                this.$emit('update:refresh', false);
-            },
-            getClockRecord() {
                 let dateStr = this.date ? this.date : null;
-                let url = '/clock/info';
+                let url = '/clock_data';
                 axios.post(url, {date: dateStr, staff_sn: this.currentUser.staff_sn}).then((response) => {
                     try {
-                        this.clocks = response.data.record;
-                        this.today = response.data.today;
+                        this.clocks = response.data.clock_record.record;
+                        this.today = response.data.clock_record.today;
                         if (!this.date) {
                             this.$emit('update:date', this.today);
                         }
+                        this.transfer = response.data.transfer ? response.data.transfer : false;
+                        this.leave = response.data.leave ? response.data.leave : false;
                         Indicator.close();
                     } catch (e) {
                         this.$Message.error(e.message);
@@ -266,30 +262,7 @@
                         document.write(error.message);
                     }
                 });
-            },
-            getTransferRecord() {
-                let url = '/transfer/next';
-                axios.post(url, {staff_sn: this.currentUser.staff_sn}).then((response) => {
-                    this.transfer = response.data == '' ? false : response.data;
-                }).catch((error) => {
-                    if (error.response) {
-                        document.write('状态码：' + error.response.status + '返回值：' + JSON.stringify(error.response.data));
-                    } else {
-                        document.write(error.message);
-                    }
-                });
-            },
-            getLeaveRecord() {
-                let url = '/leave/next';
-                axios.post(url, {staff_sn: this.currentUser.staff_sn}).then((response) => {
-                    this.leave = response.data == '' ? false : response.data;
-                }).catch((error) => {
-                    if (error.response) {
-                        document.write('状态码：' + error.response.status + '返回值：' + JSON.stringify(error.response.data));
-                    } else {
-                        document.write(error.message);
-                    }
-                });
+                this.$emit('update:refresh', false);
             },
             getLocation() {
                 dd.device.geolocation.get({

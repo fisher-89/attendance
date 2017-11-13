@@ -66,3 +66,4 @@ Route::group(['prefix' => 'attendance'], function () {
 
 Route::any('re_login', 'UserController@reLogin');
 Route::post('js_config', 'UserController@getJsConfig');
+Route::post('clock_data', 'UserController@getClockData');

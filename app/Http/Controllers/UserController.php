@@ -53,6 +53,22 @@ class UserController extends Controller
         return $config;
     }
 
+    public function getClockData(Request $request)
+    {
+        $date = $request->get('date');
+        $staffSn = $request->has('staff_sn') ? $request->get('staff_sn') : app('CurrentUser')->staff_sn;
+        $response = [];
+        $response['clock_record'] = app('ClockRepos')->getRecord($date, $staffSn);
+        $response['transfer'] = app('TransferRepos')->getNextRecord($staffSn);
+        $response['leave'] = app('LeaveRepos')->getNextLeaveRequest($staffSn);
+        return $response;
+    }
+
+    /**
+     * 获取店铺包含的员工
+     * @param Request $request
+     * @return array
+     */
     public function getShopStaff(Request $request)
     {
         if (app('CurrentUser')->isShopManager()) {

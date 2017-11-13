@@ -31,9 +31,10 @@ class LeaveController extends Controller
         return $this->leaveRepos->getRecordByStaff($request->get('take', 0), $request->get('skip', 0));
     }
 
-    public function getNextRecord()
+    public function getNextRecord(Request $request)
     {
-        return $this->leaveRepos->getNextLeaveRequest();
+        $staffSn = $request->has('staff_sn') ? $request->get('staff_sn') : app('CurrentUser')->staff_sn;
+        return $this->leaveRepos->getNextLeaveRequest($staffSn);
     }
 
     /**
