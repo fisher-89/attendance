@@ -41,6 +41,7 @@ class AttendanceStaff extends Model
         'staff_department',
         'staff_status_id',
         'staff_status',
+        'is_assistor',
     ];
 
     public function __construct(array $attributes = [])

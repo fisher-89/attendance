@@ -95,6 +95,7 @@ class AttendanceController extends Controller
                     'sales_performance_group',
                     'sales_performance_partner',
                     'shop_duty_id',
+                    'is_assistor',
                 ]));
                 $attendanceData['sales_performance_lisha'] += $detail['sales_performance_lisha'];
                 $attendanceData['sales_performance_go'] += $detail['sales_performance_go'];

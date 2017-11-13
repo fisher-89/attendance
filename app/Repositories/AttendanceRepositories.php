@@ -112,6 +112,7 @@ class AttendanceRepositories
                         'sales_performance_go',
                         'sales_performance_group',
                         'sales_performance_partner',
+                        'is_assistor',
                     ]);
                     if ($origin['shop_duty_id'] == 2) {
                         $data['shop_duty_id'] = 2;
@@ -400,13 +401,15 @@ class AttendanceRepositories
     protected function recordTransferringClockOut(Clock $clock, $lastClock)
     {
         if ($lastClock) {
-            if ($lastClock->clock_at > $clock->clock_at) {
-                $clock->clock_at = $lastClock->clock_at;
-            } else {
-                $duration = $this->countHoursBetween($lastClock->clock_at, $clock->clock_at);
-                $this->addClockLog($lastClock->clock_at, $clock->clock_at, 1);
-                $this->staffRecord['working_hours'] += $duration;
-                $this->staffRecord['working_days'] += $duration / $this->workingHours;
+            if ($lastClock->type == 1) {
+                if ($lastClock->clock_at > $clock->clock_at) {
+                    $clock->clock_at = $lastClock->clock_at;
+                } else {
+                    $duration = $this->countHoursBetween($lastClock->clock_at, $clock->clock_at);
+                    $this->addClockLog($lastClock->clock_at, $clock->clock_at, 1);
+                    $this->staffRecord['working_hours'] += $duration;
+                    $this->staffRecord['working_days'] += $duration / $this->workingHours;
+                }
             }
         } elseif ($clock->clock_at > $this->staffStartAt) {
             $lateTime = $this->countHoursBetween($this->staffStartAt, $clock->clock_at);

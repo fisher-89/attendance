@@ -73,6 +73,7 @@
 									        @click="showSheet(index)">
 										{{staffAttendance.shop_duty.name}}
 									</Button>
+									<Tag v-if="staffAttendance.is_assistor == 1" color="blue">协助</Tag>
 								</i-col>
 								<i-col span="8">
 									<Tag v-if="staffAttendance.is_leaving" color="yellow">请假</Tag>
@@ -379,21 +380,26 @@
                 this.attendanceData.details[this.shopDutyStaffKey].shop_duty.id = 3;
                 this.attendanceData.details[this.shopDutyStaffKey].shop_duty.name = '导购';
             },
+            toggleAssistor() {
+                let is_assistor = this.attendanceData.details[this.shopDutyStaffKey].is_assistor;
+                this.attendanceData.details[this.shopDutyStaffKey].is_assistor = is_assistor ? 0 : 1;
+            },
             showSheet(key) {
                 if (this.attendanceData.status <= 0) {
                     let staffAttendance = this.attendanceData.details[key];
                     this.shopDutyStaffKey = key;
+                    this.shopDutyActions = [];
                     if (staffAttendance.shop_duty_id == 3) {
-                        this.shopDutyActions = [
-                            {name: '设为店助', method: this.setShopDutyToAssistant}
-                        ];
-                        this.shopDutySheetVisible = true;
+                        this.shopDutyActions.push({name: '设为店助', method: this.setShopDutyToAssistant});
                     } else if (staffAttendance.shop_duty_id == 2) {
-                        this.shopDutyActions = [
-                            {name: '设为导购', method: this.setShopDutyToSalesperson}
-                        ];
-                        this.shopDutySheetVisible = true;
+                        this.shopDutyActions.push({name: '设为导购', method: this.setShopDutyToSalesperson});
                     }
+                    if (staffAttendance.is_assistor == 0) {
+                        this.shopDutyActions.push({name: '协助', method: this.toggleAssistor});
+                    } else {
+                        this.shopDutyActions.push({name: '取消协助', method: this.toggleAssistor});
+                    }
+                    this.shopDutySheetVisible = true;
                 }
             }
         }
