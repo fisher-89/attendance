@@ -187,7 +187,7 @@ class AttendanceRepositories
     {
         $staffSn = $staff['staff_sn'];
         $this->initStaffRecord($staff);
-        $ym = app('Clock')->getAttendanceDate('Ym', $this->date);
+        $ym = date('Ym', strtotime($this->date));
         $clockModel = new Clock(['ym' => $ym]);
         $clockModel->where([
             ['staff_sn', '=', $staffSn],
@@ -580,6 +580,9 @@ class AttendanceRepositories
                 ['attendance_type', '<>', 3],
                 ['is_abandoned', '=', 0],
             ])->orderBy('clock_at', 'desc')->first();
+        }
+        if (!empty($latestClock)) {
+            $latestClock->clock_at = strtotime($latestClock->clock_at);
         }
         return $latestClock;
     }
