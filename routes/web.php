@@ -12,7 +12,8 @@
 */
 
 Route::get('', function () {
-    return redirect('/f/sign');
+    $ver = date('mdHi', filemtime(public_path('/js/front.js')));
+    return redirect('/f/sign?ver=' . $ver);
 });
 
 //非常重要

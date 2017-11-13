@@ -10,7 +10,7 @@
 			</i-col>
 		</Row>
 		<Clock :current-user.sync="currentUser" :refresh.sync="clockRefresh"
-		       :date.sync="date"></Clock>
+		       :date.sync="date" :assist="true"></Clock>
 	</div>
 </template>
 
@@ -35,12 +35,6 @@
         watch: {
             staffSn(newValue) {
                 axios.post('/clock/get_shop_staff', {staff_sn: newValue}).then((response) => {
-                    this.currentUser = response.data;
-                    this.clockRefresh = true;
-                });
-            },
-            currentUser(newValue) {
-                axios.post('/clock/get_shop_staff', {staff_sn: this.staffSn}).then((response) => {
                     this.currentUser = response.data;
                     this.clockRefresh = true;
                 });

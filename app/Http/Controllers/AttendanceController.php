@@ -89,7 +89,8 @@ class AttendanceController extends Controller
                 return ['status' => 0, 'msg' => '不可提交空考勤表'];
             }
             foreach ($request->details as $detail) {
-                AttendanceStaff::find($detail['id'])->update(array_only($detail, [
+                $attendanceStaffModel = new AttendanceStaff(['ym' => date('Ym', strtotime($form->attendance_date))]);
+                $attendanceStaffModel->find($detail['id'])->update(array_only($detail, [
                     'sales_performance_lisha',
                     'sales_performance_go',
                     'sales_performance_group',

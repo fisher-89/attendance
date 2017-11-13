@@ -140,7 +140,7 @@
                 bigPhoto: false,
             };
         },
-        props: ['currentUser', 'date', 'refresh'],
+        props: ['currentUser', 'date', 'refresh', 'assist'],
         components: components,
         watch: {
             refresh(newValue) {
@@ -471,12 +471,19 @@
             },
             reLogin() {
                 Indicator.open('重新登录中...');
-                sessionStorage.clear();
-                axios('/re_login').then((response) => {
-                    sessionStorage.setItem('staff', JSON.stringify(response.data));
-                    this.$emit('update:currentUser', response.data);
-                    Indicator.close();
-                });
+                if (this.assist) {
+                    axios.post('/clock/get_shop_staff', {staff_sn: this.currentUser.staff_sn}).then((response) => {
+                        this.$emit('update:currentUser', response.data);
+                        Indicator.close();
+                    });
+                } else {
+                    sessionStorage.clear();
+                    axios('/re_login').then((response) => {
+                        sessionStorage.setItem('staff', JSON.stringify(response.data));
+                        this.$emit('update:currentUser', response.data);
+                        Indicator.close();
+                    });
+                }
             },
         }
     }

@@ -61,7 +61,8 @@
 					</i-col>
 				</Row>
 				<template v-if="clockInClose">
-					<Clock :current-user.sync="currentUserClock" :refresh.sync="clockRefresh" :date.sync="date"></Clock>
+					<Clock :current-user.sync="currentUserClock" :refresh.sync="clockRefresh" :date.sync="date"
+					       :assist="false"></Clock>
 				</template>
 				<template v-else>
 					<ClockIn :current-user="currentUserClock" :close.sync="clockInClose"></ClockIn>
@@ -97,7 +98,7 @@
             let newDate = new Date();
             let curDate = newDate.getFullYear() + '-' + (newDate.getMonth() + 1) + '-' + newDate.getDate();
             let curTime = newDate.getHours() + '' + newDate.getMinutes();
-            let clockInTrigger = !(curTime >= 850 && curTime <= 905);
+            let clockInTrigger = curTime < 850 || curTime > 905;
             return {
                 date: curDate,			    //选择的日期
                 showCalendar: false,	//是否显示日历
@@ -110,8 +111,7 @@
             };
         },
         props: ['currentUser'],
-        components:
-        components,
+        components: components,
         computed:
             {
                 selectStaff() {
