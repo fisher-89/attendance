@@ -113,14 +113,15 @@ class AttendanceRepositories
                         'sales_performance_group',
                         'sales_performance_partner',
                         'is_assistor',
+                        'is_shift',
                     ]);
-                    if ($origin['shop_duty_id'] == 2) {
+                    if ($origin['shop_duty_id'] == 2 && $staffAttendance->shop_duty_id != 1) {
                         $data['shop_duty_id'] = 2;
                     }
                     $staffAttendance->fill($data)->save();
                 }
             });
-
+            $this->shopRecord = $this->getShopAttendanceForm();
             return $this->shopRecord;
         } else {
             abort(500, '考勤表已提交，不可修改');
@@ -161,12 +162,13 @@ class AttendanceRepositories
     {
         $scheduleModel = new WorkingSchedule(['ymd' => str_replace('-', '', $this->date)]);
         try {
-            $staffGroup = $scheduleModel->where('shop_sn', app('CurrentUser')->shop_sn)->get()->toArray();
-            $staffSnGroup = array_pluck($staffGroup, 'staff_sn');
+            $staffGroupFromSchedule = $scheduleModel->where('shop_sn', app('CurrentUser')->shop_sn)->get()->toArray();
+            $staffSnGroup = array_pluck($staffGroupFromSchedule, 'staff_sn');
             $staffGroupFromApi = app('OA')->getDataFromApi('get_user', ['staff_sn' => $staffSnGroup])['message'];
             $staffGroupFromApi = array_pluck($staffGroupFromApi, [], 'staff_sn');
-            foreach ($staffGroup as $k => $v) {
-                $staffGroup[$k] = array_collapse([$v, $staffGroupFromApi[$v['staff_sn']]]);
+            $staffGroup = [];
+            foreach ($staffGroupFromSchedule as $v) {
+                $staffGroup[] = array_collapse([$v, $staffGroupFromApi[$v['staff_sn']]]);
             }
         } catch (\PDOException $e) {
             $staffGroup = [];
@@ -174,7 +176,6 @@ class AttendanceRepositories
         foreach ($staffGroup as $staff) {
             $this->getAttendanceDataByStaff($staff);
         }
-        $this->shopRecord->details;
         $this->shopRecord->save();
     }
 
@@ -324,6 +325,10 @@ class AttendanceRepositories
         $this->workingHours = $this->countHoursBetween($this->staffStartAt, $this->staffEndAt);
         if ($this->workingHours == 0) {
             abort(500, '上班时间和下班时间不能相同');
+        } elseif ($this->workingHours == 7 || $this->workingHours == 6) {
+            $isShift = 1;
+        } else {
+            $isShift = 0;
         }
         $this->staffRecord = [
             'attendance_shop_id' => $this->attendanceId,
@@ -355,6 +360,7 @@ class AttendanceRepositories
             'staff_department' => $staff['department']['name'],
             'staff_status_id' => $staff['status_id'],
             'staff_status' => $staff['status']['name'],
+            'is_shift' => $isShift,
         ];
     }
 

@@ -68,12 +68,17 @@
 									<small style="color:#999;line-height:26px;">{{staffAttendance.staff_sn}}</small>
 								</i-col>
 								<i-col span="8">
-									<Button :type="staffAttendance.shop_duty_id==1? 'success' :staffAttendance.shop_duty_id==2?'info': 'ghost'"
-									        size="small"
-									        @click="showSheet(index)">
+									<!--<Button :type="staffAttendance.shop_duty_id==1? 'success' :staffAttendance.shop_duty_id==2?'info': 'ghost'"-->
+									<!--size="small"-->
+									<!--@click="showSheet(index)">-->
+									<!--{{staffAttendance.shop_duty.name}}-->
+									<!--</Button>-->
+									<Tag :color="staffAttendance.shop_duty_id == 1?'green':staffAttendance.shop_duty_id==2?'blue':'default'"
+									     @click.native="showSheet(index)">
 										{{staffAttendance.shop_duty.name}}
-									</Button>
+									</Tag>
 									<Tag v-if="staffAttendance.is_assistor == 1" color="blue">协助</Tag>
+									<Tag v-if="staffAttendance.is_shift == 1" color="yellow">倒班</Tag>
 								</i-col>
 								<i-col span="8">
 									<Tag v-if="staffAttendance.is_leaving" color="yellow">请假</Tag>
@@ -251,11 +256,6 @@
         watch: {},
         methods: {
             locate() {
-//                let url = '/js_config';
-//                axios.post(url, {'current_url': location.href}).then((response) => {
-//                    let jsConfig = response.data;
-//                    jsConfig['jsApiList'] = ['device.geolocation.get'];
-//                    dd.config(jsConfig);
                 dd.ready(() => {
                     Indicator.open('定位中...');
                     dd.device.geolocation.get({
@@ -294,13 +294,6 @@
                         }
                     });
                 });
-//                    dd.error(function (error) {
-//                        let html = JSON.stringify(error);
-//                        html += '<h2 onClick="location.reload()" style="text-align:center;margin-top:20px;color:#333;">点此刷新</h2>';
-//                        document.write(html);
-//                    });
-//                });
-
             },
             getAttendanceRecord() {
                 Indicator.open('加载中...');
@@ -384,6 +377,10 @@
                 let is_assistor = this.attendanceData.details[this.shopDutyStaffKey].is_assistor;
                 this.attendanceData.details[this.shopDutyStaffKey].is_assistor = is_assistor ? 0 : 1;
             },
+            toggleShift() {
+                let is_shift = this.attendanceData.details[this.shopDutyStaffKey].is_shift;
+                this.attendanceData.details[this.shopDutyStaffKey].is_shift = is_shift ? 0 : 1;
+            },
             showSheet(key) {
                 if (this.attendanceData.status <= 0) {
                     let staffAttendance = this.attendanceData.details[key];
@@ -398,6 +395,11 @@
                         this.shopDutyActions.push({name: '协助', method: this.toggleAssistor});
                     } else {
                         this.shopDutyActions.push({name: '取消协助', method: this.toggleAssistor});
+                    }
+                    if (staffAttendance.is_shift == 0) {
+                        this.shopDutyActions.push({name: '倒班', method: this.toggleShift});
+                    } else {
+                        this.shopDutyActions.push({name: '取消倒班', method: this.toggleShift});
                     }
                     this.shopDutySheetVisible = true;
                 }

@@ -295,15 +295,17 @@
                     if (valid) {
                         Indicator.open('提交中...');
                         axios.post('/leave/submit', this.leaveRequest).then((response) => {
-                            if (typeof response.data == 'string') {
-                                document.write(response.data);
-                            } else if (response.data.status) {
-                                this.$Message.success(response.data.msg);
-                                this.init();
-                                this.getLeaveRecord();
-                            } else if (response.data.msg) {
-                                this.$Message.error(response.data.msg);
-                            } else {
+                            try {
+                                if (typeof response.data == 'string') {
+                                    document.write(response.data);
+                                } else if (response.data.status) {
+                                    this.$Message.success(response.data.msg);
+                                    this.init();
+                                    this.getLeaveRecord();
+                                } else if (response.data.msg) {
+                                    this.$Message.error(response.data.msg);
+                                }
+                            } catch (e) {
                                 document.write(JSON.stringify(response.data));
                             }
                             Indicator.close();
@@ -311,7 +313,7 @@
                     } else {
                         this.$Message.error('表单验证失败!');
                     }
-                })
+                });
             },
             getLeaveRecord() {
                 let _this = this;
