@@ -137,6 +137,7 @@
                 locationErr: false,	    //定位失败信息
                 today: false,		    //当前的考勤日
                 curTime: curTime,    //当前时间
+                curTimestamp: date.getTime(),
                 bigPhoto: false,
             };
         },
@@ -167,7 +168,9 @@
                 return this.date === this.today && this.aLocation !== false && avaliableError;
             },
             inTime() {
-                return (this.hasClockIn && this.curTime > this.currentUser.working_end_at) || (!this.hasClockIn && this.curTime < this.currentUser.working_start_at);
+                let startTimestamp = new Date(this.today.replace(/-/g, "/") + ' ' + this.currentUser.working_start_at);
+                let endTimestamp = new Date(this.today.replace(/-/g, "/") + ' ' + this.currentUser.working_end_at);
+                return (this.hasClockIn && this.curTimestamp > endTimestamp) || (!this.hasClockIn && this.curTimestamp < startTimestamp);
             },
             /* 状态判断 start */
             hasTransfer: function () {
@@ -178,9 +181,8 @@
             },
             hasLeave: function () {
                 if (this.today && this.leave) {
-                    let current = new Date(this.today.replace(/-/g, "/") + ' ' + this.curTime);
-                    let start = new Date(this.leave.start_at.replace(/-/g, "/"));
-                    return (current > start) && (this.hasClockIn || this.leave.clock_out_at != null);
+                    let startTimestamp = new Date(this.leave.start_at.replace(/-/g, "/")).getTime();
+                    return (this.curTimestamp > startTimestamp) && (this.hasClockIn || this.leave.clock_out_at != null);
                 } else {
                     return false;
                 }
@@ -202,13 +204,11 @@
             hasClockIn: function () { //是否已经打完上班卡
                 let clock;
                 let clockAtTimestamp;
-                let curTimestamp;
                 for (let i in this.clocks) {
                     clock = this.clocks[i];
                     if (clock.type === 1 && clock.shop_sn == this.currentUser.shop_sn) {
                         clockAtTimestamp = new Date(clock.clock_at.replace(/-/g, '/')).getTime();
-                        curTimestamp = new Date((this.today + ' ' + this.curTime).replace(/-/g, '/')).getTime();
-                        return clockAtTimestamp <= curTimestamp;
+                        return clockAtTimestamp <= this.curTimestamp;
                     }
                 }
                 return false;
@@ -301,6 +301,7 @@
                 let minute = (Array(2).join(0) + date.getMinutes()).slice(-2);
                 let second = (Array(2).join(0) + date.getSeconds()).slice(-2);
                 this.curTime = hour + ':' + minute + ':' + second;
+                this.curTimestamp = date.getTime();
             },
             setIconColor(clock) {
                 if (clock.is_abandoned) {
