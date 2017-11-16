@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Models\Attendance;
 use App\Models\AttendanceStaff;
 use App\Models\Clock;
+use App\Models\Transfer;
 use App\Models\WorkingSchedule;
 
 /**
@@ -261,7 +262,14 @@ class AttendanceRepositories
             } else {
                 switch ($this->lastClock->attendance_type) {
                     case 2:
+                        $transfer = Transfer::find($this->lastClock->parent_id);
                         $this->staffRecord['is_transferring'] = 1;
+                        if ($transfer->arriving_shop_sn == $transfer->leaving_shop_sn) {
+                            $duration = $this->countHoursBetween($this->lastClock->clock_at, $this->staffEndAt);
+                            $this->staffRecord['transferring_hours'] += $duration;
+                            $this->staffRecord['transferring_days'] += $duration / $this->workingHours;
+                            $this->addClockLog($this->lastClock->clock_at, $this->staffEndAt, 2);
+                        }
                         break;
                     case 3:
                         $duration = $this->countHoursBetween($this->lastClock->clock_at, $this->staffEndAt);

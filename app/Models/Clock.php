@@ -20,6 +20,7 @@ class Clock extends Model
         'address',
         'distance',
         'attendance_type',
+        'is_abandoned',
         'type',
         'photo',
         'thumb',

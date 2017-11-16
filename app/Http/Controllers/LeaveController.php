@@ -201,70 +201,63 @@ class LeaveController extends Controller
         return $leaveRequest->save() ? 1 : 0;
     }
 
-    protected function changeClockRecord($leaveRequest)
+    protected function changeClockRecord(&$leaveRequest)
     {
+
+        $staff = app('OA')->withoutPassport()->getDataFromApi('get_user', ['staff_sn' => $leaveRequest->staff_sn])['message'][0];
+
+        $startAt = date('Y-m-d H:i:s', min(strtotime($leaveRequest->start_at), time()));
+        $endAt = date('Y-m-d H:i:s', min(strtotime($leaveRequest->end_at), time()));
+
+        $ymStart = app('Clock')->getAttendanceDate('Ym', $startAt);
+        $ymEnd = app('Clock')->getAttendanceDate('Ym', $endAt);
+        list($clockInTimestamp, $clockOutTimestamp) = $this->getClockRange($staff, $startAt, $endAt);
+
+        $startTimestamp = strtotime($leaveRequest->start_at);
+        $endTimestamp = strtotime($leaveRequest->end_at);
+
+        $basicClockData = [
+            'parent_id' => $leaveRequest->id,
+            'staff_sn' => $leaveRequest->staff_sn,
+            'shop_sn' => $staff['shop_sn'],
+            'attendance_type' => 3,
+            'is_abandoned' => 0,
+        ];
+
+        $clockModelStart = new Clock(['ym' => $ymStart]);
+        $clockModelEnd = new Clock(['ym' => $ymEnd]);
+        $startClockRecord = $clockModelStart->where(['parent_id' => $leaveRequest->id, 'attendance_type' => 3, 'type' => 2])->first();
+        $endClockRecord = $clockModelEnd->where(['parent_id' => $leaveRequest->id, 'attendance_type' => 3, 'type' => 1])->first();
+
+        if (($startTimestamp <= $clockInTimestamp || $startTimestamp < time()) && empty($startClockRecord)) {
+            $clockData = array_collapse([$basicClockData, [
+                'clock_at' => $leaveRequest->start_at,
+                'punctual_time' => $leaveRequest->start_at,
+                'type' => 2,
+            ]]);
+            $response = app('Clock')->clock($clockData, false);
+            if ($response['status'] == 1) {
+                $leaveRequest->clock_out_at = $leaveRequest->start_at;
+            }
+        }
+        if (($endTimestamp >= $clockOutTimestamp || $endTimestamp < time()) && empty($endClockRecord)) {
+            $clockData = array_collapse([$basicClockData, [
+                'clock_at' => $leaveRequest->end_at,
+                'punctual_time' => $leaveRequest->end_at,
+                'type' => 1,
+            ]]);
+            $response = app('Clock')->clock($clockData, false);
+            if ($response['status'] == 1) {
+                $leaveRequest->clock_in_at = $leaveRequest->end_at;
+            }
+        }
+
         DB::beginTransaction();
         try {
-            $staff = app('OA')->withoutPassport()->getDataFromApi('get_user', ['staff_sn' => $leaveRequest->staff_sn])['message'][0];
-
-            $ymdStart = app('Clock')->getAttendanceDate('Ymd', min($leaveRequest->start_at, date('Y-m-d H:i:s')));
-            $ymdEnd = app('Clock')->getAttendanceDate('Ymd', min($leaveRequest->end_at, date('Y-m-d H:i:s')));
-            $ymStart = app('Clock')->getAttendanceDate('Ym', min($leaveRequest->start_at, date('Y-m-d H:i:s')));
-            $ymEnd = app('Clock')->getAttendanceDate('Ym', min($leaveRequest->end_at, date('Y-m-d H:i:s')));
-
-            $scheduleModelStart = new WorkingSchedule(['ymd' => $ymdStart]);
-            $scheduleModelEnd = new WorkingSchedule(['ymd' => $ymdEnd]);
-            $workingScheduleStart = $scheduleModelStart->where('staff_sn', $staff['staff_sn'])
-                ->where('shop_sn', $staff['shop_sn'])->first();
-            $workingScheduleEnd = $scheduleModelEnd->where('staff_sn', $staff['staff_sn'])
-                ->where('shop_sn', $staff['shop_sn'])->first();
-            $clockIn = empty($workingScheduleStart['clock_in']) ? $staff['shop']['clock_in'] : $workingScheduleStart['clock_in'];
-            $clockOut = empty($workingScheduleEnd['clock_out']) ? $staff['shop']['clock_out'] : $workingScheduleEnd['clock_out'];
-            $basicClockData = [
-                'parent_id' => $leaveRequest->id,
-                'staff_sn' => $leaveRequest->staff_sn,
-                'shop_sn' => $staff['shop_sn'],
-                'attendance_type' => 3,
-                'is_abandoned' => 0,
-            ];
-
-
-            $clockModelStart = new Clock(['ym' => $ymStart]);
-            $clockModelEnd = new Clock(['ym' => $ymEnd]);
-            $startClockRecord = $clockModelStart->where(['parent_id' => $leaveRequest->id, 'attendance_type' => 3, 'type' => 2])->first();
-            $endClockRecord = $clockModelEnd->where(['parent_id' => $leaveRequest->id, 'attendance_type' => 3, 'type' => 1])->first();
-
-            if ((substr($leaveRequest->start_at, 11, 5) <= $clockIn || strtotime($leaveRequest->start_at) < time())
-                && empty($startClockRecord)) {
-                $clockData = array_collapse([$basicClockData, [
-                    'clock_at' => $leaveRequest->start_at,
-                    'punctual_time' => $leaveRequest->start_at,
-                    'type' => 2,
-                ]]);
-                $response = app('Clock')->clock($clockData, false);
-                if ($response['status'] == 1) {
-                    $leaveRequest->clock_out_at = $leaveRequest->start_at;
-                }
-            }
-            if ((substr($leaveRequest->end_at, 11, 5) >= $clockOut || strtotime($leaveRequest->end_at) < time())
-                && empty($endClockRecord)) {
-                $clockData = array_collapse([$basicClockData, [
-                    'clock_at' => $leaveRequest->end_at,
-                    'punctual_time' => $leaveRequest->end_at,
-                    'type' => 1,
-                ]]);
-                $response = app('Clock')->clock($clockData, false);
-                if ($response['status'] == 1) {
-                    $leaveRequest->clock_in_at = $leaveRequest->end_at;
-                }
-            }
-
-            $startTimestamp = strtotime($leaveRequest->start_at);
-            $endTimestamp = strtotime($leaveRequest->end_at);
             $where = [
                 ['staff_sn', '=', $leaveRequest->staff_sn],
-                ['clock_at', '>', $leaveRequest->start_at],
-                ['clock_at', '<', $leaveRequest->end_at],
+                ['clock_at', '>=', $leaveRequest->start_at],
+                ['clock_at', '<=', $leaveRequest->end_at],
             ];
             if (strtotime($leaveRequest->end_at) < time()) {
                 if ($ymStart == $ymEnd) {
@@ -302,6 +295,23 @@ class LeaveController extends Controller
             DB::rollBack();
         }
         DB::commit();
+    }
+
+    public function getClockRange($staff, $startAt, $endAt)
+    {
+        $ymdStart = app('Clock')->getAttendanceDate('Ymd', $startAt);
+        $ymdEnd = app('Clock')->getAttendanceDate('Ymd', $endAt);
+        $scheduleModelStart = new WorkingSchedule(['ymd' => $ymdStart]);
+        $scheduleModelEnd = new WorkingSchedule(['ymd' => $ymdEnd]);
+        $workingScheduleStart = $scheduleModelStart->where('staff_sn', $staff['staff_sn'])
+            ->where('shop_sn', $staff['shop_sn'])->first();
+        $workingScheduleEnd = $scheduleModelEnd->where('staff_sn', $staff['staff_sn'])
+            ->where('shop_sn', $staff['shop_sn'])->first();
+        $clockIn = empty($workingScheduleStart['clock_in']) ? $staff['shop']['clock_in'] : $workingScheduleStart['clock_in'];
+        $clockOut = empty($workingScheduleEnd['clock_out']) ? $staff['shop']['clock_out'] : $workingScheduleEnd['clock_out'];
+        $clockInTimestamp = strtotime(app('Clock')->getAttendanceDate('Y-m-d', $startAt) . ' ' . $clockIn);
+        $clockOutTimestamp = strtotime(app('Clock')->getAttendanceDate('Y-m-d', $endAt) . ' ' . $clockOut);
+        return [$clockInTimestamp, $clockOutTimestamp];
     }
 
     protected function moveClockRecord($model, &$timestamp, $plus = true)
