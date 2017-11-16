@@ -125,7 +125,7 @@
 
                     },
                     onFail: (err) => {
-                        this.locationErr = err.errorMessage;
+                        this.locationErr = err.errorCode + ':' + err.errorMessage;
                     }
                 });
             },
