@@ -37,6 +37,7 @@
 				        type="ghost" shape="circle" @click="uploadClock">更新打卡
 				</Button>
 			</Timeline-item>
+
 			<Timeline-item v-if="locating == true && date == today" color="lightgrey">
 				<p style="padding:5px;">
 					<mt-spinner type="fading-circle" :size="28"></mt-spinner>
@@ -76,6 +77,7 @@
 				</p>
 				<p>至：{{transfer.arriving_shop_name}}</p>
 			</Timeline-item>
+
 			<Timeline-item v-for="(clock,key) in clocks" v-if=" clock.clock_at >= today+' '+curTime " :key="clock.id"
 			               :color="setIconColor(clock)"
 			               style="color:lightgrey;">
@@ -253,7 +255,6 @@
                         Indicator.close();
                     } catch (e) {
                         this.$Message.error(e.message);
-                        this.locationErr(e.message);
                     }
                 }).catch((error) => {
                     if (error.response) {
@@ -291,7 +292,7 @@
 
                     },
                     onFail: (err) => {
-                        this.locationErr = err.errorMessage;
+                        this.locationErr = err.errorCode + ':' + err.errorMessage;
                     }
                 });
             },
