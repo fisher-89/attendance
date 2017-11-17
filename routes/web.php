@@ -17,15 +17,8 @@ Route::get('', function () {
 });
 
 //非常重要
-Route::group(['prefix' => 'f', 'namespace' => 'f'], function () {
-    Route::get('/{wa?}', function () {
-        $ver = date('mdHi', filemtime(public_path('/js/front.js')));
-        if (request()->get('ver') != $ver) {
-            return redirect(request()->url() . '?ver=' . $ver);
-        } else {
-            return view('front.index');
-        }
-    });
+Route::group(['prefix' => 'f'], function () {
+    Route::get('/{wa?}', 'UserController@showView');
 });
 
 

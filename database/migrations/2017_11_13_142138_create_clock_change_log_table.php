@@ -17,7 +17,7 @@ class CreateClockChangeLogTable extends Migration
             $table->increments('id');
             $table->integer('clock_id')->comment('打卡id');
             $table->mediumInteger('ym')->comment('打卡分表标识');
-            $table->tinyInteger('action')->comment('操作类型 1:创建 2:恢复 -1:作废');
+            $table->tinyInteger('action')->comment('操作类型 1:创建 2:恢复 3:编辑 -1:作废');
             $table->mediumInteger('operator_sn')->comment('操作人');
             $table->timestamps();
         });

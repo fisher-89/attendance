@@ -222,6 +222,7 @@ class LeaveController extends Controller
             'shop_sn' => $staff['shop_sn'],
             'attendance_type' => 3,
             'is_abandoned' => 0,
+            'operator_sn' => 100000,
         ];
 
         $clockModelStart = new Clock(['ym' => $ymStart]);
@@ -259,15 +260,14 @@ class LeaveController extends Controller
                 ['clock_at', '>=', $leaveRequest->start_at],
                 ['clock_at', '<=', $leaveRequest->end_at],
             ];
+            $startClockModel = new Clock(['ym' => $ymStart]);
+            $endClockModel = new Clock(['ym' => $ymEnd]);
             if (strtotime($leaveRequest->end_at) < time()) {
                 if ($ymStart == $ymEnd) {
-                    $clockModel = new Clock(['ym' => $ymStart]);
-                    $clockModel->where($where)->get()->each(function ($model) use (&$endTimestamp) {
+                    $startClockModel->where($where)->get()->each(function ($model) use (&$endTimestamp) {
                         $this->moveClockRecord($model, $endTimestamp);
                     });
                 } else {
-                    $startClockModel = new Clock(['ym' => $ymStart]);
-                    $endClockModel = new Clock(['ym' => $ymEnd]);
                     $startClockModel->where($where)->get()->each(function ($model) use (&$startTimestamp) {
                         $this->moveClockRecord($model, $startTimestamp, false);
                     });
@@ -281,8 +281,7 @@ class LeaveController extends Controller
                         $this->moveClockRecord($model, $startTimestamp, false);
                     });
                 } else {
-                    $clockModel = new Clock(['ym' => $ymStart]);
-                    $clockModel->where($where)->get()->each(function ($model) use (&$startTimestamp) {
+                    $startClockModel->where($where)->get()->each(function ($model) use (&$startTimestamp) {
                         $this->moveClockRecord($model, $startTimestamp, false);
                     });
                     Clock::where($where)->get()->each(function ($model) use (&$startTimestamp) {
@@ -318,7 +317,7 @@ class LeaveController extends Controller
     {
         if ($model->attendance_type == 1) {
             $model->update(['is_abandoned' => 1]);
-        } else {
+        } elseif ($model->attendance_type == 2) {
             if ($plus) {
                 $timestamp++;
             } else {

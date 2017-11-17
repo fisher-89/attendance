@@ -35,13 +35,13 @@
 		</mt-popup>
 		<!-- startDateTimePicker -->
 		<mt-datetime-picker v-model="start_at_picker.date" cancelText="" confirmText="时间" type="date"
-		                    :startDate="startDate"
+		                    :startDate="startDate" :endDate="endDate"
 		                    ref="startDatePicker" @confirm="confirmDate"></mt-datetime-picker>
 		<mt-datetime-picker v-model="start_at_picker.time" cancelText="" confirmText="确认" type="time"
 		                    ref="startTimePicker"></mt-datetime-picker>
 		<!-- endDateTimePicker -->
 		<mt-datetime-picker v-model="end_at_picker.date" cancelText="" confirmText="时间" type="date"
-		                    :startDate="start_at_picker.date"
+		                    :startDate="start_at_picker.date" :endDate="endDate"
 		                    ref="endDatePicker" @confirm="confirmDate"></mt-datetime-picker>
 		<mt-datetime-picker v-model="end_at_picker.time" cancelText="" confirmText="确认" type="time"
 		                    ref="endTimePicker"></mt-datetime-picker>
@@ -115,7 +115,10 @@
         data() {
 
             let startDate = new Date();
-            startDate.setDate(startDate.getDate() - 30);
+            let endDate = new Date();
+            let curDate = startDate.getDate();
+            startDate.setDate(curDate - 30);
+            endDate.setDate(curDate + 30);
 
             return {
                 records: [],
@@ -163,7 +166,8 @@
                 activePicker: false,
                 leaveType: {},
                 leaveTypeSlots: [],
-                startDate: startDate
+                startDate: startDate,
+                endDate: endDate
             };
         },
         components: component,

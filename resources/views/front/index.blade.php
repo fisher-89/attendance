@@ -21,13 +21,9 @@
 <script src="{{source('/js/dingtalk.js')}}"></script>
 <script>
     sessionStorage.setItem('staff', '{!! json_encode($currentUser->getInfo()) !!}');
-    window.Laravel = {
-        csrfToken: "{{csrf_token()}}"
-    };
     dd.ready(function () {
         dd.ui.webViewBounce.disable();
     });
-
 </script>
 <script src="{{source('/js/front.js')}}"></script>
 </body>

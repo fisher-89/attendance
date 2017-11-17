@@ -7,6 +7,17 @@ use App\Models\WorkingSchedule;
 
 class UserController extends Controller
 {
+
+    public function showView(Request $request)
+    {
+        $ver = date('mdHi', filemtime(public_path('/js/front.js')));
+        if ($request->get('ver') != $ver) {
+            return redirect($request->url() . '?ver=' . $ver);
+        } else {
+            return view('front.index');
+        }
+    }
+
     /**
      * 重新获取用户信息
      */
@@ -23,7 +34,7 @@ class UserController extends Controller
     public function getJsConfig()
     {
         $response = app('OA')->getDataFromApi('get_dingtalk_js_api_ticket');
-        $jsApiTicket = $response['message'];
+        $jsApiTicket = $response['message']['api_ticket'];
         $nonceStr = 'geRn9g2l3S';
         $timeStamp = time();
         /* 获取访问路由 start */
