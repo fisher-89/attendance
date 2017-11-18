@@ -258,7 +258,7 @@
                     }
                 }).catch((error) => {
                     if (error.response) {
-                        document.write('状态码：' + error.response.status + '返回值：' + JSON.stringify(error.response.data));
+                        document.write(error.response.data);
                     } else {
                         document.write(error.message);
                     }

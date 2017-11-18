@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\WorkingSchedule;
+use Cache;
 
 class UserController extends Controller
 {
@@ -33,8 +34,16 @@ class UserController extends Controller
      */
     public function getJsConfig()
     {
-        $response = app('OA')->getDataFromApi('get_dingtalk_js_api_ticket');
-        $jsApiTicket = $response['message']['api_ticket'];
+        if (Cache::store('database')->has('jsApiTicket')) {
+            $jsApiTicket = Cache::store('database')->get('jsApiTicket');
+        } else {
+            $response = app('OA')->getDataFromApi('get_dingtalk_js_api_ticket');
+            $jsApiTicket = $response['message']['api_ticket'];
+            $expiration = ($response['message']['expiration'] - time() - 1) / 60;
+            if ($expiration > 0) {
+                Cache::store('database')->put('jsApiTicket', $jsApiTicket, $expiration);
+            }
+        }
         $nonceStr = 'geRn9g2l3S';
         $timeStamp = time();
         /* 获取访问路由 start */

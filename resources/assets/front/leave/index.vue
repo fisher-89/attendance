@@ -313,6 +313,12 @@
                                 document.write(JSON.stringify(response.data));
                             }
                             Indicator.close();
+                        }).catch((error) => {
+                            if (error.response) {
+                                document.write(error.response.data);
+                            } else {
+                                document.write(error.message);
+                            }
                         });
                     } else {
                         this.$Message.error('表单验证失败!');

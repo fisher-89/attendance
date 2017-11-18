@@ -87,7 +87,7 @@ class LeaveController extends Controller
     {
         $this->validate($request, [
             'start_at' => ['required', 'date'],
-            'end_at' => ['required', 'date', 'after:start_at'],
+            'end_at' => ['required', 'date', 'after:start_at', 'before:' . date('Y-m-d', strtotime('+1 month'))],
             'type_id' => ['required', 'exists:leave_type,id'],
             'reason' => ['required', 'max:200'],
         ]);
@@ -206,8 +206,8 @@ class LeaveController extends Controller
 
         $staff = app('OA')->withoutPassport()->getDataFromApi('get_user', ['staff_sn' => $leaveRequest->staff_sn])['message'][0];
 
-        $startAt = date('Y-m-d H:i:s', min(strtotime($leaveRequest->start_at), time()));
-        $endAt = date('Y-m-d H:i:s', min(strtotime($leaveRequest->end_at), time()));
+        $startAt = $leaveRequest->start_at;
+        $endAt = $leaveRequest->end_at;
 
         $ymStart = app('Clock')->getAttendanceDate('Ym', $startAt);
         $ymEnd = app('Clock')->getAttendanceDate('Ym', $endAt);
@@ -300,12 +300,20 @@ class LeaveController extends Controller
     {
         $ymdStart = app('Clock')->getAttendanceDate('Ymd', $startAt);
         $ymdEnd = app('Clock')->getAttendanceDate('Ymd', $endAt);
-        $scheduleModelStart = new WorkingSchedule(['ymd' => $ymdStart]);
-        $scheduleModelEnd = new WorkingSchedule(['ymd' => $ymdEnd]);
+        $tableStart = DB::table('information_schema.TABLES')
+            ->where('table_name', 'working_schedule_' . $ymdStart)
+            ->count();
+        $tableEnd = DB::table('information_schema.TABLES')
+            ->where('table_name', 'working_schedule_' . $ymdEnd)
+            ->count();
+        $scheduleModelStart = $tableStart > 0 ? new WorkingSchedule(['ymd' => $ymdStart]) : new WorkingSchedule();
+        $scheduleModelEnd = $tableEnd > 0 ? new WorkingSchedule(['ymd' => $ymdEnd]) : new WorkingSchedule();
+
         $workingScheduleStart = $scheduleModelStart->where('staff_sn', $staff['staff_sn'])
             ->where('shop_sn', $staff['shop_sn'])->first();
         $workingScheduleEnd = $scheduleModelEnd->where('staff_sn', $staff['staff_sn'])
             ->where('shop_sn', $staff['shop_sn'])->first();
+
         $clockIn = empty($workingScheduleStart['clock_in']) ? $staff['shop']['clock_in'] : $workingScheduleStart['clock_in'];
         $clockOut = empty($workingScheduleEnd['clock_out']) ? $staff['shop']['clock_out'] : $workingScheduleEnd['clock_out'];
         $clockInTimestamp = strtotime(app('Clock')->getAttendanceDate('Y-m-d', $startAt) . ' ' . $clockIn);

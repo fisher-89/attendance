@@ -302,7 +302,11 @@
                     this.attendanceData = response.data;
                     Indicator.close();
                 }).catch((error) => {
-                    document.write(error);
+                    if (error.response) {
+                        document.write(error.response.data);
+                    } else {
+                        document.write(error.message);
+                    }
                 });
             },
             refreshAttendanceRecord() {
@@ -311,14 +315,22 @@
                         this.attendanceData = response.data;
                         this.$refs.loadmore.onTopLoaded();
                     }).catch((error) => {
-                        document.write(error);
+                        if (error.response) {
+                            document.write(error.response.data);
+                        } else {
+                            document.write(error.message);
+                        }
                     });
                 } else {
                     axios.post('/attendance/refresh', this.attendanceData).then((response) => {
                         this.attendanceData = response.data;
                         this.$refs.loadmore.onTopLoaded();
                     }).catch((error) => {
-                        document.write(error);
+                        if (error.response) {
+                            document.write(error.response.data);
+                        } else {
+                            document.write('其他错误:' + error.message);
+                        }
                     });
                 }
             },
