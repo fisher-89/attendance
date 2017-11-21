@@ -49,8 +49,8 @@ class ClockService
     public function getDistanceToShop($lng, $lat)
     {
         $earthRadius = 6371393;
-        $shopLng = session()->get('staff.shop.lng') * pi() / 180;
-        $shopLat = session()->get('staff.shop.lat') * pi() / 180;
+        $shopLng = app('CurrentUser')->get('shop.lng') * pi() / 180;
+        $shopLat = app('CurrentUser')->get('shop.lat') * pi() / 180;
         $staffLng = $lng * pi() / 180;
         $staffLat = $lat * pi() / 180;
         $distance = 2 * asin(min(1, sqrt(pow(sin(($staffLat - $shopLat) / 2), 2) + cos($shopLat) * cos($staffLat) * pow(sin(($staffLng - $shopLng) / 2), 2)))) * $earthRadius;

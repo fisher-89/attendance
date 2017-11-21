@@ -96,8 +96,8 @@
 							</Row>
 							<ClockLine v-if="!staffAttendance.is_missing"
 							           :clockLog="staffAttendance.clock_log"
-							           :workingStartAt="currentUser.working_start_at"
-							           :workingEndAt="currentUser.working_end_at"></ClockLine>
+							           :workingStartAt="staffAttendance.working_start_at"
+							           :workingEndAt="staffAttendance.working_end_at"></ClockLine>
 						</template>
 						<template v-if="staffAttendance.is_missing">
 							<Alert type="error">

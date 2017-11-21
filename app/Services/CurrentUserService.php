@@ -8,6 +8,7 @@
 namespace App\Services;
 
 use App\Models\WorkingSchedule;
+use Log;
 
 class CurrentUserService
 {
@@ -17,7 +18,7 @@ class CurrentUserService
     public function __construct()
     {
         if ($this->isLogin()) {
-            $this->userInfo = session('staff');
+            $this->userInfo = cache()->get('staff_' . session('staff_sn'));
         }
     }
 
@@ -55,8 +56,10 @@ class CurrentUserService
                 }
             }
             session()->put('staff_sn', $staff['staff_sn']);
-            session()->put('staff', $staff);
+            cache()->put('staff_' . $staff['staff_sn'], $staff, 120);
             $this->userInfo = $staff;
+        } else {
+            abort(500, 'OA接口异常');
         }
     }
 
@@ -88,12 +91,22 @@ class CurrentUserService
     }
 
     /**
+     * 获取某一属性（多级）
+     * @param $key
+     * @return mixed
+     */
+    public function get($key)
+    {
+        return array_get($this->userInfo, $key);
+    }
+
+    /**
      * 检查员工是否登录
      * @return type
      */
     public function isLogin()
     {
-        return session()->has('staff');
+        return session()->has('staff_sn') && cache()->has('staff_' . session('staff_sn'));
     }
 
     /**

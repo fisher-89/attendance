@@ -46,7 +46,7 @@ class UserController extends Controller
         }
         $nonceStr = 'geRn9g2l3S';
         $timeStamp = time();
-        /* 获取访问路由 start */
+        /* 获取当前路由 start */
         $url = request('current_url');
         $preg = '/\?_url=.*?&/';
         if (preg_match($preg, $url)) {

@@ -247,7 +247,7 @@ class AttendanceRepositories
                         $clockModel = new Clock(['ym' => date('Ym', strtotime($this->date . ' -1 month'))]);
                         $latestClock = $this->getLatestClock($clockModel, $staffSn);
                     }
-                    if ($latestClock && $latestClock->type == 2 || $latestClock->attendance_type == 2) {
+                    if ($latestClock && $latestClock->type == 2 && $latestClock->attendance_type == 2) {
                         $duration = $this->countHoursBetween($this->lastClock->clock_at, $this->staffEndAt);
                         $this->addClockLog($this->lastClock->clock_at, $this->staffEndAt, 2);
                         $this->staffRecord['is_transferring'] = 1;
@@ -446,11 +446,13 @@ class AttendanceRepositories
                 $start = $lastClock->clock_at;
             } else {
                 $prevClock = app('Clock')->getPrevClock($clock, date('Y-m-d H:i:s', $this->staffStartAt));
-                if ($prevClock && $prevClock->attendance_type == 2 && $prevClock->type == 2) {
+                if ($prevClock && (($prevClock->attendance_type == 2 && $prevClock->type == 2) || ($prevClock->attendance_type == 3 && $prevClock->type == 1))) {
                     $start = strtotime($prevClock->clock_at);
                     if ($start > $this->staffEndAt) {
                         $start = $this->staffEndAt;
                     }
+                } elseif ($prevClock) {
+                    $this->staffRecord['is_missing'] = 1;
                 } else {
                     $start = $this->staffStartAt;
                 }
