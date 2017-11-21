@@ -21,7 +21,8 @@
 			</template>
 		</Alert>
 		<Timeline style="margin-top:20px;">
-			<Timeline-item v-for="(clock,key) in clocks" v-if=" clock.clock_at < today+' '+curTime " :key="clock.id"
+			<Timeline-item v-for="(clock,key) in clocks"
+			               v-if="new Date(clock.clock_at.replace(/-/g,'/')).getTime() < curTimestamp " :key="clock.id"
 			               :color="setIconColor(clock)"
 			               :style="clock.is_abandoned?'color:lightgrey;':''">
 				<h3>
@@ -78,7 +79,8 @@
 				<p>至：{{transfer.arriving_shop_name}}</p>
 			</Timeline-item>
 
-			<Timeline-item v-for="(clock,key) in clocks" v-if=" clock.clock_at >= today+' '+curTime " :key="clock.id"
+			<Timeline-item v-for="(clock,key) in clocks"
+			               v-if="new Date(clock.clock_at.replace(/-/g,'/')).getTime() >= curTimestamp " :key="clock.id"
 			               :color="setIconColor(clock)"
 			               style="color:lightgrey;">
 				<h3>
@@ -170,8 +172,8 @@
                 return this.date === this.today && this.aLocation !== false && avaliableError;
             },
             inTime() {
-                let startTimestamp = new Date(this.today.replace(/-/g, "/") + ' ' + this.currentUser.working_start_at);
-                let endTimestamp = new Date(this.today.replace(/-/g, "/") + ' ' + this.currentUser.working_end_at);
+                let startTimestamp = new Date(this.today.replace(/-/g, "/") + ' ' + this.currentUser.working_start_at).getTime();
+                let endTimestamp = new Date(this.today.replace(/-/g, "/") + ' ' + this.currentUser.working_end_at).getTime();
                 return (this.hasClockIn && this.curTimestamp > endTimestamp) || (!this.hasClockIn && this.curTimestamp < startTimestamp);
             },
             /* 状态判断 start */
@@ -192,9 +194,8 @@
             isLeaving: function () {
                 if (this.hasLeave) {
                     if (this.leave.clock_in_at) {
-                        let current = new Date(this.today.replace(/-/g, "/") + ' ' + this.curTime);
-                        let clockIn = new Date(this.leave.clock_in_at.replace(/-/g, "/"));
-                        return this.leave.clock_out_at && (clockIn > current);
+                        let clockInTimestamp = new Date(this.leave.clock_in_at.replace(/-/g, "/")).getTime();
+                        return this.leave.clock_out_at && (clockInTimestamp > this.curTimestamp);
                     } else {
                         return this.leave.clock_out_at;
                     }

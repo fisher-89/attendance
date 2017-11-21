@@ -55,7 +55,7 @@
 					<i-col span="8" :class="showCalendar?'calendar-show':'calendar-hide'" id="calendar">
 						<Button @click="showCalendar = !showCalendar" size="small" type="primary"
 						        style="float:right;white-space:nowrap;margin-top:6px;">
-							{{date}}
+							{{date == '' ? curDate : date}}
 							<Icon :type="showCalendar?'arrow-up-b':'arrow-down-b'"/>
 						</Button>
 					</i-col>
@@ -100,7 +100,8 @@
             let curTime = newDate.getHours() + '' + newDate.getMinutes();
             let clockInTrigger = curTime < 850 || curTime > 905;
             return {
-                date: curDate,			    //选择的日期
+                date: '',			    //选择的日期
+                curDate: curDate,
                 showCalendar: false,	//是否显示日历
                 staffPicker: false,
                 selectedStaffSn: false,

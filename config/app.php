@@ -177,7 +177,6 @@ return [
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
-        App\Providers\CrudServiceProvider::class,
         App\Providers\RepositoriesProvider::class,
         App\Providers\SystemServiceProvider::class,
         // Barryvdh\Debugbar\ServiceProvider::class,
@@ -236,9 +235,7 @@ return [
         'Image'        => Intervention\Image\Facades\Image::class,
         'Excel'        => Maatwebsite\Excel\Facades\Excel::class,
         // 'Crud' => 'App\Facades\CrudFacade',
-        'Crud'         => App\Facades\CrudFacade::class,
         'Curl'         => App\Facades\CurlFacade::class,
-        'Oa'           => App\Facades\OaFacade::class,
         'Image'        => Intervention\Image\Facades\Image::class,
     ],
 

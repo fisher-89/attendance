@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Events\LeaveUpdating;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -23,8 +22,5 @@ class Leave extends Model
         'process_instance_id',
         'approver_sn',
         'approver_name',
-    ];
-    protected $events = [
-        'updating' => LeaveUpdating::class,
     ];
 }
