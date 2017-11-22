@@ -63,15 +63,19 @@ class AttendanceRepositories
      */
     protected $staffRecord;
 
-    public function __construct($date = null)
+    public function __construct($date = null, $shop = [])
     {
         $date = empty($date) ? date('Y-m-d') : $date;
-        $timestamp = date('Y-m-d H:i:s') >= $date . ' ' . app('CurrentUser')->shop['clock_out'] ? strtotime($date) : strtotime($date) - 24 * 3600;
+        $shopClockIn = empty($shop['clock_in']) ? app('CurrentUser')->shop['clock_in'] : $shop['clock_in'];
+        $shopClockOut = empty($shop['clock_out']) ? app('CurrentUser')->shop['clock_out'] : $shop['clock_out'];
+        $shopSn = empty($shop['shop_sn']) ? app('CurrentUser')->shop_sn : $shop['shop_sn'];
+
+        $timestamp = date('Y-m-d H:i:s') >= $date . ' ' . $shopClockOut ? strtotime($date) : strtotime($date) - 24 * 3600;
         $this->date = date('Y-m-d', $timestamp);
         list($this->dayStartAt, $this->dayEndAt) = app('Clock')->getAttendanceDay($this->date);
-        $this->shopSn = app('CurrentUser')->shop_sn;
-        $this->shopStartAt = strtotime($this->date . ' ' . app('CurrentUser')->shop['clock_in']);
-        $this->shopEndAt = strtotime($this->date . ' ' . app('CurrentUser')->shop['clock_out']);
+        $this->shopSn = $shopSn;
+        $this->shopStartAt = strtotime($this->date . ' ' . $shopClockIn);
+        $this->shopEndAt = strtotime($this->date . ' ' . $shopClockOut);
     }
 
     /**
@@ -92,11 +96,11 @@ class AttendanceRepositories
      * 刷新店铺考勤表
      * @return AttendanceRepositories|array|\Illuminate\Database\Eloquent\Model|mixed
      */
-    public function refreshAttendanceForm($attendance)
+    public function refreshAttendanceForm($attendance = null, $force = false)
     {
         $this->shopRecord = $this->getShopAttendanceForm();
-        if ($this->shopRecord->status <= 0) {
-            $originalDetails = empty($attendance->details) ? [] : array_pluck($attendance->details, [], 'staff_sn');
+        if ($this->shopRecord->status <= 0 || $force) {
+            $originalDetails = empty($attendance->details) ? $this->shopRecord->details->pluck([], 'staff_sn')->toArray() : array_pluck($attendance->details, [], 'staff_sn');
             $this->shopRecord->details->each(function ($staffAttendance) {
                 $staffAttendance->forceDelete();
             });
@@ -163,7 +167,7 @@ class AttendanceRepositories
     {
         $scheduleModel = new WorkingSchedule(['ymd' => str_replace('-', '', $this->date)]);
         try {
-            $staffGroupFromSchedule = $scheduleModel->where('shop_sn', app('CurrentUser')->shop_sn)->get()->toArray();
+            $staffGroupFromSchedule = $scheduleModel->where('shop_sn', $this->shopSn)->get()->toArray();
             $staffSnGroup = array_pluck($staffGroupFromSchedule, 'staff_sn');
             $staffGroupFromApi = app('OA')->getDataFromApi('get_user', ['staff_sn' => $staffSnGroup])['message'];
             $staffGroupFromApi = array_pluck($staffGroupFromApi, [], 'staff_sn');

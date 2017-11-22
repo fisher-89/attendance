@@ -8,10 +8,10 @@ use App\Models\AttendanceStaff;
 use App\Models\Holiday;
 use App\Models\Sign;
 use App\Models\Statistic;
-use App\Services\OAService;
-use App\Services\PluginService;
+use App\Models\WorkingSchedule;
 use App\Services\UpfileService;
 use Illuminate\Http\Request;
+use Artisan;
 
 class AttendanceController extends Controller
 {
@@ -64,6 +64,33 @@ class AttendanceController extends Controller
     {
         if (app('CurrentUser')->isShopManager()) {
             return app('AttendanceRepos', ['date' => $request->attendance_date])->refreshAttendanceForm($request);
+        }
+    }
+
+    /**
+     * 接口刷新考勤表
+     * @param Requet $request
+     * @return array
+     */
+    public function refreshByApi(Request $request)
+    {
+        $id = $request->get('id');
+        $attendance = Attendance::find($id);
+        $date = $attendance->attendance_date;
+        $ymd = date('Ymd', strtotime($date));
+        $shopSn = $attendance->shop_sn;
+
+        $attendanceList = $attendance->details->pluck('staff_sn')->toArray();
+        $workingScheduleModel = new WorkingSchedule(['ymd' => $ymd]);
+        $workingScheduleList = $workingScheduleModel->where('shop_sn', $shopSn)->get()->pluck('staff_sn')->toArray();
+
+        sort($workingScheduleList);
+        sort($attendanceList);
+        if ($workingScheduleList == $attendanceList) {
+            Artisan::call('attendance:refresh', ['--date' => $date, '--shop_sn' => $shopSn]);
+            return ['status' => 1, 'message' => '刷新成功'];
+        } else {
+            return ['status' => -1, 'message' => '考勤表与排班表人员不同'];
         }
     }
 

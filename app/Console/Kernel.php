@@ -2,7 +2,7 @@
 
 namespace App\Console;
 
-use App\Console\Commands\TransferTmp;
+use App\Console\Commands\RefreshAttendance;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -14,7 +14,7 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        TransferTmp::class
+        RefreshAttendance::class
     ];
 
     /**

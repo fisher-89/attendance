@@ -8,16 +8,16 @@
 			店铺尚未定位
 			<template slot="desc">请联系店长登录系统完成定位</template>
 		</Alert>
-		<Alert banner type="error" show-icon v-else-if="!aLocation" v-show="locationErr != false">
+		<Alert banner type="error" show-icon v-else-if="!aLocation" v-show="errorMessage != false">
 			定位失败
 			<template slot="desc">请检查是否开启定位或使用店长代签打卡<br>
-				<span v-if="locationErr != false">错误信息：{{locationErr}}</span>
+				<span v-if="errorMessage != false">错误信息：{{errorMessage}}</span>
 			</template>
 		</Alert>
 		<Alert banner type="error" show-icon v-else-if="!clockAvailable && date == today">
 			无法打卡，未知原因
 			<template slot="desc">请联系IT部<br>
-				<span v-if="locationErr != false">错误信息：{{locationErr}}</span>
+				<span v-if="errorMessage != false">错误信息：{{errorMessage}}</span>
 			</template>
 		</Alert>
 		<Timeline style="margin-top:20px;">
@@ -138,7 +138,7 @@
 
                 locating: false,        //定位中提示
                 aLocation: false,	    //定位信息
-                locationErr: false,	    //定位失败信息
+                errorMessage: false,	    //定位失败信息
                 today: false,		    //当前的考勤日
                 curTime: curTime,    //当前时间
                 curTimestamp: date.getTime(),
@@ -164,9 +164,9 @@
             },
             clockAvailable() { //是否可以打卡
                 let avaliableError = true;
-                if (this.locationErr &&
-                    this.locationErr.match('error message = 取消') == null &&
-                    this.locationErr.match('error message = 定位错误') == null) {
+                if (this.errorMessage &&
+                    this.errorMessage.match('error message = 取消') == null &&
+                    this.errorMessage.match('error message = 定位错误') == null) {
                     avaliableError = false;
                 }
                 return this.date === this.today && this.aLocation !== false && avaliableError;
@@ -209,7 +209,7 @@
                 let clockAtTimestamp;
                 for (let i in this.clocks) {
                     clock = this.clocks[i];
-                    if (clock.type === 1 && clock.shop_sn == this.currentUser.shop_sn) {
+                    if (clock.type === 1 && clock.shop_sn == this.currentUser.shop_sn && clock.is_abandoned == 0) {
                         clockAtTimestamp = new Date(clock.clock_at.replace(/-/g, '/')).getTime();
                         return clockAtTimestamp <= this.curTimestamp;
                     }
@@ -220,7 +220,7 @@
                 let clock;
                 for (let i in this.clocks) {
                     clock = this.clocks[i];
-                    if (clock.type == 2 && clock.attendance_type == 1) {
+                    if (clock.type == 2 && clock.attendance_type == 1 && clock.is_abandoned == 0) {
                         return true;
                     }
                 }
@@ -286,14 +286,15 @@
                                 formattedAddress: result.address ? result.address : '获取地址信息失败，可正常打卡',
                                 accuracy: result.accuracy
                             };
-                            this.locationErr = false;
+                            this.errorMessage = false;
                         } catch (e) {
-                            this.locationErr = e.message;
+                            this.errorMessage = e.message;
                         }
 
                     },
                     onFail: (err) => {
-                        this.locationErr = err.errorCode + ':' + err.errorMessage;
+                        this.aLocation = false;
+                        this.errorMessage = err.errorCode + ':' + err.errorMessage;
                     }
                 });
             },
