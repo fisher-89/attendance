@@ -268,7 +268,7 @@ class AttendanceRepositories
                     case 2:
                         $transfer = Transfer::find($this->lastClock->parent_id);
                         $this->staffRecord['is_transferring'] = 1;
-                        if ($transfer->arriving_shop_sn == $transfer->leaving_shop_sn) {
+                        if ($transfer->arriving_shop_sn == $this->lastClock->shop_sn) {
                             $duration = $this->countHoursBetween($this->lastClock->clock_at, $this->staffEndAt);
                             $this->staffRecord['transferring_hours'] += $duration;
                             $this->staffRecord['transferring_days'] += $duration / $this->workingHours;
