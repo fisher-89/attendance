@@ -41,8 +41,8 @@ class ClockService
             }
             $ym = $this->getAttendanceDate('Ym', $clockData['clock_at']);
             $clockModel = new Clock(['ym' => $ym]);
-            $res = $clockModel->create($clockData);
-            return returnRes($res->id, 'hints.112', 'hints.113');
+            $clockModel->fill($clockData)->save();
+            return returnRes($clockModel->id, 'hints.112', 'hints.113');
         }
     }
 

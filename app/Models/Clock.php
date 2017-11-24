@@ -32,7 +32,7 @@ class Clock extends Model
     {
         parent::__construct($attributes);
         $ym = array_has($attributes, 'ym') ? $attributes['ym'] : app('Clock')->getAttendanceDate('Ym');
-        $this->table .= $ym;
+        $this->setMonth($ym);
     }
 
     /* 关联 Start */
@@ -76,5 +76,18 @@ class Clock extends Model
     }
 
     /* 访问器 End */
+
+    /* 自定义方法 Start */
+
+    public function setMonth($month)
+    {
+        if (!preg_match('/^\d{6}$/', $month)) {
+            $month = date('Ym', strtotime($month));
+        }
+        $this->setTable('clock_' . $month);
+        return $this;
+    }
+
+    /* 自定义方法 End */
 
 }

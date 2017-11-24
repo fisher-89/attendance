@@ -19,7 +19,7 @@ trait RelationHasSeveralTables
     protected function newRelatedInstance($class)
     {
         $class = is_object($class) ? $class : new $class;
-        return tap(new $class, function ($instance) {
+        return tap($class, function ($instance) {
             if (!$instance->getConnectionName()) {
                 $instance->setConnection($this->connection);
             }

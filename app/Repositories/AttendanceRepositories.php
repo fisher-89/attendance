@@ -102,7 +102,7 @@ class AttendanceRepositories
         if ($this->shopRecord->status <= 0 || $force) {
             $originalDetails = empty($attendance->details) ? $this->shopRecord->details->pluck([], 'staff_sn')->toArray() : array_pluck($attendance->details, [], 'staff_sn');
             $this->shopRecord->details->each(function ($staffAttendance) {
-                $staffAttendance->forceDelete();
+                $staffAttendance->setMonth($this->shopRecord->attendance_date)->forceDelete();
             });
             $this->shopRecord->is_missing = 0;
             $this->shopRecord->is_late = 0;
@@ -123,7 +123,7 @@ class AttendanceRepositories
                     if ($origin['shop_duty_id'] == 2 && $staffAttendance->shop_duty_id != 1) {
                         $data['shop_duty_id'] = 2;
                     }
-                    $staffAttendance->fill($data)->save();
+                    $staffAttendance->setMonth($this->shopRecord->attendance_date)->fill($data)->save();
                 }
             });
             $this->shopRecord = $this->getShopAttendanceForm();
@@ -296,13 +296,22 @@ class AttendanceRepositories
             if (!$latestClock || $latestClock->type == 1 || $latestClock->attendance_type == 1) {
                 $this->staffRecord['is_missing'] = 1;
             } else {
-                $duration = $this->countHoursBetween(max($latestClock->clock_at, $this->staffStartAt), $this->staffEndAt);
-                $this->addClockLog(max($latestClock->clock_at, $this->staffStartAt), $this->staffEndAt, $latestClock->attendance_type);
                 if ($latestClock->attendance_type == 2) {
+                    $beforeLatestClock = app('Clock')->getPrevClock($latestClock, $this->dayStartAt);
+                    if (empty($beforeLatestClock)) {
+                        $start = $this->staffStartAt;
+                    } else {
+                        $start = max($latestClock->clock_at, $this->staffStartAt);
+                    }
+                    $duration = $this->countHoursBetween($start, $this->staffEndAt);
+                    $this->addClockLog($start, $this->staffEndAt, $latestClock->attendance_type);
                     $this->staffRecord['is_transferring'] = 1;
                     $this->staffRecord['transferring_hours'] += $duration;
                     $this->staffRecord['transferring_days'] += $duration / $this->workingHours;
                 } elseif ($latestClock->attendance_type == 3) {
+                    $start = max($latestClock->punctual_time, $this->staffStartAt);
+                    $duration = $this->countHoursBetween($start, $this->staffEndAt);
+                    $this->addClockLog($start, $this->staffEndAt, $latestClock->attendance_type);
                     $this->staffRecord['is_leaving'] = 1;
                     $this->staffRecord['leaving_hours'] += $duration;
                     $this->staffRecord['leaving_days'] += $duration / $this->workingHours;
@@ -322,7 +331,7 @@ class AttendanceRepositories
         $this->shopRecord->is_early_out = round($this->staffRecord['early_out_time'], 2) > 0 ? 1 : $this->shopRecord['is_early_out'];
 
         $attendanceStaffModel = new AttendanceStaff(['ym' => $ym]);
-        $attendanceStaffModel->create($this->staffRecord);
+        $attendanceStaffModel->fill($this->staffRecord)->save();
     }
 
     /**
@@ -446,20 +455,29 @@ class AttendanceRepositories
         if ($lastClock && $lastClock->combined_type != 31 && $lastClock->combined_type != 22) {
             $this->staffRecord['is_missing'] = 1;
         } else {
-            if ($lastClock) {
+            if ($lastClock && ($lastClock->combined_type == 31 || $lastClock->parent_id == $clock->parent_id)) {
                 $start = $lastClock->clock_at;
             } else {
                 $prevClock = app('Clock')->getPrevClock($clock, date('Y-m-d H:i:s', $this->staffStartAt));
-                if ($prevClock && (($prevClock->attendance_type == 2 && $prevClock->type == 2) || ($prevClock->attendance_type == 3 && $prevClock->type == 1))) {
-                    $start = strtotime($prevClock->clock_at);
-                    if ($start > $this->staffEndAt) {
-                        $start = $this->staffEndAt;
-                    }
-                } elseif ($prevClock) {
-                    $this->staffRecord['is_missing'] = 1;
-                } else {
+                if (empty($prevClock)) {
                     $start = $this->staffStartAt;
+                } elseif ($prevClock->attendance_type == 2 && $prevClock->type == 2) {
+                    $beforePrevClock = app('Clock')->getPrevClock($prevClock, $this->dayStartAt);
+                    if (empty($beforePrevClock)) {
+                        $start = $this->staffStartAt;
+                    } else {
+                        $start = strtotime($prevClock->clock_at);
+                    }
+                } elseif ($prevClock->attendance_type == 3 && $prevClock->type == 1) {
+                    $start = strtotime($prevClock->clock_at);
+                } else {
+                    $this->staffRecord['is_missing'] = 1;
+                    return;
                 }
+
+                $start = max($start, $this->staffStartAt);
+                $start = min($start, $this->staffEndAt);
+
             }
             $this->staffRecord['is_transferring'] = 1;
             if ($start > $clock->clock_at) {

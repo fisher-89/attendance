@@ -264,15 +264,15 @@ class LeaveController extends Controller
             $endClockModel = new Clock(['ym' => $ymEnd]);
             if (strtotime($leaveRequest->end_at) < time()) {
                 if ($ymStart == $ymEnd) {
-                    $startClockModel->where($where)->get()->each(function ($model) use (&$endTimestamp) {
-                        $this->moveClockRecord($model, $endTimestamp);
+                    $startClockModel->where($where)->get()->each(function ($model) use (&$endTimestamp, $ymStart) {
+                        $this->moveClockRecord($model->setMonth($ymStart), $endTimestamp);
                     });
                 } else {
-                    $startClockModel->where($where)->get()->each(function ($model) use (&$startTimestamp) {
-                        $this->moveClockRecord($model, $startTimestamp, false);
+                    $startClockModel->where($where)->get()->each(function ($model) use (&$startTimestamp, $ymStart) {
+                        $this->moveClockRecord($model->setMonth($ymStart), $startTimestamp, false);
                     });
-                    $endClockModel->where($where)->get()->each(function ($model) use (&$endTimestamp) {
-                        $this->moveClockRecord($model, $endTimestamp);
+                    $endClockModel->where($where)->get()->each(function ($model) use (&$endTimestamp, $ymEnd) {
+                        $this->moveClockRecord($model->setMonth($ymEnd), $endTimestamp);
                     });
                 }
             } elseif (strtotime($leaveRequest->start_at) < time()) {
@@ -281,8 +281,8 @@ class LeaveController extends Controller
                         $this->moveClockRecord($model, $startTimestamp, false);
                     });
                 } else {
-                    $startClockModel->where($where)->get()->each(function ($model) use (&$startTimestamp) {
-                        $this->moveClockRecord($model, $startTimestamp, false);
+                    $startClockModel->where($where)->get()->each(function ($model) use (&$startTimestamp, $ymStart) {
+                        $this->moveClockRecord($model->setMonth($ymStart), $startTimestamp, false);
                     });
                     Clock::where($where)->get()->each(function ($model) use (&$startTimestamp) {
                         $this->moveClockRecord($model, $startTimestamp, false);
@@ -324,7 +324,7 @@ class LeaveController extends Controller
     protected function moveClockRecord($model, &$timestamp, $plus = true)
     {
         if ($model->attendance_type == 1) {
-            $model->update(['is_abandoned' => 1]);
+            $model->fill(['is_abandoned' => 1])->save();
         } elseif ($model->attendance_type == 2) {
             if ($plus) {
                 $timestamp++;
@@ -332,7 +332,7 @@ class LeaveController extends Controller
                 $timestamp--;
             }
             $clockAt = date('Y-m-d H:i:s', $timestamp);
-            $model->update(['clock_at' => $clockAt]);
+            $model->fill(['clock_at' => $clockAt])->save();
             if ($model->type == 2) {
                 Transfer::find($model->parent_id)->update(['left_at' => $clockAt]);
             } elseif ($model->type == 1) {
