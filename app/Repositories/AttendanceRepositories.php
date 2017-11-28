@@ -381,6 +381,11 @@ class AttendanceRepositories
             'staff_status_id' => $staff['status_id'],
             'staff_status' => $staff['status']['name'],
             'is_shift' => $isShift,
+            'shop_sn' => $this->shopRecord->shop_sn,
+            'manager_sn' => $this->shopRecord->manager_sn,
+            'attendance_date' => $this->shopRecord->attendance_date,
+            'department_id' => $this->shopRecord->department_id,
+            'status' => $this->shopRecord->status,
         ];
     }
 
@@ -465,6 +470,8 @@ class AttendanceRepositories
                     $beforePrevClock = app('Clock')->getPrevClock($prevClock, $this->dayStartAt);
                     if (empty($beforePrevClock)) {
                         $start = $this->staffStartAt;
+                    } elseif ($beforePrevClock->attendance_type == 2 && $beforePrevClock->type == 1) {
+                        $start = strtotime($beforePrevClock->punctual_time);
                     } else {
                         $start = strtotime($prevClock->clock_at);
                     }
@@ -590,7 +597,9 @@ class AttendanceRepositories
             } elseif (substr($this->staffRecord['clock_log'], -4) == $startClock) {
                 $clockLogString = $typeGroup[$type] . $endClock;
             } else {
-                $this->staffRecord['is_missing'] = 1;
+                if ($type != 2) {
+                    $this->staffRecord['is_missing'] = 1;
+                }
                 $clockLogString = $startClock . $typeGroup[$type] . $endClock;
             }
             $this->staffRecord['clock_log'] .= $clockLogString;

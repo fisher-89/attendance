@@ -246,7 +246,7 @@
                 locale: Chinese,
                 defaultDate: 'today',
                 maxDate: 'today',
-                minDate: '2017-11-01',
+                minDate: new Date().fp_incr(-40),
                 onChange: (selectedDates, dateStr) => {
                     this.date = dateStr;
                     this.getAttendanceRecord();

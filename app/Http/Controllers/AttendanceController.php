@@ -104,28 +104,31 @@ class AttendanceController extends Controller
     {
         $form = Attendance::find($request->id);
         if ($form->status <= 0) {
+            $currentUserSn = app('CurrentUser')->staff_sn;
+            $currentUserName = app('CurrentUser')->realname;
             $attendanceData = [
                 'sales_performance_lisha' => 0,
                 'sales_performance_go' => 0,
                 'sales_performance_group' => 0,
                 'sales_performance_partner' => 0,
-                'manager_sn' => app('CurrentUser')->staff_sn,
-                'manager_name' => app('CurrentUser')->realname,
+                'manager_sn' => $currentUserSn,
+                'manager_name' => $currentUserName,
             ];
             if (empty($request->details)) {
                 return ['status' => 0, 'msg' => '不可提交空考勤表'];
             }
             foreach ($request->details as $detail) {
-                $attendanceStaffModel = new AttendanceStaff(['ym' => date('Ym', strtotime($form->attendance_date))]);
-                $attendanceStaffModel->find($detail['id'])->update(array_only($detail, [
-                    'sales_performance_lisha',
-                    'sales_performance_go',
-                    'sales_performance_group',
-                    'sales_performance_partner',
-                    'shop_duty_id',
-                    'is_assistor',
-                    'is_shift',
-                ]));
+                $attendanceStaffModel = new AttendanceStaff(['ym' => $form->attendance_date]);
+                $attendanceStaffModel->find($detail['id'])->setMonth($form->attendance_date)
+                    ->fill(array_only($detail, [
+                        'sales_performance_lisha',
+                        'sales_performance_go',
+                        'sales_performance_group',
+                        'sales_performance_partner',
+                        'shop_duty_id',
+                        'is_assistor',
+                        'is_shift',
+                    ]))->fill(['status' => 1, 'manager_sn' => $currentUserSn])->save();
                 $attendanceData['sales_performance_lisha'] += $detail['sales_performance_lisha'];
                 $attendanceData['sales_performance_go'] += $detail['sales_performance_go'];
                 $attendanceData['sales_performance_group'] += $detail['sales_performance_group'];
@@ -151,6 +154,9 @@ class AttendanceController extends Controller
     {
         $form = Attendance::find($request->id);
         if ($form->status == 1) {
+            $form->details->each(function ($staffAttendance) {
+                $staffAttendance->setMonth($staffAttendance->attendance_date)->fill(['status' => 0])->save();
+            });
             $form->status = 0;
             $form->save();
             $form->details;

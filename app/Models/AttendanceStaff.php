@@ -43,6 +43,11 @@ class AttendanceStaff extends Model
         'staff_status',
         'is_assistor',
         'is_shift',
+        'shop_sn',
+        'manager_sn',
+        'attendance_date',
+        'department_id',
+        'status',
     ];
 
     public function __construct(array $attributes = [])
