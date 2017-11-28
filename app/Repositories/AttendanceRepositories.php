@@ -470,7 +470,7 @@ class AttendanceRepositories
                     $beforePrevClock = app('Clock')->getPrevClock($prevClock, $this->dayStartAt);
                     if (empty($beforePrevClock)) {
                         $start = $this->staffStartAt;
-                    } elseif ($beforePrevClock->attendance_type == 2 && $beforePrevClock->type == 1) {
+                    } elseif ($beforePrevClock->attendance_type == 3 && $beforePrevClock->type == 1) {
                         $start = max(strtotime($prevClock->clock_at), strtotime($beforePrevClock->punctual_time));
                     } else {
                         $start = strtotime($prevClock->clock_at);
