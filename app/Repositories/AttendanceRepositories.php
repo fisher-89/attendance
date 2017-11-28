@@ -471,7 +471,7 @@ class AttendanceRepositories
                     if (empty($beforePrevClock)) {
                         $start = $this->staffStartAt;
                     } elseif ($beforePrevClock->attendance_type == 2 && $beforePrevClock->type == 1) {
-                        $start = strtotime($beforePrevClock->punctual_time);
+                        $start = max(strtotime($prevClock->clock_at), strtotime($beforePrevClock->punctual_time));
                     } else {
                         $start = strtotime($prevClock->clock_at);
                     }
