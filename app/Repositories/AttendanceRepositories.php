@@ -382,6 +382,7 @@ class AttendanceRepositories
             'staff_status' => $staff['status']['name'],
             'is_shift' => $isShift,
             'shop_sn' => $this->shopRecord->shop_sn,
+            'shop_name' => $this->shopRecord->shop_name,
             'manager_sn' => $this->shopRecord->manager_sn,
             'attendance_date' => $this->shopRecord->attendance_date,
             'department_id' => $this->shopRecord->department_id,

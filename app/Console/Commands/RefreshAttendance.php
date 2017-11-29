@@ -43,8 +43,7 @@ class RefreshAttendance extends Command
         $shopSn = $this->option('shop_sn');
         $shop = app('OA')->withoutPassport()->getDataFromApi('get_shop', ['shop_sn' => $shopSn])['message'][0];
         $this->info('Date:' . $date . ';ShopSn:' . $shopSn . ';ShopName:' . $shop['name']);
-        $attendance = new AttendanceRepositories($date, $shop);
-        $attendance->refreshAttendanceForm(null, true);
+        app('AttendanceRepos', ['date' => $date, 'shop' => $shop])->refreshAttendanceForm(null, true);
         $this->info('Refresh Success');
     }
 }

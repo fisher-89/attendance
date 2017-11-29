@@ -44,6 +44,7 @@ class AttendanceStaff extends Model
         'is_assistor',
         'is_shift',
         'shop_sn',
+        'shop_name',
         'manager_sn',
         'attendance_date',
         'department_id',

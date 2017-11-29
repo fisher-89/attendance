@@ -18,7 +18,9 @@ class CurrentUserService
     public function __construct()
     {
         if ($this->isLogin()) {
+            cache()->setPrefix('OA_');
             $this->userInfo = cache()->get('staff_' . session('staff_sn'));
+            cache()->setPrefix('attendance_');
         }
     }
 
@@ -56,7 +58,9 @@ class CurrentUserService
                 }
             }
             session()->put('staff_sn', $staff['staff_sn']);
+            cache()->setPrefix('OA_');
             cache()->put('staff_' . $staff['staff_sn'], $staff, 120);
+            cache()->setPrefix('attendance_');
             $this->userInfo = $staff;
         } else {
             abort(500, 'OA接口异常');
@@ -106,7 +110,10 @@ class CurrentUserService
      */
     public function isLogin()
     {
-        return session()->has('staff_sn') && cache()->has('staff_' . session('staff_sn'));
+        cache()->setPrefix('OA_');
+        $response = session()->has('staff_sn') && cache()->has('staff_' . session('staff_sn'));
+        cache()->setPrefix('attendance_');
+        return $response;
     }
 
     /**

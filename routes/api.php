@@ -8,4 +8,5 @@ Route::group(['prefix' => 'leave'], function () {
 //考勤
 Route::group(['prefix' => 'attendance'], function () {
     Route::post('refresh', 'AttendanceController@refreshByApi')->middleware('oaOnly');//刷新考勤数据
+    Route::post('make', 'AttendanceController@makeByApi')->middleware('oaOnly');//生成考勤数据
 });

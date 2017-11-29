@@ -19,11 +19,13 @@ class AddShopInfoToStaffAttendance extends Migration
             ->get()->each(function ($model) {
                 Schema::table($model->TABLE_NAME, function (Blueprint $table) {
                     $table->char('shop_sn', 10)->comment('店铺代码');
+                    $table->char('shop_name', 50)->comment('店铺名称');
                     $table->mediumInteger('manager_sn')->unsigned()->comment('店长员工编号');
                     $table->date('attendance_date')->comment('考勤日期');
                     $table->smallInteger('department_id')->comment('部门ID');
                     $table->tinyInteger('status')->comment('状态 0:未提交 1:已提交 2:已通过 -1:已驳回');
                     $table->mediumInteger('auditor_sn')->comment('审核人编号');
+                    $table->char('auditor_name', 10)->comment('审核人姓名');
                 });
             });
     }
@@ -39,7 +41,7 @@ class AddShopInfoToStaffAttendance extends Migration
             ->where('table_name', 'like', 'attendance_staff_%')
             ->get()->each(function ($model) {
                 Schema::table($model->TABLE_NAME, function (Blueprint $table) {
-                    $table->dropColumn(['shop_sn', 'manager_sn', 'attendance_date', 'department_id', 'status', 'auditor_sn']);
+                    $table->dropColumn(['shop_sn', 'shop_name', 'manager_sn', 'attendance_date', 'department_id', 'status', 'auditor_sn', 'auditor_name']);
                 });
             });
     }

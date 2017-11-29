@@ -94,6 +94,24 @@ class AttendanceController extends Controller
         }
     }
 
+    public function makeByApi(Request $request)
+    {
+        $shop = $request->get('shop');
+        $date = $request->get('date');
+        if (time() < strtotime($date . ' ' . $shop['clock_out'])) {
+            return ['status' => -1, 'message' => '未到下班时间，无法生成考勤'];
+        }
+        $attendance = Attendance::where(['shop_sn' => $shop['shop_sn'], 'attendance_date' => $date])->first();
+        if (empty($attendance)) {
+            $attendance = app('AttendanceRepos', ['date' => $request->date, 'shop' => $shop])->getAttendanceForm();
+        }
+        if ($attendance->status < 1) {
+            $request->offsetSet('id', $attendance->id);
+            $attendance = $this->submit($request)['msg'];
+        }
+        return ['status' => 1, 'message' => $attendance];
+    }
+
     /**
      * 提交考勤表
      *
