@@ -98,15 +98,19 @@ class AttendanceController extends Controller
     {
         $shop = $request->get('shop');
         $date = $request->get('date');
+        $user = $request->get('user');
+        app('CurrentUser')->setInfo($user);
+
         if (time() < strtotime($date . ' ' . $shop['clock_out'])) {
             return ['status' => -1, 'message' => '未到下班时间，无法生成考勤'];
         }
         $attendance = Attendance::where(['shop_sn' => $shop['shop_sn'], 'attendance_date' => $date])->first();
         if (empty($attendance)) {
-            $attendance = app('AttendanceRepos', ['date' => $request->date, 'shop' => $shop])->getAttendanceForm();
+            $attendance = app('AttendanceRepos', ['date' => $date, 'shop' => $shop])->getAttendanceForm();
         }
         if ($attendance->status < 1) {
             $request->offsetSet('id', $attendance->id);
+            $request->offsetSet('details', $attendance->details->toArray());
             $response = $this->submit($request);
             return ['status' => $response['status'] ? 1 : -1, 'message' => $response['msg']];
         } else {

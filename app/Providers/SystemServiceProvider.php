@@ -24,6 +24,6 @@ class SystemServiceProvider extends ServiceProvider
     public function register()
     {
         $this->app->bind('Curl', \App\Services\CurlService::class);
-        $this->app->bind('CurrentUser', \App\Services\CurrentUserService::class);
+        $this->app->singleton('CurrentUser', \App\Services\CurrentUserService::class);
     }
 }

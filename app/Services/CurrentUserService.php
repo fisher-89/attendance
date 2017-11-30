@@ -95,6 +95,15 @@ class CurrentUserService
     }
 
     /**
+     * 设置当前员工信息
+     * @param $info
+     */
+    public function setInfo($info)
+    {
+        $this->userInfo = $info;
+    }
+
+    /**
      * 获取某一属性（多级）
      * @param $key
      * @return mixed

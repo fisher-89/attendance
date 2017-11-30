@@ -19,7 +19,6 @@ class AttendanceRepositories
     protected $date;
     protected $dayStartAt;
     protected $dayEndAt;
-    protected $shopSn;
     protected $shop;
     /**
      * 店铺上下班时间
@@ -67,18 +66,14 @@ class AttendanceRepositories
     public function __construct($date = null, $shop = [])
     {
         $date = empty($date) ? date('Y-m-d') : $date;
-        $shopClockIn = empty($shop['clock_in']) ? app('CurrentUser')->shop['clock_in'] : $shop['clock_in'];
-        $shopClockOut = empty($shop['clock_out']) ? app('CurrentUser')->shop['clock_out'] : $shop['clock_out'];
-        $shopSn = empty($shop['shop_sn']) ? app('CurrentUser')->shop_sn : $shop['shop_sn'];
         $shop = empty($shop) ? app('CurrentUser')->shop : $shop;
 
-        $timestamp = date('Y-m-d H:i:s') >= $date . ' ' . $shopClockOut ? strtotime($date) : strtotime($date) - 24 * 3600;
+        $timestamp = date('Y-m-d H:i:s') >= $date . ' ' . $shop['clock_out'] ? strtotime($date) : strtotime($date) - 24 * 3600;
         $this->date = date('Y-m-d', $timestamp);
         list($this->dayStartAt, $this->dayEndAt) = app('Clock')->getAttendanceDay($this->date);
-        $this->shopSn = $shopSn;
         $this->shop = $shop;
-        $this->shopStartAt = strtotime($this->date . ' ' . $shopClockIn);
-        $this->shopEndAt = strtotime($this->date . ' ' . $shopClockOut);
+        $this->shopStartAt = strtotime($this->date . ' ' . $shop['clock_in']);
+        $this->shopEndAt = strtotime($this->date . ' ' . $shop['clock_out']);
     }
 
     /**
@@ -143,12 +138,12 @@ class AttendanceRepositories
     protected function getShopAttendanceForm()
     {
         $attendance = Attendance::where([
-            'shop_sn' => $this->shopSn,
+            'shop_sn' => $this->shop['shop_sn'],
             'attendance_date' => $this->date,
         ])->first();
         if (empty($attendance)) {
             $attendance = Attendance::create([
-                'shop_sn' => $this->shopSn,
+                'shop_sn' => $this->shop['shop_sn'],
                 'shop_name' => $this->shop['name'],
                 'department_id' => $this->shop['department_id'],
                 'manager_sn' => app('CurrentUser')->staff_sn,
@@ -170,9 +165,9 @@ class AttendanceRepositories
     {
         $scheduleModel = new WorkingSchedule(['ymd' => str_replace('-', '', $this->date)]);
         try {
-            $staffGroupFromSchedule = $scheduleModel->where('shop_sn', $this->shopSn)->get()->toArray();
+            $staffGroupFromSchedule = $scheduleModel->where('shop_sn', $this->shop['shop_sn'])->get()->toArray();
             $staffSnGroup = array_pluck($staffGroupFromSchedule, 'staff_sn');
-            $staffGroupFromApi = app('OA')->getDataFromApi('get_user', ['staff_sn' => $staffSnGroup])['message'];
+            $staffGroupFromApi = app('OA')->withoutPassport()->getDataFromApi('get_user', ['staff_sn' => $staffSnGroup])['message'];
             $staffGroupFromApi = array_pluck($staffGroupFromApi, [], 'staff_sn');
             $staffGroup = [];
             foreach ($staffGroupFromSchedule as $v) {
@@ -203,7 +198,7 @@ class AttendanceRepositories
             ['clock_at', '>', $this->dayStartAt],
             ['clock_at', '<', $this->dayEndAt],
             ['is_abandoned', '=', 0],
-            ['shop_sn', '=', $this->shopSn],
+            ['shop_sn', '=', $this->shop['shop_sn']],
         ])->orderBy('clock_at', 'asc')->each(function ($clock) {
             $clock->clock_at = strtotime($clock->clock_at);
             $clock->punctual_time = strtotime($clock->punctual_time);
