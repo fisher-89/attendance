@@ -20,6 +20,7 @@ class AttendanceRepositories
     protected $dayStartAt;
     protected $dayEndAt;
     protected $shopSn;
+    protected $shop;
     /**
      * 店铺上下班时间
      * @var int
@@ -69,11 +70,13 @@ class AttendanceRepositories
         $shopClockIn = empty($shop['clock_in']) ? app('CurrentUser')->shop['clock_in'] : $shop['clock_in'];
         $shopClockOut = empty($shop['clock_out']) ? app('CurrentUser')->shop['clock_out'] : $shop['clock_out'];
         $shopSn = empty($shop['shop_sn']) ? app('CurrentUser')->shop_sn : $shop['shop_sn'];
+        $shop = empty($shop) ? app('CurrentUser')->shop : $shop;
 
         $timestamp = date('Y-m-d H:i:s') >= $date . ' ' . $shopClockOut ? strtotime($date) : strtotime($date) - 24 * 3600;
         $this->date = date('Y-m-d', $timestamp);
         list($this->dayStartAt, $this->dayEndAt) = app('Clock')->getAttendanceDay($this->date);
         $this->shopSn = $shopSn;
+        $this->shop = $shop;
         $this->shopStartAt = strtotime($this->date . ' ' . $shopClockIn);
         $this->shopEndAt = strtotime($this->date . ' ' . $shopClockOut);
     }
@@ -146,8 +149,8 @@ class AttendanceRepositories
         if (empty($attendance)) {
             $attendance = Attendance::create([
                 'shop_sn' => $this->shopSn,
-                'shop_name' => app('CurrentUser')->shop['name'],
-                'department_id' => app('CurrentUser')->shop['department_id'],
+                'shop_name' => $this->shop['name'],
+                'department_id' => $this->shop['department_id'],
                 'manager_sn' => app('CurrentUser')->staff_sn,
                 'manager_name' => app('CurrentUser')->realname,
                 'attendance_date' => $this->date,

@@ -107,9 +107,11 @@ class AttendanceController extends Controller
         }
         if ($attendance->status < 1) {
             $request->offsetSet('id', $attendance->id);
-            $attendance = $this->submit($request)['msg'];
+            $response = $this->submit($request);
+            return ['status' => $response['status'] ? 1 : -1, 'message' => $response['msg']];
+        } else {
+            return ['status' => -1, 'message' => '考勤表已提交'];
         }
-        return ['status' => 1, 'message' => $attendance];
     }
 
     /**
