@@ -22,7 +22,7 @@
 				</template>
 			</Alert>
 		</template>
-		<Alert type="warning" v-if="clocks.length == 0 && today != false && !clockAvailable">
+		<Alert type="warning" v-if="clocks.length == 0 && today != false && (date != today || !clockPermission)">
 			无打卡记录
 		</Alert>
 		<Timeline style="margin-top:20px;">
