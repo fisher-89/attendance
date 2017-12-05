@@ -1,24 +1,29 @@
 <template>
 	<div>
-		<Alert banner type="error" show-icon v-if="!inShop">
-			没有所属店铺
-			<template slot="desc">请联系人事添加店铺归属</template>
-		</Alert>
-		<Alert banner type="error" show-icon v-else-if="!currentUser.shop.lng">
-			店铺尚未定位
-			<template slot="desc">请联系店长登录系统完成定位</template>
-		</Alert>
-		<Alert banner type="error" show-icon v-else-if="!aLocation" v-show="errorMessage != false">
-			定位失败
-			<template slot="desc">请检查是否开启定位或使用店长代签打卡<br>
-				<span v-if="errorMessage != false">错误信息：{{errorMessage}}</span>
-			</template>
-		</Alert>
-		<Alert banner type="error" show-icon v-else-if="!clockAvailable && date == today">
-			无法打卡，未知原因
-			<template slot="desc">请联系IT部<br>
-				<span v-if="errorMessage != false">错误信息：{{errorMessage}}</span>
-			</template>
+		<template v-if="clockPermission">
+			<Alert banner type="error" show-icon v-if="!inShop">
+				没有所属店铺
+				<template slot="desc">请联系人事添加店铺归属</template>
+			</Alert>
+			<Alert banner type="error" show-icon v-else-if="!currentUser.shop.lng">
+				店铺尚未定位
+				<template slot="desc">请联系店长登录系统完成定位</template>
+			</Alert>
+			<Alert banner type="error" show-icon v-else-if="!aLocation" v-show="errorMessage != false">
+				定位失败
+				<template slot="desc">请检查是否开启定位或使用店长代签打卡<br>
+					<span v-if="errorMessage != false">错误信息：{{errorMessage}}</span>
+				</template>
+			</Alert>
+			<Alert banner type="error" show-icon v-else-if="!clockAvailable && date == today">
+				无法打卡，未知原因
+				<template slot="desc">请联系IT部<br>
+					<span v-if="errorMessage != false">错误信息：{{errorMessage}}</span>
+				</template>
+			</Alert>
+		</template>
+		<Alert type="warning" v-if="clocks.length == 0 && today != false && !clockAvailable">
+			无打卡记录
 		</Alert>
 		<Timeline style="margin-top:20px;">
 			<Timeline-item v-for="(clock,key) in clocks"
@@ -145,7 +150,12 @@
                 bigPhoto: false,
             };
         },
-        props: ['currentUser', 'date', 'refresh', 'assist'],
+        props: {
+            currentUser: {}, date: {}, refresh: {}, assist: {},
+            clockPermission: {
+                default: true
+            }
+        },
         components: components,
         watch: {
             refresh(newValue) {
@@ -169,7 +179,7 @@
                     this.errorMessage.match('error message = 定位错误') == null) {
                     avaliableError = false;
                 }
-                return this.date === this.today && this.aLocation !== false && avaliableError;
+                return this.date === this.today && this.aLocation !== false && avaliableError && this.clockPermission;
             },
             inTime() {
                 let startTimestamp = new Date(this.today.replace(/-/g, "/") + ' ' + this.currentUser.working_start_at).getTime();
@@ -237,7 +247,9 @@
             setInterval(this.getCurTime, 1000);
         },
         mounted() {
-            this.dingtalkInit();
+            if (this.clockPermission) {
+                this.dingtalkInit();
+            }
         },
         methods: {
             getRecord() {

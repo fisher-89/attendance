@@ -15,30 +15,30 @@
 					</Row>
 				</router-link>
 			</mt-tab-item>
-			<mt-tab-item id="/f/transrecord">
-				<router-link :to="'/f/transrecord?ver='+ver">
+			<mt-tab-item id="/f/application">
+				<router-link :to="'/f/application?ver='+ver">
 					<Row>
-						<Icon type="arrow-right-a" size="30"/>
+						<Icon type="ios-paper" size="30"/>
 					</Row>
 					<Row>
-						调动
+						申请
 					</Row>
 				</router-link>
 			</mt-tab-item>
-			<mt-tab-item id="/f/askforleave">
-				<router-link :to="'/f/askforleave?ver='+ver">
+			<mt-tab-item id="/f/statistics">
+				<router-link :to="'/f/statistics?ver='+ver">
 					<Row>
-						<Icon type="coffee" size="30"/>
+						<Icon type="pie-graph" size="30"/>
 					</Row>
 					<Row>
-						请假
+						统计
 					</Row>
 				</router-link>
 			</mt-tab-item>
 			<mt-tab-item v-if="currentUser.is_manager" id="/f/attend">
 				<router-link :to="'/f/attend?ver='+ver">
 					<Row>
-						<Icon type="person" size="30"/>
+						<Icon type="ios-home" size="30"/>
 					</Row>
 					<Row>
 						店长
@@ -65,7 +65,7 @@
             let ver = location.search.replace(/^.*\?ver=(\d{8}).*$/, '$1');
             let currentUser = this.getCurrentUser();
             return {
-                tabbar: window.location.pathname,
+                tabbar: window.location.pathname.replace(/^(\/f\/\w+)\/.*$/, '$1'),
                 currentUser: currentUser,
                 ver: ver
             };

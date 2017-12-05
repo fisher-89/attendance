@@ -18,7 +18,7 @@ Route::get('', function () {
 
 //非常重要
 Route::group(['prefix' => 'f'], function () {
-    Route::get('/{wa?}', 'UserController@showView');
+    Route::get('/{wa?}/{wb?}/{wc?}', 'UserController@showView');
 });
 
 
@@ -55,6 +55,12 @@ Route::group(['prefix' => 'attendance'], function () {
     Route::post('refresh', 'AttendanceController@refreshAttendanceForm'); //刷新店铺考勤表数据
     Route::post('submit', 'AttendanceController@submit'); //提交
     Route::post('withdraw', 'AttendanceController@withdraw'); //撤回
+});
+
+
+//统计
+Route::group(['prefix' => 'statistics'], function () {
+    Route::post('personal', 'StatisticsController@getPersonalReport'); //店铺定位
 });
 
 Route::any('re_login', 'UserController@reLogin');

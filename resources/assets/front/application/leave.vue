@@ -117,7 +117,7 @@
             let startDate = new Date();
             let endDate = new Date();
             let curDate = startDate.getDate();
-            startDate.setDate(curDate - 30);
+            startDate.setDate(curDate - 40);
             endDate.setDate(curDate + 30);
 
             return {
@@ -134,8 +134,8 @@
                                 let start = new Date(value.replace(/-/g, '/')).getTime();
                                 let current = new Date().getTime();
                                 let diff = current - start;
-                                if (diff > 30 * 24 * 60 * 60 * 1000) {
-                                    callback(new Error('开始时间不能早于30天前'));
+                                if (diff > 40 * 24 * 60 * 60 * 1000) {
+                                    callback(new Error('开始时间不能早于40天前'));
                                 } else {
                                     callback();
                                 }

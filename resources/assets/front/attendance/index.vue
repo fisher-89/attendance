@@ -77,8 +77,12 @@
 									     @click.native="showSheet(index)">
 										{{staffAttendance.shop_duty.name}}
 									</Tag>
-									<Tag v-if="staffAttendance.is_assistor == 1" color="blue">协助</Tag>
-									<Tag v-if="staffAttendance.is_shift == 1" color="yellow">倒班</Tag>
+									<Tag v-if="staffAttendance.is_assistor == 1" color="blue"
+									     @click.native="showSheet(index)">协助
+									</Tag>
+									<Tag v-if="staffAttendance.is_shift == 1" color="yellow"
+									     @click.native="showSheet(index)">倒班
+									</Tag>
 								</i-col>
 								<i-col span="8">
 									<Tag v-if="staffAttendance.is_leaving" color="yellow">请假</Tag>
