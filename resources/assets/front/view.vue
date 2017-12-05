@@ -50,7 +50,7 @@
 </template>
 
 <style>
-	.mint-tab-item {
+	.mint-tab-item, .mint-tab-item:active, .mint-tab-item:hover {
 		color: #999;
 	}
 
@@ -63,9 +63,10 @@
     export default {
         data() {
             let ver = location.search.replace(/^.*\?ver=(\d{8}).*$/, '$1');
+            let curPath = window.location.pathname.replace(/^(\/f\/\w+)\/.*$/, '$1');
             let currentUser = this.getCurrentUser();
             return {
-                tabbar: window.location.pathname.replace(/^(\/f\/\w+)\/.*$/, '$1'),
+                tabbar: curPath,
                 currentUser: currentUser,
                 ver: ver
             };
@@ -77,37 +78,20 @@
                 } else {
                     return false;
                 }
-            },
+            }
         },
         beforeMount() {
-//            this.dingtalkInit();
+            window.onpopstate = (event) => {
+                let curPath = window.location.pathname.replace(/^(\/f\/\w+)\/.*$/, '$1');
+                this.tabbar = curPath;
+            }
         },
         methods: {
             getCurrentUser: function () {
                 let staff = sessionStorage.getItem('staff');
                 let currentUser = JSON.parse(staff.replace(/[\t|\r|\n]/g, ''));
                 return currentUser;
-            },
-            dingtalkInit() {
-                let url = '/js_config';
-                axios.post(url, {'current_url': location.href}).then((response) => {
-                    let jsConfig = response.data;
-                    jsConfig['jsApiList'] = ['biz.util.uploadImageFromCamera', 'device.geolocation.get'];
-                    dd.config(jsConfig);
-                    dd.error(function (error) {
-                        let message = error.message;
-                        let html = '';
-                        if (message.match(/52013/)) {
-                            html += '<p>签名校验失败</p>';
-                            html += '<h2 onClick="location.reload()" style="text-align:center;margin-top:20px;color:#333;">点此刷新</h2>';
-                        } else {
-                            html += message;
-                            html += '<h2 onClick="location.reload()" style="text-align:center;margin-top:20px;color:#333;">点此刷新</h2>';
-                        }
-                        document.write(html);
-                    });
-                });
-            },
+            }
         }
     }
 </script>
