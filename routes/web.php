@@ -51,6 +51,7 @@ Route::group(['prefix' => 'leave'], function () {
 //考勤
 Route::group(['prefix' => 'attendance'], function () {
     Route::post('locate', 'AttendanceController@locateShop'); //店铺定位
+    Route::post('all', 'AttendanceController@getAllAttendanceRecords'); //店铺定位
     Route::post('sheet', 'AttendanceController@getAttendanceForm'); //获取店铺考勤表数据
     Route::post('refresh', 'AttendanceController@refreshAttendanceForm'); //刷新店铺考勤表数据
     Route::post('submit', 'AttendanceController@submit'); //提交

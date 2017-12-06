@@ -225,6 +225,7 @@
     export default {
         data() {
             return {
+                attendanceRecords: {},
                 attendanceData: {
                     status: 0,
                     details: [],
@@ -239,6 +240,7 @@
                 ],
                 shopDutySheetVisible: false,
                 shopDutyStaffKey: false,
+                calandar: false
             }
         },
         props: ['currentUser'],
@@ -258,19 +260,38 @@
             }
         },
         beforeMount() {
+            this.getAllAttendanceRecords();
             this.getAttendanceRecord();
         },
         mounted() {
-            Flatpickr("#calendar", {
+            this.calandar = Flatpickr("#calendar", {
                 inline: true,
                 locale: Chinese,
                 defaultDate: 'today',
                 maxDate: 'today',
                 minDate: new Date().fp_incr(-40),
                 onChange: (selectedDates, dateStr) => {
+                    this.renderCalendar();
                     this.date = dateStr;
                     this.getAttendanceRecord();
                     this.showCalendar = false;
+                },
+                onReady: () => {
+                    setTimeout(this.renderCalendar, 500);
+                },
+                onMonthChange: (selectedDates, dateStr, instance) => {
+                    Indicator.open('加载中...');
+                    setTimeout(this.renderCalendar, 500);
+                },
+                onYearChange: (selectedDates, dateStr, instance) => {
+                    Indicator.open('加载中...');
+                    setTimeout(this.renderCalendar, 500);
+                },
+                onDayCreate: (dObj, dStr, fp, dayElem) => {
+                    let year = dayElem.dateObj.getFullYear();
+                    let month = (Array(2).join(0) + (dayElem.dateObj.getMonth() + 1)).slice(-2);
+                    let date = (Array(2).join(0) + dayElem.dateObj.getDate()).slice(-2);
+                    dayElem.id = 'calandar-' + year + '-' + month + '-' + date;
                 }
             });
         },
@@ -315,6 +336,52 @@
                         }
                     });
                 });
+            },
+            getAllAttendanceRecords() {
+                axios.post('/attendance/all').then((response) => {
+                    this.attendanceRecords = response.data;
+                });
+            },
+            renderCalendar() {
+                let cell;
+                let date;
+                let attendance;
+                let html;
+                let color;
+                let dayContainer = this.calandar.days.getElementsByTagName('span');
+
+                for (let i = 0; i < dayContainer.length; i++) {
+                    cell = dayContainer[i];
+                    if (!cell.className.match(/(MonthDay|disabled)/)) {
+                        date = cell.id.replace(/calandar\-(.*)/, '$1');
+                        attendance = this.attendanceRecords[date];
+                        if (attendance) {
+                            switch (attendance.status) {
+                                case 0:
+                                    color = '#2d8cf0';
+                                    break;
+                                case 1:
+                                    color = '#ff9900';
+                                    break;
+                                case 2:
+                                    color = '#19be6b';
+                                    break;
+                                case -1:
+                                    color = '#ed3f14';
+                                    break;
+                                default:
+                                    color = '#999999';
+                                    break;
+                            }
+                        } else {
+                            color = '#999999';
+                        }
+                        html = '<div style="position:absolute;top:0;left:0;border-top:10px solid ' + color +
+                            ';border-right:10px solid transparent;"></div>';
+                        cell.innerHTML += html;
+                    }
+                }
+                Indicator.close();
             },
             getAttendanceRecord() {
                 Indicator.open('加载中...');

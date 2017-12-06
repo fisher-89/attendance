@@ -44,6 +44,16 @@ class AttendanceController extends Controller
         }
     }
 
+    public function getAllAttendanceRecords()
+    {
+        if (app('CurrentUser')->isShopManager()) {
+            return Attendance::where('shop_sn', app('CurrentUser')->shop_sn)
+                ->select('status', 'attendance_date')
+                ->where('attendance_date', '>', date('Y-m-d', strtotime('-45 days')))
+                ->get()->pluck([], 'attendance_date');
+        }
+    }
+
     /**
      * 获取店铺考勤表数据
      * @return mixed
