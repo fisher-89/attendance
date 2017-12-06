@@ -137,6 +137,7 @@ class AttendanceController extends Controller
                 'sales_performance_partner' => 0,
                 'manager_sn' => $currentUserSn,
                 'manager_name' => $currentUserName,
+                'manager_remark' => $request->manager_remark
             ];
             if (empty($request->details)) {
                 return ['status' => 0, 'msg' => '不可提交空考勤表'];

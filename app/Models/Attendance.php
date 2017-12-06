@@ -29,6 +29,7 @@ class Attendance extends Model
         'is_missing',
         'is_late',
         'is_early_out',
+        'manager_remark',
     ];
 
     /* 定义关联 Start */

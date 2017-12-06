@@ -132,7 +132,7 @@
                         date = cell.id.replace(/calandar\-(.*)/, '$1');
                         attendance = this.record[date];
                         html = '';
-                        if (attendance && attendance.is_missing) {
+                        if (attendance && attendance.is_missing > 0) {
                             this.missingDays++;
                             html += '<div style="position:absolute;top:0;left:0;border-top:10px solid #ed3f14;' +
                                 'border-right:10px solid transparent;"></div>';

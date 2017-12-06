@@ -46,6 +46,14 @@
 							<i-col span="13">
 								￥{{total}}
 							</i-col>
+							<template v-if="attendanceData.status == -1 && attendanceData.auditor_remark">
+								<i-col span="6">
+									驳回备注：
+								</i-col>
+								<i-col span="13">
+									{{attendanceData.auditor_remark}}
+								</i-col>
+							</template>
 						</Row>
 
 					</h4>
@@ -168,6 +176,13 @@
 							</Row>
 						</template>
 					</Card>
+					<Card>
+						<p slot="title">备注</p>
+						<i-input v-model="attendanceData.manager_remark" type="textarea"
+						         :autosize="{minRows: 2,maxRows: 5}" :maxlength="200"
+						         placeholder="备注（不超过200字）" size="small">
+						</i-input>
+					</Card>
 					<div style="margin:10px 20px;">
 						<Button v-if="attendanceData.status <= 0" type="primary" long size="large" @click="submit">
 							<!--:disabled="attendanceData.is_missing == 1">-->
@@ -212,7 +227,8 @@
             return {
                 attendanceData: {
                     status: 0,
-                    details: []
+                    details: [],
+                    manager_remark: ''
                 },
                 date: null,
                 statusColor: {'0': 'info', '1': 'warning', '2': 'success', '-1': 'error'},
