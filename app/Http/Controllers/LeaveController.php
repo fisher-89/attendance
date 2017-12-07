@@ -106,7 +106,7 @@ class LeaveController extends Controller
         }
         $params = [
             'process_code' => $this->processCode,
-            'approvers' => $approvers['staff_sn'],
+            'approvers' => array_pluck($approvers, 'staff_sn'),
             'form_data' => $formData,
             'callback_url' => url('/api/leave/callback'),
         ];
@@ -115,8 +115,8 @@ class LeaveController extends Controller
             $leaveData = $request->input();
             $leaveData['staff_sn'] = app('CurrentUser')->staff_sn;
             $leaveData['staff_name'] = app('CurrentUser')->realname;
-            $leaveData['approver_sn'] = $approvers['staff_sn'];
-            $leaveData['approver_name'] = $approvers['name'];
+            $leaveData['approver_sn'] = $approvers[0]['staff_sn'];
+            $leaveData['approver_name'] = $approvers[0]['name'];
             $leaveData['process_instance_id'] = $response['message'];
             Leave::create($leaveData);
         } else {
@@ -128,23 +128,24 @@ class LeaveController extends Controller
     protected function getApprovers()
     {
         $staff = app('CurrentUser');
+        $approvers = [];
         if ($staff->inShop() && $staff->shop['manager_sn'] != $staff->staff_sn && $staff->shop['manager_sn'] > 0) {
-            $approvers = [
+            $approvers[] = [
                 'staff_sn' => $staff->shop['manager_sn'],
                 'name' => $staff->shop['manager_name']
             ];
-        } elseif ($staff->department['manager_sn'] > 0 && $staff->staff_sn != $staff->department['manager_sn']) {
-            $approvers = [
+        }
+        if ($staff->department['manager_sn'] > 0 && $staff->staff_sn != $staff->department['manager_sn'] &&
+            !preg_match('/^.*组$/', $staff->department['name'])) {
+            $approvers[] = [
                 'staff_sn' => $staff->department['manager_sn'],
                 'name' => $staff->department['manager_name']
             ];
         } elseif ($staff->department['parent_id'] > 0 && $staff->department['_parent']['manager_sn']) {
-            $approvers = [
+            $approvers[] = [
                 'staff_sn' => $staff->department['_parent']['manager_sn'],
                 'name' => $staff->department['_parent']['manager_name']
             ];
-        } else {
-            $approvers = [];
         }
         return $approvers;
     }

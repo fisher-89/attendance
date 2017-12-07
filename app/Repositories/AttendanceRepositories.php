@@ -105,7 +105,9 @@ class AttendanceRepositories
             $this->shopRecord->is_missing = 0;
             $this->shopRecord->is_late = 0;
             $this->shopRecord->is_early_out = 0;
-            $this->shopRecord->manager_remark = $attendance->manager_remark;
+            if (!empty($attendance)) {
+                $this->shopRecord->manager_remark = $attendance->manager_remark;
+            }
             $this->makeAttendanceDetail();
             $this->shopRecord = $this->getShopAttendanceForm();
             $this->shopRecord->details->each(function ($staffAttendance) use ($originalDetails) {
