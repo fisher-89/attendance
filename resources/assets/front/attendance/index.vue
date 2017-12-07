@@ -486,7 +486,15 @@
                     let staffAttendance = this.attendanceData.details[key];
                     this.shopDutyStaffKey = key;
                     this.shopDutyActions = [];
-                    if (staffAttendance.shop_duty_id == 3) {
+                    //@TODO 使用一段时间后恢复店助全开
+                    let assistantActive = [
+                        'lsw4084', 'lsw4026', 'lsw3859',
+                        'lsc1894', 'lsw3862', 'lsw3766',
+                        'lsw3977', 'lsc1720', 'lsc1947',
+                        'lsc1911', 'lsw4032'
+                    ];
+
+                    if (staffAttendance.shop_duty_id == 3 && assistantActive.indexOf(this.attendanceData.shop_sn) != -1) {
                         this.shopDutyActions.push({name: '设为店助', method: this.setShopDutyToAssistant});
                     } else if (staffAttendance.shop_duty_id == 2) {
                         this.shopDutyActions.push({name: '设为导购', method: this.setShopDutyToSalesperson});

@@ -176,7 +176,7 @@ class LeaveController extends Controller
         if (empty($leaveRequest)) {
             return 0;
         }
-        if ($request->type == 'start') {
+        if ($request->EventType == 'bpms_task_change' && $request->type == 'start') {
             $staff = app('OA')->withoutPassport()->getDataFromApi('get_user', ['dingding' => $request->staffId])['message'];
             if (!empty($staff)) {
                 $staff = $staff[0];
@@ -185,7 +185,7 @@ class LeaveController extends Controller
             } else {
                 $leaveRequest->approver_name = '未知审批人';
             }
-        } elseif ($request->type == 'finish') {
+        } elseif ($request->EventType == 'bpms_instance_change' && $request->type == 'finish') {
             switch ($request->result) {
                 case 'agree':
                     $leaveRequest->status = 1;
