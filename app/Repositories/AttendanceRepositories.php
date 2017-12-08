@@ -351,6 +351,11 @@ class AttendanceRepositories
         } else {
             $isShift = 0;
         }
+        if (in_array($staff['position_id'], [17, 18, 33, 34]) && $staff['shop_duty_id'] != 1) {
+            $isAssistor = 1;
+        } else {
+            $isAssistor = 0;
+        }
         $this->staffRecord = [
             'attendance_shop_id' => $this->attendanceId,
             'staff_sn' => $staff['staff_sn'],
@@ -381,6 +386,7 @@ class AttendanceRepositories
             'staff_department' => $staff['department']['name'],
             'staff_status_id' => $staff['status_id'],
             'staff_status' => $staff['status']['name'],
+            'is_assistor' => $isAssistor,
             'is_shift' => $isShift,
             'shop_sn' => $this->shopRecord->shop_sn,
             'shop_name' => $this->shopRecord->shop_name,
