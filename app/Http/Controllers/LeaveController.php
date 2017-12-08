@@ -110,11 +110,14 @@ class LeaveController extends Controller
             'form_data' => $formData,
             'callback_url' => url('/api/leave/callback'),
         ];
+        if ($request->has('staff_sn')) {
+            $params['initiator_sn'] = $request->staff_sn;
+        }
         $response = app('OA')->getDataFromApi('dingtalk/start_approval', $params);
         if ($response['status'] == 1) {
             $leaveData = $request->input();
-            $leaveData['staff_sn'] = app('CurrentUser')->staff_sn;
-            $leaveData['staff_name'] = app('CurrentUser')->realname;
+            $leaveData['staff_sn'] = $request->has('staff_sn') ? $request->staff_sn : app('CurrentUser')->staff_sn;
+            $leaveData['staff_name'] = $request->has('staff_name') ? $request->staff_name : app('CurrentUser')->realname;
             $leaveData['approver_sn'] = $approvers[0]['staff_sn'];
             $leaveData['approver_name'] = $approvers[0]['name'];
             $leaveData['process_instance_id'] = $response['message'];

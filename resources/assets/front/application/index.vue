@@ -5,9 +5,9 @@
 				<square-button text="请假" color="orange" icon="coffee"></square-button>
 			</router-link>
 		</i-col>
-		<i-col span="6">
-			<router-link :to="'/f/application/transrecord?ver='+ver">
-				<square-button text="调动记录" color="#2d8cf0" icon="arrow-right-a"></square-button>
+		<i-col span="6" v-if="currentUser.is_manager">
+			<router-link :to="'/f/application/askforothersleave?ver='+ver">
+				<square-button text="请假(代)" color="orange" icon="coffee"></square-button>
 			</router-link>
 		</i-col>
 	</Row>
@@ -22,6 +22,7 @@
                 ver: ver
             };
         },
+        props: ['currentUser'],
         components: {
             'square-button': SquareButtonComponent
         }

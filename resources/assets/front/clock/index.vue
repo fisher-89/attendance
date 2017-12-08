@@ -113,40 +113,34 @@
         },
         props: ['currentUser'],
         components: components,
-        computed:
-            {
-                selectStaff() {
-                    if (this.currentUser.is_manager) {
-                        let response = [];
-                        this.currentUser.shop_staff.map((item) => {
-                            if (item.staff_sn !== this.currentUser.staff_sn) {
-                                response.push({
-                                    name: item.realname,
-                                    method: () => {
-                                        this.selectedStaffSn = item.staff_sn;
-                                        setTimeout(() => {
-                                            this.assistPage = true;
-                                        }, 800);
-                                    }
-                                });
-                            }
-                        });
-                        return response;
-                    } else {
-                        return [];
-                    }
+        computed: {
+            selectStaff() {
+                if (this.currentUser.is_manager) {
+                    let response = [];
+                    this.currentUser.shop_staff.map((item) => {
+                        if (item.staff_sn !== this.currentUser.staff_sn) {
+                            response.push({
+                                name: item.realname,
+                                method: () => {
+                                    this.selectedStaffSn = item.staff_sn;
+                                    setTimeout(() => {
+                                        this.assistPage = true;
+                                    }, 800);
+                                }
+                            });
+                        }
+                    });
+                    return response;
+                } else {
+                    return [];
                 }
             }
-        ,
+        },
         watch: {
             currentUserClock(newValue) {
                 this.$emit('update:currentUser', newValue);
             }
-        }
-        ,
-        beforeMount() {
-        }
-        ,
+        },
         mounted() {
             Flatpickr("#calendar", {
                 inline: true,
@@ -158,8 +152,7 @@
                     this.clockRefresh = true;
                 }
             });
-        }
-        ,
+        },
         methods: {
             reLogin() {
                 sessionStorage.clear();
@@ -169,8 +162,7 @@
                     this.clockRefresh = true;
                     this.$refs.loadmore.onTopLoaded();
                 });
-            }
-            ,
+            },
             toggleStaffPicker() {
                 this.staffPicker = !this.staffPicker;
             }
