@@ -93,6 +93,7 @@ class ClockService
         $prevClockRecord = Clock::when($today, function ($query) use ($startTime) {
             return $query->where('clock_at', '>', $startTime);
         })->where('clock_at', '<', date('Y-m-d H:i:s'))
+            ->where('type', '<', 3)
             ->where(['staff_sn' => $staffSn, 'shop_sn' => $shopSn, 'is_abandoned' => 0])
             ->orderBy('clock_at', 'desc')->first();
         return $prevClockRecord;
@@ -112,6 +113,7 @@ class ClockService
         $response = Clock::where('staff_sn', $staffSn)
             ->where('is_abandoned', 0)
             ->where('clock_at', '<', $clockAt)
+            ->where('type', '<', 3)
             ->when($startAt != false, function ($query) use ($startAt) {
                 return $query->where('clock_at', '>', $startAt);
             })->when($lockShop, function ($query) use ($clock) {
@@ -124,6 +126,7 @@ class ClockService
             $response = $clockModel->where('staff_sn', $staffSn)
                 ->where('is_abandoned', 0)
                 ->where('clock_at', '<', $clockAt)
+                ->where('type', '<', 3)
                 ->when($startAt != false, function ($query) use ($startAt) {
                     return $query->where('clock_at', '>', $startAt);
                 })->when($lockShop, function ($query) use ($clock) {

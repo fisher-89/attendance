@@ -201,6 +201,7 @@ class AttendanceRepositories
             ['clock_at', '>', $this->dayStartAt],
             ['clock_at', '<', $this->dayEndAt],
             ['is_abandoned', '=', 0],
+            ['type', '<', 3],
             ['shop_sn', '=', $this->shop['shop_sn']],
         ])->orderBy('clock_at', 'asc')->each(function ($clock) {
             $clock->clock_at = strtotime($clock->clock_at);
@@ -528,6 +529,7 @@ class AttendanceRepositories
                     $this->addClockLog($lastClock->clock_at, $clock->clock_at, 2);
                     $this->staffRecord['transferring_hours'] += $duration;
                     $this->staffRecord['transferring_days'] += $duration / $this->workingHours;
+                    $this->staffRecord['is_transferring'] = 1;
                 } else {
                     $this->addClockLog($lastClock->clock_at, $clock->clock_at, 1);
                     $this->staffRecord['working_hours'] += $duration;
@@ -541,6 +543,7 @@ class AttendanceRepositories
                     $this->addClockLog($start, $clock->clock_at, 2);
                     $this->staffRecord['transferring_hours'] += $duration;
                     $this->staffRecord['transferring_days'] += $duration / $this->workingHours;
+                    $this->staffRecord['is_transferring'] = 1;
                 } else {
                     $this->staffRecord['is_missing'] = 1;
                 }

@@ -144,7 +144,7 @@ class LeaveController extends Controller
                 'staff_sn' => $staff->department['manager_sn'],
                 'name' => $staff->department['manager_name']
             ];
-        } elseif ($staff->department['parent_id'] > 0 && $staff->department['_parent']['manager_sn']) {
+        } elseif ($staff->department['parent_id'] > 0 && !empty($staff->department['_parent']['manager_sn'])) {
             $approvers[] = [
                 'staff_sn' => $staff->department['_parent']['manager_sn'],
                 'name' => $staff->department['_parent']['manager_name']
@@ -329,7 +329,7 @@ class LeaveController extends Controller
     {
         if ($model->attendance_type == 1) {
             $model->fill(['is_abandoned' => 1])->save();
-        } elseif ($model->attendance_type == 2) {
+        } elseif ($model->attendance_type == 2 && $model->type < 3) {
             if ($plus) {
                 $timestamp++;
             } else {

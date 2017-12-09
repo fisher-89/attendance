@@ -40,7 +40,14 @@ class TransferController extends Controller
      */
     public function save(Request $request)
     {
-        return $this->transferRepos->clock($request->get('parent_id'), $request);
+        if ($request->is_middle) {
+            $clockData = $request->input();
+            $clockData['attendance_type'] = 2;
+            $clockData['type'] = 3;
+            return app('Clock')->clock($clockData, false);
+        } else {
+            return $this->transferRepos->clock($request->get('parent_id'), $request);
+        }
     }
 
 }

@@ -72,11 +72,19 @@
 					{{aLocation.formattedAddress}}
 				</p>
 			</Timeline-item>
-			<Timeline-item v-if="clockAvailable && !isLeaving && hasTransfer ">
-				<Button type="primary" size="large" shape="circle" @click="uploadTransferClock">
-					<h3 style="display:inline;">&nbsp;{{transfer.status == 1 ? '到达店铺' : '调动出发'}}&nbsp;</h3>
-					<p style="display:inline;">{{curTime}}</p>
+			<Timeline-item v-if="clockAvailable && !isLeaving && hasTransfer">
+				<Button type="primary" size="large" shape="circle" @click="uploadTransferClock(false)">
+					<h3 style="display:inline;">&nbsp;{{isTransferring ? '到达店铺' : '调动出发'}}&nbsp;</h3>
+					<p style="display:inline;">{{curTime}}&nbsp;</p>
 				</Button>
+				<div style="margin-top:20px;">
+					<Button type="ghost" size="" shape="circle" @click="uploadTransferClock(true)"
+					        v-if="isTransferring">
+						<h3 style="display:inline;">调动中打卡</h3>
+						<p style="display:inline;">{{curTime}}</p>
+					</Button>
+				</div>
+				<br>
 				<p>
 					<Icon type="location"/>
 					{{aLocation.formattedAddress}}
@@ -397,7 +405,7 @@
                     });
                 });
             },
-            uploadTransferClock() {
+            uploadTransferClock(isMiddle) {
                 this.takePhoto((picPath) => {
                     Indicator.open('处理中...');
                     let transferID = this.transfer.id;
@@ -409,7 +417,8 @@
                         lat: this.aLocation.position.lat,
                         address: this.aLocation.formattedAddress,
                         accuracy: this.aLocation.accuracy,
-                        photo: picPath[0]
+                        photo: picPath[0],
+                        is_middle: isMiddle
                     };
                     axios.post(url, params).then((response) => {
                         if (typeof response.data == 'string') {

@@ -66,6 +66,9 @@ class Clock extends Model
             case 22:
                 return '调动出发';
                 break;
+            case 23:
+                return '调动中';
+                break;
             case 31:
                 return '请假结束';
                 break;
