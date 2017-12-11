@@ -4,7 +4,7 @@
 			<router-view :current-user.sync="currentUser"></router-view>
 			<div style="width:100%;height:60px;"></div>
 		</div>
-		<mt-tabbar v-model="tabbar" :fixed="true" style="z-index: 10;">
+		<mt-tabbar v-model="tabbar" :fixed="true" style="z-index: 10;" v-if="tabbar != '/f/check'">
 			<mt-tab-item id="/f/sign">
 				<router-link :to="'/f/sign?ver='+ver">
 					<Row>

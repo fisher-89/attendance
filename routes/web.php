@@ -58,10 +58,15 @@ Route::group(['prefix' => 'attendance'], function () {
     Route::post('withdraw', 'AttendanceController@withdraw'); //撤回
 });
 
-
 //统计
 Route::group(['prefix' => 'statistics'], function () {
     Route::post('personal', 'StatisticsController@getPersonalReport'); //店铺定位
+});
+
+//检查
+Route::group(['prefix' => 'check'], function () {
+    Route::post('get_all_shop', 'CheckController@getAllShop');//获取所有店铺
+    Route::post('get_shop_staff', 'CheckController@getShopStaff');//获取店员
 });
 
 Route::any('re_login', 'UserController@reLogin');

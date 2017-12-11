@@ -91,7 +91,7 @@ class LeaveController extends Controller
             'type_id' => ['required', 'exists:leave_type,id'],
             'reason' => ['required', 'max:200'],
         ]);
-        $leaveRequestExist = Leave::where('staff_sn', app('CurrentUser')->staff_sn)
+        $leaveRequestExist = Leave::where('staff_sn', $request->has('staff_sn') ? $request->staff_sn : app('CurrentUser')->staff_sn)
             ->where('start_at', '<=', $request->end_at)
             ->where('end_at', '>=', $request->start_at)
             ->where('status', '>=', 0)
@@ -110,9 +110,6 @@ class LeaveController extends Controller
             'form_data' => $formData,
             'callback_url' => url('/api/leave/callback'),
         ];
-        if ($request->has('staff_sn')) {
-            $params['initiator_sn'] = $request->staff_sn;
-        }
         $response = app('OA')->getDataFromApi('dingtalk/start_approval', $params);
         if ($response['status'] == 1) {
             $leaveData = $request->input();
@@ -161,6 +158,7 @@ class LeaveController extends Controller
     protected function makeFormData(Request $request)
     {
         return [
+            '请假人' => $request->has('staff_name') ? $request->staff_name : app('CurrentUser')->realname,
             '开始时间' => $request->start_at,
             '结束时间' => $request->end_at,
             '请假时长' => $request->duration,

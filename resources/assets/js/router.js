@@ -20,5 +20,8 @@ let response = [
 
     /*店铺考勤*/
     {path: '/f/attend', component: require('../front/attendance/index.vue')},
+
+    /*检查打卡*/
+    {path: '/f/check', component: require('../front/check/index.vue')},
 ];
 export default response;
