@@ -78,23 +78,25 @@ class ClockService
     }
 
     /**
-     * 获取最近一条打卡记录（当店,当天）
+     * 获取最近一条打卡记录
      * @param null $shopSn
      * @param null $staffSn
      * @return \Illuminate\Database\Eloquent\Model|null|static
      */
     public function getLatestClock($shopSn = null, $staffSn = null, $today = true)
     {
-        $shopSn = empty($shopSn) ? app('CurrentUser')->shop_sn : $shopSn;
         $staffSn = empty($staffSn) ? app('CurrentUser')->staff_sn : $staffSn;
 
-        list($startTime,
-            $endTime) = $this->getAttendanceDay();
-        $prevClockRecord = Clock::when($today, function ($query) use ($startTime) {
+        $prevClockRecord = Clock::when($today, function ($query) {
+            list($startTime,
+                $endTime) = $this->getAttendanceDay();
             return $query->where('clock_at', '>', $startTime);
         })->where('clock_at', '<', date('Y-m-d H:i:s'))
             ->where('type', '<', 3)
-            ->where(['staff_sn' => $staffSn, 'shop_sn' => $shopSn, 'is_abandoned' => 0])
+            ->where(['staff_sn' => $staffSn, 'is_abandoned' => 0])
+            ->when(!empty($shopSn), function ($query) use ($shopSn) {
+                return $query->where('shop_sn', $shopSn);
+            })
             ->orderBy('clock_at', 'desc')->first();
         return $prevClockRecord;
     }

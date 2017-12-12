@@ -628,6 +628,7 @@ class AttendanceRepositories
         $latestClock = $clockModel->where([
             ['staff_sn', '=', $staffSn],
             ['clock_at', '<', $this->dayEndAt],
+            ['type', '<', 3],
             ['is_abandoned', '=', 0],
         ])->orderBy('clock_at', 'desc')->first();
         if ($latestClock && $latestClock->attendance_type == 3 && $latestClock->type == 1) {
@@ -635,6 +636,7 @@ class AttendanceRepositories
                 ['staff_sn', '=', $staffSn],
                 ['clock_at', '<', $this->dayEndAt],
                 ['attendance_type', '<>', 3],
+                ['type', '<', 3],
                 ['is_abandoned', '=', 0],
             ])->orderBy('clock_at', 'desc')->first();
         }

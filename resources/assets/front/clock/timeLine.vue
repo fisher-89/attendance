@@ -32,6 +32,7 @@
 			               :style="clock.is_abandoned?'color:lightgrey;':''">
 				<h3>
 					{{clock.clock_at | hourAndMinute}} {{clock.clock_type}} {{clock.shop_sn ? clock.shop_sn.toUpperCase() : '无店铺'}}</h3>
+				<p v-if="clock.remark.length > 0">{{clock.remark}}</p>
 				<p v-if="clock.lng > 0">
 					<Icon type="location"/>
 					{{clock.address}}
@@ -78,7 +79,7 @@
 					<p style="display:inline;">{{curTime}}&nbsp;</p>
 				</Button>
 				<div style="margin-top:20px;">
-					<Button type="ghost" size="" shape="circle" @click="uploadTransferClock(true)"
+					<Button type="ghost" shape="circle" @click="uploadTransferClockMiddle"
 					        v-if="isTransferring">
 						<h3 style="display:inline;">调动中打卡</h3>
 						<p style="display:inline;">{{curTime}}</p>
@@ -98,6 +99,7 @@
 			               style="color:lightgrey;">
 				<h3>
 					{{clock.clock_at | hourAndMinute}} {{clock.clock_type}} {{clock.shop_sn ? clock.shop_sn.toUpperCase() : '无店铺'}}</h3>
+				<p v-if="clock.remark != '' ">{{clock.remark}}</p>
 				<p v-if="clock.lng > 0">
 					<Icon type="location"/>
 					{{clock.address}}
@@ -128,7 +130,7 @@
 
 
 <script>
-    import {Spinner} from 'mint-ui';
+    import {Spinner, MessageBox} from 'mint-ui';
 
     var components = {};
     components[Spinner.name] = Spinner;
@@ -405,7 +407,8 @@
                     });
                 });
             },
-            uploadTransferClock(isMiddle) {
+            uploadTransferClock(isMiddle, remark) {
+                remark = isMiddle ? remark : '';
                 this.takePhoto((picPath) => {
                     Indicator.open('处理中...');
                     let transferID = this.transfer.id;
@@ -420,6 +423,9 @@
                         photo: picPath[0],
                         is_middle: isMiddle
                     };
+                    if (remark.length > 0) {
+                        params.remark = remark;
+                    }
                     axios.post(url, params).then((response) => {
                         if (typeof response.data == 'string') {
                             document.write(response.data);
@@ -435,6 +441,17 @@
                     }).catch(function (err) {
                         document.write(err);
                     });
+                });
+            },
+            uploadTransferClockMiddle() {
+                MessageBox.prompt('不超过100字', '打卡说明').then(({value, action}) => {
+                    if (!value) {
+                        this.$Message.error('打卡说明不能为空');
+                    } else if (value.length > 100) {
+                        this.$Message.error('打卡说明不能超过100字');
+                    } else if (action == 'confirm') {
+                        this.uploadTransferClock(true, value);
+                    }
                 });
             },
             dingtalkInit() {

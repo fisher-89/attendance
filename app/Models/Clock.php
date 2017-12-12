@@ -26,6 +26,7 @@ class Clock extends Model
         'thumb',
         'accuracy',
         'operator_sn',
+        'remark',
     ];
 
     public function __construct(array $attributes = [])
