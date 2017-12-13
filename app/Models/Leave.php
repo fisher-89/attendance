@@ -22,5 +22,15 @@ class Leave extends Model
         'process_instance_id',
         'approver_sn',
         'approver_name',
+        'attachment',
     ];
+
+    /* ----- 访问器 Start ----- */
+
+    public function getAttachmentAttribute($value)
+    {
+        return explode(';', $value);
+    }
+
+    /* ----- 访问器 End ----- */
 }

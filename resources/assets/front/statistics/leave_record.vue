@@ -51,6 +51,11 @@
 						{{record.reason}}
 					</i-col>
 				</Row>
+				<Row>
+					<i-col span="6" v-for="attachment in record.attachment">
+						<img width="60" height="60" :src="attachment">
+					</i-col>
+				</Row>
 			</Card>
 			<div style="width:100%;height:60px;"></div>
 		</div>

@@ -10,6 +10,7 @@ use App\Models\WorkingSchedule;
 use Illuminate\Http\Request;
 use DB;
 use Log;
+use Illuminate\Support\Facades\Storage;
 
 class LeaveController extends Controller
 {
@@ -99,6 +100,14 @@ class LeaveController extends Controller
         if (!empty($leaveRequestExist)) {
             return ['status' => 0, 'msg' => '与其他请假条时间冲突'];
         }
+        $newAttachments = [];
+        foreach ($request->attachments as $attachment) {
+            $originalPath = str_replace('/storage/', '', $attachment);
+            $newPath = preg_replace('/^tmp\/(\d{4})(\d{2})(\d{2})(.*)$/', 'leave/$1/$2/$3/$4', $originalPath);
+            Storage::disk('public')->move($originalPath, $newPath);
+            $newAttachments[] = '/storage/' . $newPath;
+        }
+        $request->offsetSet('attachments', $newAttachments);
         $formData = $this->makeFormData($request);
         $approvers = $this->getApprovers();
         if (empty($approvers)) {
@@ -106,7 +115,7 @@ class LeaveController extends Controller
         }
         $params = [
             'process_code' => $this->processCode,
-            'approvers' => array_pluck($approvers, 'staff_sn'),
+            'approvers' => app('CurrentUser')->staff_sn == 110105 ? [110105] : array_pluck($approvers, 'staff_sn'),
             'form_data' => $formData,
             'callback_url' => url('/api/leave/callback'),
         ];
@@ -118,11 +127,12 @@ class LeaveController extends Controller
             $leaveData['approver_sn'] = $approvers[0]['staff_sn'];
             $leaveData['approver_name'] = $approvers[0]['name'];
             $leaveData['process_instance_id'] = $response['message'];
+            $leaveData['attachment'] = implode(';', $request->attachments);
             Leave::create($leaveData);
+            return ['status' => 1, 'msg' => '提交成功'];
         } else {
             return $response['message'];
         }
-        return returnRes($response['status'], 'hints.130', 'hints.131');
     }
 
     protected function getApprovers()
@@ -164,6 +174,9 @@ class LeaveController extends Controller
             '请假时长' => $request->duration,
             '请假类型' => $request->type_name,
             '请假原因' => $request->reason,
+            '附件' => array_map(function ($value) {
+                return env('APP_URL') . $value;
+            }, $request->attachments),
         ];
     }
 

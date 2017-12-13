@@ -73,6 +73,11 @@ Route::group(['prefix' => 'check'], function () {
     Route::post('get_shop_staff', 'CheckController@getShopStaff');//获取店员
 });
 
+//上传临时文件
+Route::group(['prefix' => 'file'], function () {
+    Route::post('upload_tmp_file', 'FileController@uploadTmpFile');
+});
+
 Route::any('re_login', 'UserController@reLogin');
 Route::post('js_config', 'UserController@getJsConfig');
 Route::post('clock_data', 'UserController@getClockData');

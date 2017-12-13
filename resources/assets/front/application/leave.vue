@@ -22,6 +22,9 @@
 					<Input v-model="leaveRequest.reason" type="textarea" :autosize="{minRows:2,maxRows:10}"
 					       placeholder="请输入..."></Input>
 				</Form-item>
+				<Form-item label="附件">
+					<upload-img @upload="uploadAttachment" @remove="removeAttachment"></upload-img>
+				</Form-item>
 				<Row>
 					<i-col span="18" offset="3">
 						<Button type="primary" @click="submit" long>提交</Button>
@@ -49,6 +52,7 @@
 </template>
 <script>
     import {DatetimePicker, Popup, Picker} from 'mint-ui';
+    import uploadImgComponent from './upload_img.vue';
 
     //@TODO 时间的计算，赋值由watcher改为computed
 
@@ -56,6 +60,7 @@
     component[DatetimePicker.name] = DatetimePicker;
     component[Popup.name] = Popup;
     component[Picker.name] = Picker;
+    component['upload-img'] = uploadImgComponent;
     export default {
         data() {
 
@@ -189,7 +194,8 @@
                     duration: 0,
                     type_name: '',
                     type_id: '',
-                    reason: ''
+                    reason: '',
+                    attachments: [],
                 };
                 this.start_at_picker = {
                     date: defaultDate,
@@ -234,6 +240,18 @@
                 this.activeInput = column;
                 this.bottomPopup = true;
             },
+            uploadAttachment(file) {
+                this.leaveRequest.attachments.push(file.url);
+            },
+            removeAttachment(file) {
+                let attachments = this.leaveRequest.attachments;
+                for (let i in attachments) {
+                    if (attachments[i] == file.url) {
+                        this.leaveRequest.attachments.splice(i, 1);
+                        break;
+                    }
+                }
+            },
             submit() {
                 this.$refs['leaveRequest'].validate((valid) => {
                     if (valid) {
@@ -245,7 +263,6 @@
                                 } else if (response.data.status) {
                                     this.$Message.success(response.data.msg);
                                     this.init();
-                                    this.getLeaveRecord();
                                 } else if (response.data.msg) {
                                     this.$Message.error(response.data.msg);
                                 }
