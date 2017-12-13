@@ -17,11 +17,10 @@ let response = [
     {path: '/f/statistics/shop', component: require('../front/statistics/shop.vue')},
     /*调动记录*/
     {path: '/f/statistics/transrecord', component: require('../front/statistics/transfer_record.vue')},
+    /*请假记录*/
+    {path: '/f/statistics/leaverecord', component: require('../front/statistics/leave_record.vue')},
 
     /*店铺考勤*/
     {path: '/f/attend', component: require('../front/attendance/index.vue')},
-
-    /*检查打卡*/
-    {path: '/f/check', component: require('../front/check/index.vue')},
 ];
 export default response;

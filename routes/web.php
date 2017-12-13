@@ -16,6 +16,10 @@ Route::get('', function () {
     return redirect('/f/sign?ver=' . $ver);
 });
 
+Route::get('check', function () {
+    return view('front/check');
+});
+
 //非常重要
 Route::group(['prefix' => 'f'], function () {
     Route::get('/{wa?}/{wb?}/{wc?}', 'UserController@showView');

@@ -120,7 +120,6 @@
                 }
             };
         },
-        props: ['currentUser'],
         components: components,
         computed: {
             searchShopResult() {

@@ -7,7 +7,7 @@
 		</i-col>
 		<i-col span="6" v-if="currentUser.is_manager">
 			<router-link :to="'/f/application/askforothersleave?ver='+ver">
-				<square-button text="请假(代)" color="orange" icon="coffee"></square-button>
+				<square-button text="请假(代)" color="#f9c500" icon="coffee"></square-button>
 			</router-link>
 		</i-col>
 	</Row>

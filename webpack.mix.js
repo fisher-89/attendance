@@ -11,10 +11,11 @@ var path = require('path');
  |
  */
 mix.js('resources/assets/js/front.js', 'public/js/front.js');
+mix.js('resources/assets/js/check.js', 'public/js/check.js');
 mix.webpackConfig({
-	output: {
-		path: path.resolve('public')
-	}
+    output: {
+        path: path.resolve('public')
+    }
 });
 // Full API
 // mix.js(src, output);
