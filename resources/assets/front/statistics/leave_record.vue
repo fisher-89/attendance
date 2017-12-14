@@ -52,7 +52,7 @@
 					</i-col>
 				</Row>
 				<Row>
-					<i-col span="6" v-for="attachment in record.attachment">
+					<i-col span="6" v-for="attachment in record.attachment" v-if="attachment">
 						<img width="60" height="60" :src="attachment">
 					</i-col>
 				</Row>

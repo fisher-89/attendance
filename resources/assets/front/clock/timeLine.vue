@@ -276,6 +276,9 @@
                         this.transfer = response.data.transfer ? response.data.transfer : false;
                         this.leave = response.data.leave ? response.data.leave : false;
                         Indicator.close();
+                        setTimeout(() => {
+                            this.$emit('onLoad', this);
+                        }, 500);
                     } catch (e) {
                         this.$Message.error(e.message);
                     }

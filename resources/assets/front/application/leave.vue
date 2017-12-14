@@ -52,15 +52,15 @@
 </template>
 <script>
     import {DatetimePicker, Popup, Picker} from 'mint-ui';
-    import uploadImgComponent from './upload_img.vue';
+    import uploadImgComponent from '../tools/upload_img.vue';
 
     //@TODO 时间的计算，赋值由watcher改为computed
 
-    let component = {};
-    component[DatetimePicker.name] = DatetimePicker;
-    component[Popup.name] = Popup;
-    component[Picker.name] = Picker;
-    component['upload-img'] = uploadImgComponent;
+    let components = {};
+    components[DatetimePicker.name] = DatetimePicker;
+    components[Popup.name] = Popup;
+    components[Picker.name] = Picker;
+    components['upload-img'] = uploadImgComponent;
     export default {
         data() {
 
@@ -118,7 +118,7 @@
                 endDate: endDate
             };
         },
-        components: component,
+        components: components,
         props: ['currentUser'],
         computed: {},
         watch: {
@@ -195,7 +195,7 @@
                     type_name: '',
                     type_id: '',
                     reason: '',
-                    attachments: [],
+                    attachments: []
                 };
                 this.start_at_picker = {
                     date: defaultDate,
@@ -262,6 +262,7 @@
                                     document.write(response.data);
                                 } else if (response.data.status) {
                                     this.$Message.success(response.data.msg);
+                                    this.$router.push('/f/statistics/leaverecord');
                                     this.init();
                                 } else if (response.data.msg) {
                                     this.$Message.error(response.data.msg);

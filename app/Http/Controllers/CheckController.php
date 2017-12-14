@@ -19,6 +19,10 @@ class CheckController extends Controller
     public function getShopStaff(Request $request)
     {
         $response = app('OA')->getDataFromApi('get_user', ['shop_sn' => $request->shop_sn])['message'];
-        return $response;
+        return array_map(function ($value) {
+            $value['shopStatusColor'] = '#666';
+            $value['shopStatusName'] = '计算中...';
+            return $value;
+        }, $response);
     }
 }

@@ -492,7 +492,7 @@
                         'lsc1894', 'lsw3862', 'lsw3766',
                         'lsw3977', 'lsc1720', 'lsc1947',
                         'lsc1911', 'lsw4032', 'lsw3630',
-                        'lsw4128',
+                        'lsw4128', 'lsw4112',
                     ];
 
                     if (staffAttendance.shop_duty_id == 3 && assistantActive.indexOf(this.attendanceData.shop_sn) != -1) {
