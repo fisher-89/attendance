@@ -22,7 +22,7 @@
 							:on-format-error="handleFormatError"
 							:on-exceeded-size="handleMaxSize"
 							:before-upload="handleBeforeUpload"
-							:headers="{'X-XSRF-TOKEN':cookies.read('XSRF-TOKEN')}"
+							:headers="{'X-XSRF-TOKEN':readCookie('XSRF-TOKEN')}"
 							type="select" action="/file/upload_tmp_file">
 						<Icon type="camera" size="20"></Icon>
 					</Upload>
@@ -35,7 +35,6 @@
     export default {
         data() {
             return {
-                cookies: __webpack_require__(33),
                 uploadList: []
             }
         },
@@ -67,6 +66,10 @@
                     Indicator.open('上传中...');
                 }
                 return check;
+            },
+            readCookie(name) {
+                var match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
+                return (match ? decodeURIComponent(match[3]) : null);
             }
         },
         mounted() {

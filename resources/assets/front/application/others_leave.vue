@@ -228,8 +228,10 @@
                 this.openPopup('type_name');
             },
             changeLeaveType(picker, values) {
-                this.leaveRequest.type_id = values[0].id;
-                this.leaveRequest[this.activeInput] = values[0].name;
+                if (values[0]) {
+                    this.leaveRequest.type_id = values[0].id;
+                    this.leaveRequest[this.activeInput] = values[0].name;
+                }
             },
             openPopup(column) {
                 this.activeInput = column;
