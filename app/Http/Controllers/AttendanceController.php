@@ -154,7 +154,11 @@ class AttendanceController extends Controller
             }
             foreach ($request->details as $detail) {
                 $attendanceStaffModel = new AttendanceStaff(['ym' => $form->attendance_date]);
-                $attendanceStaffModel->find($detail['id'])->setMonth($form->attendance_date)
+                $staffAttendance = $attendanceStaffModel->find($detail['id']);
+                if (empty($staffAttendance)) {
+                    return ['status' => 0, 'msg' => '店铺人员不匹配'];
+                }
+                $staffAttendance->setMonth($form->attendance_date)
                     ->fill(array_only($detail, [
                         'sales_performance_lisha',
                         'sales_performance_go',
