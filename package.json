@@ -7,20 +7,25 @@
     "production": "node node_modules/cross-env/dist/bin/cross-env.js NODE_ENV=production node_modules/webpack/bin/webpack.js --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js"
   },
   "devDependencies": {
+    "babel-plugin-import": "^1.6.3",
     "flatpickr": "^4.0.4",
-    "vuex": "^2.1.2"
-  },
-  "dependencies": {
-    "axios": "^0.16.2",
-    "bootstrap-sass": "^3.3.7",
-    "iview": "^2.4.0",
-    "jquery": "^3.1.0",
-    "laravel-mix": "^0.6.0",
-    "lodash": "^4.16.2",
+    "iview": "^2.7.4",
     "mint-ui": "^2.1.1",
-    "vue": "^2.0.1",
-    "vue-event-calendar": "^1.4.6",
-    "vue-quill-editor": "^2.0.0",
-    "vue-router": "^2.2.1"
-  }
+    "axios": "^0.16.2",
+    "vue": "^2.5.9",
+    "vue-router": "^3.0.1",
+    "laravel-mix": "^0.6.0",
+    "bootstrap-sass": "^3.3.7",
+    "jquery": "^3.1.0"
+  },
+  "dependencies": {},
+  "plugins": [
+    [
+      "import",
+      {
+        "libraryName": "iview",
+        "libraryDirectory": "src/components"
+      }
+    ]
+  ]
 }
