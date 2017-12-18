@@ -96,6 +96,7 @@ class OAService
     {
         $url = $this->oaApiPath . 'refresh_token';
         $refreshToken = session('OA_refresh_token');
+        session()->forget('OA_refresh_token');
         $message = ['refresh_token' => $refreshToken];
         $response = CurlService::build($url)->sendMessageByPost($message);
         if (!isset($response['status'])) {
@@ -105,7 +106,6 @@ class OAService
             $this->saveAppToken($response['message']);
             return $this->makeAppTokenSuccessResponse($response);
         } elseif ($response['status'] == -1) {
-            session()->forget('OA_refresh_token');
             return $this->makeAppTokenErrorResponse($response);
         }
     }
