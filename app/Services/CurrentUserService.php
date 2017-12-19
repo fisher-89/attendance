@@ -58,7 +58,7 @@ class CurrentUserService
                 }
             }
             session()->put('staff_sn', $staff['staff_sn']);
-            cache()->put('staff_' . $staff['staff_sn'], $staff, 120);
+            cache()->put('staff_' . $staff['staff_sn'], $staff, 720);
             $this->userInfo = $staff;
         } else {
             abort(500, 'OA接口异常');
