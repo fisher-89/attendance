@@ -2,6 +2,8 @@
 
 namespace App\Console;
 
+use App\Console\Commands\CleanUpPhotos;
+use App\Console\Commands\CleanUpTmpFiles;
 use App\Console\Commands\RefreshAttendance;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
@@ -14,7 +16,9 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        RefreshAttendance::class
+        RefreshAttendance::class,
+        CleanUpPhotos::class,
+        CleanUpTmpFiles::class,
     ];
 
     /**
@@ -25,7 +29,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-//        $schedule->command('daily:transfer')->dailyAt('5:00');
+        $schedule->command('file:clean-up-photos')->dailyAt('5:00');
+        $schedule->command('file:clean-up-tmp-files')->dailyAt('5:05');
     }
 
     /**

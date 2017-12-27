@@ -23,7 +23,7 @@ class ClockService
             $clockData['distance'] = $distance;
             if (!empty($clockData['photo'])) {
                 $picPath = $clockData['photo'];
-                $saveDir = '/uploads/photo/' . preg_replace('/^(\d{4})-(\d{2})-(\d{2}).*$/', '$1/$2/$3', $clockData['clock_at']) . '/' . $clockData['shop_sn']
+                $saveDir = '/storage/clock/' . preg_replace('/^(\d{4})-(\d{2})-(\d{2}).*$/', '$1/$2/$3', $clockData['clock_at']) . '/' . $clockData['shop_sn']
                     . '/';
                 $fileName = $staffSn . '-' . preg_replace('/^.*(\d{2}):(\d{2}):(\d{2})$/', '$1$2$3', $clockData['clock_at']) . '.png';
                 $photoPath = $saveDir . $fileName;
