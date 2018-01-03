@@ -35,7 +35,7 @@
         data() {
             let newDate = new Date();
             let curYear = newDate.getFullYear();
-            let curMonth = newDate.getMonth() + 1;
+            let curMonth = (Array(2).join(0) + (newDate.getMonth() + 1)).slice(-2);
             return {
                 curYear: curYear,
                 curMonth: curMonth,
