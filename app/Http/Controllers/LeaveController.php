@@ -145,8 +145,7 @@ class LeaveController extends Controller
                 'name' => $staff->shop['manager_name']
             ];
         }
-        if ($staff->department['manager_sn'] > 0 && $staff->staff_sn != $staff->department['manager_sn'] &&
-            !preg_match('/^.*组$/', $staff->department['name'])) {
+        if ($staff->department['manager_sn'] > 0 && $staff->staff_sn != $staff->department['manager_sn']) {
             $approvers[] = [
                 'staff_sn' => $staff->department['manager_sn'],
                 'name' => $staff->department['manager_name']
