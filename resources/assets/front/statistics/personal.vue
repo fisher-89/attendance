@@ -69,20 +69,20 @@
                 minDate: '2017-11-01',
                 onMonthChange: (selectedDates, dateStr, instance) => {
                     Indicator.open('加载中...');
-                    this.curMonth = instance.currentMonth + 1;
+                    this.curMonth = (Array(2).join(0) + (instance.currentMonth + 1)).slice(-2);
                     this.curYear = instance.currentYear;
                     setTimeout(this.getReport, 500);
                 },
                 onYearChange: (selectedDates, dateStr, instance) => {
                     Indicator.open('加载中...');
-                    this.curMonth = instance.currentMonth + 1;
+                    this.curMonth = (Array(2).join(0) + (instance.currentMonth + 1)).slice(-2);
                     this.curYear = instance.currentYear;
                     setTimeout(this.getReport, 500);
                 },
                 onChange: (selectedDates, dateStr, instance) => {
                     this.selectedDate = dateStr;
                     this.clockRefresh = true;
-                    this.curMonth = instance.currentMonth + 1;
+                    this.curMonth = (Array(2).join(0) + (instance.currentMonth + 1)).slice(-2);
                     this.curYear = instance.currentYear;
                     this.renderCalendar();
                 },
