@@ -20,19 +20,19 @@
 @inject('currentUser','CurrentUser')
 <script src="{{source('/js/dingtalk.js')}}"></script>
 <script>
-    sessionStorage.setItem('staff', '{!! json_encode($currentUser->getInfo()) !!}');
-    dd.ready(function () {
-        dd.ui.webViewBounce.disable();
-    });
-    //@TODO 使用一段时间后恢复店助全开
-    window.assistantActive = [
-        'lsw4084', 'lsw4026', 'lsw3859',
-        'lsc1894', 'lsw3862', 'lsw3766',
-        'lsw3977', 'lsc1720', 'lsc1947',
-        'lsc1911', 'lsw4032', 'lsw3630',
-        'lsw4128', 'lsw4112', 'lsw4148',
-        'lsw4224', 'lsw4203'
-    ];
+  sessionStorage.setItem('staff', '{!! json_encode($currentUser->getInfo()) !!}');
+  dd.ready(function () {
+    dd.ui.webViewBounce.disable();
+  });
+  //@TODO 使用一段时间后恢复店助全开
+  window.assistantActive = [
+    'lsw4084', 'lsw4026', 'lsw3859',
+    'lsc1894', 'lsw3862',
+    'lsw3977', 'lsc1720', 'lsc1947',
+    'lsc1911', 'lsw4032', 'lsw3630',
+    'lsw4128', 'lsw4112', 'lsw4148',
+    'lsw4224', 'lsw4273'
+  ];
 </script>
 <script src="{{source('/js/front.js')}}"></script>
 </body>

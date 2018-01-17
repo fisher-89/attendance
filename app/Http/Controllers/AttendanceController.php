@@ -137,6 +137,9 @@ class AttendanceController extends Controller
     public function submit(Request $request)
     {
         $form = Attendance::find($request->id);
+        if (empty($form)) {
+            return ['status' => 0, 'msg' => '考勤表不存在'];
+        }
         if ($form->status <= 0) {
             $currentUserSn = app('CurrentUser')->staff_sn;
             $currentUserName = app('CurrentUser')->realname;
