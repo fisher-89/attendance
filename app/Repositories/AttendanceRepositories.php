@@ -85,7 +85,11 @@ class AttendanceRepositories
         $this->shopRecord = $this->getShopAttendanceForm();
         if ($this->shopRecord->status == 0 && $this->shopRecord->details->count() == 0) {
             $this->makeAttendanceDetail();
-            $this->shopRecord = $this->getShopAttendanceForm();
+            $this->shopRecord = Attendance::where([
+                'shop_sn' => $this->shop['shop_sn'],
+                'attendance_date' => $this->date,
+            ])->first();
+            $this->shopRecord->details;
         }
         return $this->shopRecord;
     }
@@ -174,7 +178,7 @@ class AttendanceRepositories
             $staffGroupFromApi = array_pluck($staffGroupFromApi, [], 'staff_sn');
             $staffGroup = [];
             foreach ($staffGroupFromSchedule as $v) {
-                $staffGroup[] = array_collapse([$v, $staffGroupFromApi[$v['staff_sn']]]);
+                $staffGroup[$v['staff_sn']] = array_collapse([$v, $staffGroupFromApi[$v['staff_sn']]]);
             }
         } catch (\PDOException $e) {
             $staffGroup = [];
@@ -333,7 +337,7 @@ class AttendanceRepositories
         $this->shopRecord->is_early_out = round($this->staffRecord['early_out_time'], 2) > 0 ? 1 : $this->shopRecord['is_early_out'];
 
         $attendanceStaffModel = new AttendanceStaff(['ym' => $ym]);
-        $attendanceStaffModel->fill($this->staffRecord)->save();
+        $attendanceStaffModel->firstOrNew(['staff_sn' => $staffSn, 'attendance_shop_id' => $this->attendanceId])->fill($this->staffRecord)->save();
     }
 
     /**

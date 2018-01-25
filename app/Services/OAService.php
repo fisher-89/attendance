@@ -28,7 +28,7 @@ class OAService
     public function getDataFromApi($url, $params = [])
     {
         $url = preg_match('/^https?:\/\//', $url) ? $url : $this->oaApiPath . $url;
-        if (session()->has('OA_staff_sn') && cache()->has('OA_appToken_' . session('OA_staff_sn'))) {
+        if ($this->hasAppToken()) {
             $params['app_token'] = cache('OA_appToken_' . session('OA_staff_sn'));
             $response = CurlService::build($url)->sendMessageByPost($params);
             return $this->checkResponse($response);
@@ -52,6 +52,11 @@ class OAService
             }
             $this->getAuthCode();
         }
+    }
+
+    public function hasAppToken()
+    {
+        return session()->has('OA_staff_sn') && cache()->has('OA_appToken_' . session('OA_staff_sn'));
     }
 
     /**
