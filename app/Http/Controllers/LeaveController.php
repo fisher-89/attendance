@@ -59,7 +59,7 @@ class LeaveController extends Controller
             $leave->clock_out_at = $current;
         } else {
             Clock::where('parent_id', $request->parent_id)
-                ->where('type', 1)
+                ->where(['type' => 1, 'attendance_type' => 3])
                 ->update(['is_abandoned' => 1]);
             $checkDistance = false;
             $type = 1;
