@@ -112,7 +112,8 @@ class ClockService
     {
         $clockAt = $clock->getOriginal('clock_at');
         $staffSn = $clock->staff_sn;
-        $response = Clock::where('staff_sn', $staffSn)
+        $clockModel = new Clock(['ym' => $clockAt]);
+        $response = $clockModel->where('staff_sn', $staffSn)
             ->where('is_abandoned', 0)
             ->where('clock_at', '<', $clockAt)
             ->where('type', '<', 3)
@@ -123,7 +124,7 @@ class ClockService
             })->orderBy('clock_at', 'desc')->first();
 
         if (empty($response)) {
-            $ym = date('Ym', strtotime('-1 month'));
+            $ym = date('Ym', strtotime($clockAt . ' -1 month'));
             $clockModel = new Clock(['ym' => $ym]);
             $response = $clockModel->where('staff_sn', $staffSn)
                 ->where('is_abandoned', 0)
