@@ -68,7 +68,7 @@ class AttendanceRepositories
         $date = empty($date) ? date('Y-m-d') : $date;
         $shop = empty($shop) ? app('CurrentUser')->shop : $shop;
 
-        $timestamp = date('Y-m-d H:i:s') >= $date . ' ' . $shop['clock_out'] ? strtotime($date) : strtotime($date) - 24 * 3600;
+        $timestamp = date('Y-m-d H:i:s') >= $date . ' ' . $shop['clock_out'] ? strtotime($date) : strtotime($date . ' -1 day');
         $this->date = date('Y-m-d', $timestamp);
         list($this->dayStartAt, $this->dayEndAt) = app('Clock')->getAttendanceDay($this->date);
         $this->shop = $shop;
@@ -337,7 +337,8 @@ class AttendanceRepositories
         $this->shopRecord->is_early_out = round($this->staffRecord['early_out_time'], 2) > 0 ? 1 : $this->shopRecord['is_early_out'];
 
         $attendanceStaffModel = new AttendanceStaff(['ym' => $ym]);
-        $attendanceStaffModel->firstOrNew(['staff_sn' => $staffSn, 'attendance_shop_id' => $this->attendanceId])->fill($this->staffRecord)->save();
+        $attendanceStaffModel->firstOrNew(['staff_sn' => $staffSn, 'attendance_shop_id' => $this->attendanceId])
+            ->setMonth($ym)->fill($this->staffRecord)->save();
     }
 
     /**
