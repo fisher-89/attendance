@@ -51,240 +51,241 @@
 	</div>
 </template>
 <script>
-    import {DatetimePicker, Popup, Picker} from 'mint-ui';
-    import uploadImgComponent from '../tools/upload_img.vue';
+  import { DatetimePicker, Popup, Picker } from 'mint-ui';
+  import uploadImgComponent from '../tools/upload_img.vue';
 
-    //@TODO 时间的计算，赋值由watcher改为computed
+  //@TODO 时间的计算，赋值由watcher改为computed
 
-    let components = {};
-    components[DatetimePicker.name] = DatetimePicker;
-    components[Popup.name] = Popup;
-    components[Picker.name] = Picker;
-    components['upload-img'] = uploadImgComponent;
-    export default {
-        data() {
+  let components = {};
+  components[DatetimePicker.name] = DatetimePicker;
+  components[Popup.name] = Popup;
+  components[Picker.name] = Picker;
+  components['upload-img'] = uploadImgComponent;
+  export default {
+    data() {
 
-            let startDate = new Date();
-            let endDate = new Date();
-            let curDate = startDate.getDate();
-            startDate.setDate(curDate - 40);
-            endDate.setDate(curDate + 30);
+      let startDate = new Date();
+      let endDate = new Date();
+      let curDate = startDate.getDate();
+      startDate.setDate(curDate - 40);
+      endDate.setDate(curDate + 30);
 
-            return {
-                leaveRequest: {},
-                start_at_picker: {},
-                end_at_picker: {},
-                leaveRequestValidator: {
-                    start_at: [
-                        {required: true, message: '开始时间不能为空', trigger: 'change'},
-                        {
-                            validator: (rule, value, callback) => {
-                                let start = new Date(value.replace(/-/g, '/')).getTime();
-                                let current = new Date().getTime();
-                                let diff = current - start;
-                                if (diff > 40 * 24 * 60 * 60 * 1000) {
-                                    callback(new Error('开始时间不能早于40天前'));
-                                } else {
-                                    callback();
-                                }
-                            }, trigger: 'change'
-                        }
-                    ],
-                    end_at: [
-                        {required: true, message: '结束时间不能为空', trigger: 'change'},
-                        {
-                            validator: (rule, value, callback) => {
-                                let start = new Date(this.leaveRequest.start_at.replace(/-/g, '/'));
-                                let end = new Date(value.replace(/-/g, '/'));
-                                if (start > end) {
-                                    callback(new Error('结束时间必须在开始时间之后'));
-                                } else {
-                                    callback();
-                                }
-                            }, trigger: 'change'
-                        }
-                    ],
-                    type_name: [{required: true, message: '请选择请假类型', trigger: 'change'}],
-                    reason: [
-                        {required: true, message: '请输入请假原因', trigger: 'change'},
-                        {type: 'string', max: 200, message: '原因不能超过200字', trigger: 'change'}
-                    ]
-                },
-                bottomPopup: false,
-                activePicker: false,
-                leaveType: {},
-                leaveTypeSlots: [],
-                startDate: startDate,
-                endDate: endDate
-            };
-        },
-        components: components,
-        props: ['currentUser'],
-        computed: {},
-        watch: {
-            start_at_picker: {
-                handler: function (value) {
-                    let year = value.date.getFullYear();
-                    let month = (Array(2).join(0) + (value.date.getMonth() + 1)).slice(-2);
-                    let day = (Array(2).join(0) + value.date.getDate()).slice(-2);
-                    this.leaveRequest.start_at = year + '-' + month + '-' + day + ' ' + value.time;
-                },
-                deep: true
-            },
-            end_at_picker: {
-                handler: function (value) {
-                    let year = value.date.getFullYear();
-                    let month = (Array(2).join(0) + (value.date.getMonth() + 1)).slice(-2);
-                    let day = (Array(2).join(0) + value.date.getDate()).slice(-2);
-                    this.leaveRequest.end_at = year + '-' + month + '-' + day + ' ' + value.time;
-                },
-                deep: true
-            },
-            leaveRequest: {
-                handler: function (value) {
-                    let startDate = new Date(value.start_at.replace(/^(\d{4})\-(\d{2})\-(\d{2}).*$/, '$1/$2/$3'));
-                    let endDate = new Date(value.end_at.replace(/^(\d{4})\-(\d{2})\-(\d{2}).*$/, '$1/$2/$3'));
-                    let dayBetween = (endDate - startDate) / 3600 / 24 / 1000;
-
-                    let startTimeStr = value.start_at.replace(/^.*(\d{2}):(\d{2})$/, '$1:$2');
-                    let endTimeStr = value.end_at.replace(/^.*(\d{2}):(\d{2})$/, '$1:$2');
-                    if (this.currentUser.shop) {
-                        if (startTimeStr > this.currentUser.working_end_at) {
-                            startTimeStr = this.currentUser.working_end_at;
-                        } else if (startTimeStr < this.currentUser.working_start_at) {
-                            startTimeStr = this.currentUser.working_start_at;
-                        }
-                        if (endTimeStr > this.currentUser.working_end_at) {
-                            endTimeStr = this.currentUser.working_end_at;
-                        } else if (endTimeStr < this.currentUser.working_start_at) {
-                            endTimeStr = this.currentUser.working_start_at;
-                        }
-                    }
-                    let startTime = new Date('2000/01/01 ' + startTimeStr);
-                    let endTime = new Date('2000/01/01 ' + endTimeStr);
-                    let hourDiff = (endTime - startTime) / 3600 / 1000;
-                    let workingHours = this.currentUser.shop ? this.currentUser.working_hours : 12;
-                    value.duration = workingHours * dayBetween + hourDiff;
-                },
-                deep: true
-            }
-        },
-        beforeMount() {
-            this.init();
-            axios.get('/leave/get_type').then((response) => {
-                this.leaveTypeSlots = [{flex: 1, values: response.data}];
-            });
-        },
-        filters: {
-            withoutSeconds: function (value) {
-                if (value) {
-                    return value.substring(0, 16);
+      return {
+        leaveRequest: {},
+        start_at_picker: {},
+        end_at_picker: {},
+        leaveRequestValidator: {
+          start_at: [
+            { required: true, message: '开始时间不能为空', trigger: 'change' },
+            {
+              validator: (rule, value, callback) => {
+                let start = new Date(value.replace(/-/g, '/')).getTime();
+                let current = new Date().getTime();
+                let diff = current - start;
+                if (diff > 40 * 24 * 60 * 60 * 1000) {
+                  callback(new Error('开始时间不能早于40天前'));
                 } else {
-                    return '';
+                  callback();
                 }
+              }, trigger: 'change'
             }
+          ],
+          end_at: [
+            { required: true, message: '结束时间不能为空', trigger: 'change' },
+            {
+              validator: (rule, value, callback) => {
+                let start = new Date(this.leaveRequest.start_at.replace(/-/g, '/'));
+                let end = new Date(value.replace(/-/g, '/'));
+                if (start > end) {
+                  callback(new Error('结束时间必须在开始时间之后'));
+                } else {
+                  callback();
+                }
+              }, trigger: 'change'
+            }
+          ],
+          type_name: [{ required: true, message: '请选择请假类型', trigger: 'change' }],
+          reason: [
+            { required: true, message: '请输入请假原因', trigger: 'change' },
+            { type: 'string', max: 200, message: '原因不能超过200字', trigger: 'change' }
+          ]
         },
-        methods: {
-            init() {
-                let defaultDate = new Date();
+        bottomPopup: false,
+        activePicker: false,
+        leaveType: {},
+        leaveTypeSlots: [],
+        startDate: startDate,
+        endDate: endDate
+      };
+    },
+    components: components,
+    props: ['currentUser'],
+    computed: {},
+    watch: {
+      start_at_picker: {
+        handler: function (value) {
+          let year = value.date.getFullYear();
+          let month = (Array(2).join(0) + (value.date.getMonth() + 1)).slice(-2);
+          let day = (Array(2).join(0) + value.date.getDate()).slice(-2);
+          this.leaveRequest.start_at = year + '-' + month + '-' + day + ' ' + value.time;
+        },
+        deep: true
+      },
+      end_at_picker: {
+        handler: function (value) {
+          let year = value.date.getFullYear();
+          let month = (Array(2).join(0) + (value.date.getMonth() + 1)).slice(-2);
+          let day = (Array(2).join(0) + value.date.getDate()).slice(-2);
+          this.leaveRequest.end_at = year + '-' + month + '-' + day + ' ' + value.time;
+        },
+        deep: true
+      },
+      leaveRequest: {
+        handler: function (value) {
+          const startDate = new Date(value.start_at.replace(/^(\d{4})\-(\d{2})\-(\d{2}).*$/, '$1/$2/$3'));
+          const endDate = new Date(value.end_at.replace(/^(\d{4})\-(\d{2})\-(\d{2}).*$/, '$1/$2/$3'));
+          const dayBetween = (endDate - startDate) / 3600 / 24 / 1000;
 
-                this.leaveRequest = {
-                    start_at: '',
-                    end_at: '',
-                    duration: 0,
-                    type_name: '',
-                    type_id: '',
-                    reason: '',
-                    attachments: []
-                };
-                this.start_at_picker = {
-                    date: defaultDate,
-                    time: this.currentUser.shop ? this.currentUser.working_start_at : '9:00'
-                };
-                this.end_at_picker = {
-                    date: defaultDate,
-                    time: this.currentUser.shop ? this.currentUser.working_end_at : '21:00'
-                };
-            },
-            openDatetimePicker(column) {
-                this.activeInput = column;
-                switch (column) {
-                    case 'start_at':
-                        this.$refs.startDatePicker.open();
-                        break;
-                    case 'end_at':
-                        this.$refs.endDatePicker.open();
-                        break;
-                }
+          let startTimeStr = value.start_at.replace(/^.*(\d{2}):(\d{2})$/, '$1:$2');
+          let endTimeStr = value.end_at.replace(/^.*(\d{2}):(\d{2})$/, '$1:$2');
+          const workingStartAt = this.currentUser.shop ? this.currentUser.working_start_at : '09:00';
+          const workingEndAt = this.currentUser.shop ? this.currentUser.working_end_at : '21:00';
+          if (startTimeStr > workingEndAt) {
+            startTimeStr = workingEndAt;
+          } else if (startTimeStr < workingStartAt) {
+            startTimeStr = workingStartAt;
+          }
+          if (endTimeStr > workingEndAt) {
+            endTimeStr = workingEndAt;
+          } else if (endTimeStr < workingStartAt) {
+            endTimeStr = workingStartAt;
+          }
 
-            },
-            confirmDate(date) {
-                switch (this.activeInput) {
-                    case 'start_at':
-                        this.$refs.startTimePicker.open();
-                        break;
-                    case 'end_at':
-                        this.$refs.endTimePicker.open();
-                        break;
-                }
-            },
-            openLeaveTypePicker() {
-                this.activePicker = 'leave_type';
-                this.openPopup('type_name');
-            },
-            changeLeaveType(picker, values) {
-                if (values[0]) {
-                    this.leaveRequest.type_id = values[0].id;
-                    this.leaveRequest[this.activeInput] = values[0].name;
-                }
-            },
-            openPopup(column) {
-                this.activeInput = column;
-                this.bottomPopup = true;
-            },
-            uploadAttachment(file) {
-                this.leaveRequest.attachments.push(file.url);
-            },
-            removeAttachment(file) {
-                let attachments = this.leaveRequest.attachments;
-                for (let i in attachments) {
-                    if (attachments[i] == file.url) {
-                        this.leaveRequest.attachments.splice(i, 1);
-                        break;
-                    }
-                }
-            },
-            submit() {
-                this.$refs['leaveRequest'].validate((valid) => {
-                    if (valid) {
-                        Indicator.open('提交中...');
-                        axios.post('/leave/submit', this.leaveRequest).then((response) => {
-                            try {
-                                if (typeof response.data == 'string') {
-                                    document.write(response.data);
-                                } else if (response.data.status) {
-                                    this.$Message.success(response.data.msg);
-                                    this.$router.push('/f/statistics/leaverecord');
-                                    this.init();
-                                } else if (response.data.msg) {
-                                    this.$Message.error(response.data.msg);
-                                }
-                            } catch (e) {
-                                document.write(JSON.stringify(response.data));
-                            }
-                            Indicator.close();
-                        }).catch((error) => {
-                            if (error.response) {
-                                document.write(error.response.data);
-                            } else {
-                                document.write(error.message);
-                            }
-                        });
-                    } else {
-                        this.$Message.error('表单验证失败!');
-                    }
-                });
-            }
+          const startTime = new Date('2000/01/01 ' + startTimeStr);
+          const endTime = new Date('2000/01/01 ' + endTimeStr);
+          let hourDiff = (endTime - startTime) / 3600 / 1000;
+          let workingHours = this.currentUser.shop ? this.currentUser.working_hours : 12;
+          value.duration = workingHours * dayBetween + hourDiff;
+        },
+        deep: true
+      }
+    },
+    beforeMount() {
+      this.init();
+      axios.get('/leave/get_type').then((response) => {
+        this.leaveTypeSlots = [{ flex: 1, values: response.data }];
+      });
+    },
+    filters: {
+      withoutSeconds: function (value) {
+        if (value) {
+          return value.substring(0, 16);
+        } else {
+          return '';
         }
+      }
+    },
+    methods: {
+      init() {
+        let defaultDate = new Date();
+
+        this.leaveRequest = {
+          start_at: '',
+          end_at: '',
+          duration: 0,
+          type_name: '',
+          type_id: '',
+          reason: '',
+          attachments: []
+        };
+        this.start_at_picker = {
+          date: defaultDate,
+          time: this.currentUser.shop ? this.currentUser.working_start_at : '9:00'
+        };
+        this.end_at_picker = {
+          date: defaultDate,
+          time: this.currentUser.shop ? this.currentUser.working_end_at : '21:00'
+        };
+      },
+      openDatetimePicker(column) {
+        this.activeInput = column;
+        switch (column) {
+          case 'start_at':
+            this.$refs.startDatePicker.open();
+            break;
+          case 'end_at':
+            this.$refs.endDatePicker.open();
+            break;
+        }
+
+      },
+      confirmDate(date) {
+        switch (this.activeInput) {
+          case 'start_at':
+            this.$refs.startTimePicker.open();
+            break;
+          case 'end_at':
+            this.$refs.endTimePicker.open();
+            break;
+        }
+      },
+      openLeaveTypePicker() {
+        this.activePicker = 'leave_type';
+        this.openPopup('type_name');
+      },
+      changeLeaveType(picker, values) {
+        if (values[0]) {
+          this.leaveRequest.type_id = values[0].id;
+          this.leaveRequest[this.activeInput] = values[0].name;
+        }
+      },
+      openPopup(column) {
+        this.activeInput = column;
+        this.bottomPopup = true;
+      },
+      uploadAttachment(file) {
+        this.leaveRequest.attachments.push(file.url);
+      },
+      removeAttachment(file) {
+        let attachments = this.leaveRequest.attachments;
+        for (let i in attachments) {
+          if (attachments[i] == file.url) {
+            this.leaveRequest.attachments.splice(i, 1);
+            break;
+          }
+        }
+      },
+      submit() {
+        this.$refs['leaveRequest'].validate((valid) => {
+          if (valid) {
+            Indicator.open('提交中...');
+            axios.post('/leave/submit', this.leaveRequest).then((response) => {
+              try {
+                if (typeof response.data == 'string') {
+                  document.write(response.data);
+                } else if (response.data.status) {
+                  this.$Message.success(response.data.msg);
+                  this.$router.push('/f/statistics/leaverecord');
+                  this.init();
+                } else if (response.data.msg) {
+                  this.$Message.error(response.data.msg);
+                }
+              } catch (e) {
+                document.write(JSON.stringify(response.data));
+              }
+              Indicator.close();
+            }).catch((error) => {
+              if (error.response) {
+                document.write(error.response.data);
+              } else {
+                document.write(error.message);
+              }
+            });
+          } else {
+            this.$Message.error('表单验证失败!');
+          }
+        });
+      }
     }
+  }
 </script>
