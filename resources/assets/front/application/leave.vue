@@ -67,8 +67,10 @@
       let startDate = new Date();
       let endDate = new Date();
       let curDate = startDate.getDate();
+      const curMonth = startDate.getMonth();
       startDate.setDate(curDate - 40);
-      endDate.setDate(curDate + 30);
+      endDate.setMonth(curMonth + 1);
+      endDate.setDate(curDate - 1);
 
       return {
         leaveRequest: {},
@@ -148,8 +150,8 @@
 
           let startTimeStr = value.start_at.replace(/^.*(\d{2}):(\d{2})$/, '$1:$2');
           let endTimeStr = value.end_at.replace(/^.*(\d{2}):(\d{2})$/, '$1:$2');
-          const workingStartAt = this.currentUser.shop ? this.currentUser.working_start_at : '09:00';
-          const workingEndAt = this.currentUser.shop ? this.currentUser.working_end_at : '21:00';
+          const workingStartAt = this.currentUser.working_start_at || '09:00';
+          const workingEndAt = this.currentUser.working_end_at || '21:00';
           if (startTimeStr > workingEndAt) {
             startTimeStr = workingEndAt;
           } else if (startTimeStr < workingStartAt) {
@@ -164,7 +166,8 @@
           const startTime = new Date('2000/01/01 ' + startTimeStr);
           const endTime = new Date('2000/01/01 ' + endTimeStr);
           let hourDiff = (endTime - startTime) / 3600 / 1000;
-          let workingHours = this.currentUser.shop ? this.currentUser.working_hours : 12;
+          let workingHours = this.currentUser.working_hours || 12;
+          console.log(startTimeStr);
           value.duration = workingHours * dayBetween + hourDiff;
         },
         deep: true
@@ -200,11 +203,11 @@
         };
         this.start_at_picker = {
           date: defaultDate,
-          time: this.currentUser.shop ? this.currentUser.working_start_at : '9:00'
+          time: this.currentUser.working_start_at || '09:00'
         };
         this.end_at_picker = {
           date: defaultDate,
-          time: this.currentUser.shop ? this.currentUser.working_end_at : '21:00'
+          time: this.currentUser.working_end_at || '21:00'
         };
       },
       openDatetimePicker(column) {
@@ -276,7 +279,7 @@
               Indicator.close();
             }).catch((error) => {
               if (error.response) {
-                document.write(error.response.data);
+                document.write(JSON.stringify(error.response.data));
               } else {
                 document.write(error.message);
               }
