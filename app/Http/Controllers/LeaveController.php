@@ -139,22 +139,29 @@ class LeaveController extends Controller
     {
         $staff = app('CurrentUser');
         $approvers = [];
-        if ($staff->inShop() && $staff->shop['manager_sn'] != $staff->staff_sn && $staff->shop['manager_sn'] > 0) {
+        if ($staff->brand_id == 14) {
             $approvers[] = [
-                'staff_sn' => $staff->shop['manager_sn'],
-                'name' => $staff->shop['manager_name']
+                'staff_sn' => '119591',
+                'name' => '段志辉',
             ];
-        }
-        if ($staff->department['manager_sn'] > 0 && $staff->staff_sn != $staff->department['manager_sn']) {
-            $approvers[] = [
-                'staff_sn' => $staff->department['manager_sn'],
-                'name' => $staff->department['manager_name']
-            ];
-        } elseif ($staff->department['parent_id'] > 0 && !empty($staff->department['_parent']['manager_sn'])) {
-            $approvers[] = [
-                'staff_sn' => $staff->department['_parent']['manager_sn'],
-                'name' => $staff->department['_parent']['manager_name']
-            ];
+        } elseif (in_array($staff->brand_id, [4, 8])) {
+            if ($staff->inShop() && $staff->shop['manager_sn'] != $staff->staff_sn && $staff->shop['manager_sn'] > 0) {
+                $approvers[] = [
+                    'staff_sn' => $staff->shop['manager_sn'],
+                    'name' => $staff->shop['manager_name']
+                ];
+            }
+            if ($staff->department['manager_sn'] > 0 && $staff->staff_sn != $staff->department['manager_sn']) {
+                $approvers[] = [
+                    'staff_sn' => $staff->department['manager_sn'],
+                    'name' => $staff->department['manager_name']
+                ];
+            } elseif ($staff->department['parent_id'] > 0 && !empty($staff->department['_parent']['manager_sn'])) {
+                $approvers[] = [
+                    'staff_sn' => $staff->department['_parent']['manager_sn'],
+                    'name' => $staff->department['_parent']['manager_name']
+                ];
+            }
         }
         return $approvers;
     }
