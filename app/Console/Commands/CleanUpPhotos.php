@@ -41,12 +41,12 @@ class CleanUpPhotos extends Command
      */
     public function handle()
     {
-        $directory = 'photo/' . $this->date;
+        $directory = 'clock/' . $this->date;
         $this->info($directory);
-        $files = Storage::disk('upload')->allFiles($directory);
+        $files = Storage::disk('public')->allFiles($directory);
         foreach ($files as $file) {
             if (!preg_match('/thumb/', $file)) {
-                Storage::disk('upload')->delete($file);
+                Storage::disk('public')->delete($file);
             }
         }
     }
