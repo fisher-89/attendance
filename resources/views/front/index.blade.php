@@ -31,6 +31,7 @@
     'lsw3977', 'lsc1720', 'lsc1947',
     'lsc1911', 'lsw4032', 'lsw4224',
     'lsw4128', 'lsw4112', 'lsw4398',
+    'lsw4549',
   ];
 </script>
 <script src="{{source('/js/front.js')}}"></script>

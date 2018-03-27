@@ -272,9 +272,11 @@
                   this.init();
                 } else if (response.data.msg) {
                   this.$Message.error(response.data.msg);
+                } else {
+                  document.write(JSON.stringify(response.data));
                 }
               } catch (e) {
-                document.write(JSON.stringify(response.data));
+                document.write('error:' + JSON.stringify(response.data));
               }
               Indicator.close();
             }).catch((error) => {
