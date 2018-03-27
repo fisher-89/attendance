@@ -357,7 +357,7 @@ class AttendanceRepositories
         } else {
             $isShift = 0;
         }
-        if (in_array($staff['position_id'], [17, 18, 33, 34]) && $staff['shop_duty_id'] != 1) {
+        if (in_array($staff['position_id'], [93, 94, 95, 96, 97, 98]) && $staff['shop_duty_id'] != 1) {
             $isAssistor = 1;
         } else {
             $isAssistor = 0;
