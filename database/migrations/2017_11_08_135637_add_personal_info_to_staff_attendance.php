@@ -16,6 +16,7 @@ class AddPersonalInfoToStaffAttendance extends Migration
         Schema::table('attendance_staff_' . date('Ym'), function (Blueprint $table) {
             $table->smallInteger('staff_position_id')->comment('职位ID');
             $table->char('staff_position', 10)->comment('职位');
+            $table->unsignedTinyInteger('staff_position_level')->comment('职级')->default(0);
             $table->smallInteger('staff_department_id')->comment('部门ID');
             $table->char('staff_department', 20)->comment('部门');
             $table->tinyInteger('staff_status_id')->comment('状态ID');

@@ -37,6 +37,7 @@ class AttendanceStaff extends Model
         'working_end_at',
         'staff_position_id',
         'staff_position',
+        'staff_position_level',
         'staff_department_id',
         'staff_department',
         'staff_status_id',
