@@ -28,7 +28,6 @@ window.Toast = Toast;
 Vue.use(InfiniteScroll);
 Vue.component(Tabbar.name, Tabbar);
 Vue.component(TabItem.name, TabItem);
-window.oaurl = 'http://192.168.1.20:8001/Api/';
 /* Global Packages End */
 /* Router Start */
 import routes from './router';

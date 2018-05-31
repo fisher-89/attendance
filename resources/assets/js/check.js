@@ -20,7 +20,6 @@ import {
 window.axios = axios;
 window.Indicator = Indicator;
 window.Toast = Toast;
-window.oaurl = 'http://192.168.1.20:8001/Api/';
 
 import View from '../front/check/index.vue';
 

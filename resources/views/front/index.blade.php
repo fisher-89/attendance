@@ -26,13 +26,7 @@
   });
   //@TODO 使用一段时间后恢复店助全开
   window.assistantActive = [
-    'lsw4084', 'lsw4026', 'lsw3859',
-    'lsc1894', 'lsw3862', 'lsw4148',
-    'lsw3977', 'lsc1720', 'lsc1947',
-    'lsc1911', 'lsw4032', 'lsw4224',
-    'lsw4128', 'lsw4112', 'lsw4398',
-    'lsw4549', 'lsw4580', 'lsw4712',
-    'lsw4708', 'lsw4797'
+    'lsw4797',
   ];
 </script>
 <script src="{{source('/js/front.js')}}"></script>
