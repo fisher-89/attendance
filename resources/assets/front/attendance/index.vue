@@ -209,302 +209,317 @@
 </template>
 
 <script>
-    import {Field, Loadmore, Popup, Actionsheet} from 'mint-ui';
-    import clockLineComponent from './clockLine.vue';
-    import Flatpickr from 'flatpickr';
+  import { Field, Loadmore, Popup, Actionsheet } from 'mint-ui';
+  import clockLineComponent from './clockLine.vue';
+  import Flatpickr from 'flatpickr';
 
-    const Chinese = require('../../flatpickr/l10ns/zh.js').zh;
+  const Chinese = require('../../flatpickr/l10ns/zh.js').zh;
 
-    let components = {};
-    components[Field.name] = Field;
-    components[Loadmore.name] = Loadmore;
-    components[Popup.name] = Popup;
-    components[Actionsheet.name] = Actionsheet;
-    components['ClockLine'] = clockLineComponent;
+  let components = {};
+  components[Field.name] = Field;
+  components[Loadmore.name] = Loadmore;
+  components[Popup.name] = Popup;
+  components[Actionsheet.name] = Actionsheet;
+  components['ClockLine'] = clockLineComponent;
 
-    export default {
-        data() {
-            return {
-                attendanceRecords: {},
-                attendanceData: {
-                    status: 0,
-                    details: [],
-                    manager_remark: ''
-                },
-                date: null,
-                statusColor: {'0': 'info', '1': 'warning', '2': 'success', '-1': 'error'},
-                searchStaffStatus: false,
-                showCalendar: false,
-                shopDutyActions: [
-                    {name: '设为店助', method: this.setShopDutyToAssistant}
-                ],
-                shopDutySheetVisible: false,
-                shopDutyStaffKey: false,
-                calandar: false
-            }
+  export default {
+    data() {
+      return {
+        attendanceRecords: {},
+        attendanceData: {
+          status: 0,
+          details: [],
+          manager_remark: ''
         },
-        props: ['currentUser'],
-        components: components,
-        computed: {
-            total: function () {
-                let total = 0;
-                let staffAttendance;
-                for (let i in this.attendanceData.details) {
-                    staffAttendance = this.attendanceData.details[i];
-                    total += parseFloat(staffAttendance.sales_performance_lisha) || 0;
-                    total += parseFloat(staffAttendance.sales_performance_go) || 0;
-                    total += parseFloat(staffAttendance.sales_performance_group) || 0;
-                    total += parseFloat(staffAttendance.sales_performance_partner) || 0;
-                }
-                return total.toFixed(2);
-            }
+        originalAttendanceData: {
+          status: 0,
+          details: [],
+          manager_remark: ''
         },
-        beforeMount() {
-            this.getAllAttendanceRecords();
-            this.getAttendanceRecord();
-        },
-        mounted() {
-            this.calandar = Flatpickr("#calendar", {
-                inline: true,
-                locale: Chinese,
-                defaultDate: 'today',
-                maxDate: 'today',
-                minDate: new Date().fp_incr(-40),
-                onChange: (selectedDates, dateStr) => {
-                    this.renderCalendar();
-                    this.date = dateStr;
-                    this.getAttendanceRecord();
-                    this.showCalendar = false;
-                },
-                onReady: () => {
-                    setTimeout(this.renderCalendar, 500);
-                },
-                onMonthChange: (selectedDates, dateStr, instance) => {
-                    Indicator.open('加载中...');
-                    setTimeout(this.renderCalendar, 500);
-                },
-                onYearChange: (selectedDates, dateStr, instance) => {
-                    Indicator.open('加载中...');
-                    setTimeout(this.renderCalendar, 500);
-                },
-                onDayCreate: (dObj, dStr, fp, dayElem) => {
-                    let year = dayElem.dateObj.getFullYear();
-                    let month = (Array(2).join(0) + (dayElem.dateObj.getMonth() + 1)).slice(-2);
-                    let date = (Array(2).join(0) + dayElem.dateObj.getDate()).slice(-2);
-                    dayElem.id = 'calandar-' + year + '-' + month + '-' + date;
-                }
-            });
-        },
-        watch: {},
-        methods: {
-            locate() {
-                dd.ready(() => {
-                    Indicator.open('定位中...');
-                    dd.device.geolocation.get({
-                        targetAccuracy: 15,
-                        coordinate: 1,
-                        withReGeocode: true,
-                        useCache: false,
-                        onSuccess: (result) => {
-                            let position = {
-                                lng: result.longitude,
-                                lat: result.latitude
-                            };
-                            this.getAttendanceRecord();
-                            axios.post('/attendance/locate', position).then((response) => {
-                                Indicator.close();
-                                if (response.data.status == 1) {
-                                    this.$Message.success('定位成功');
-                                } else if (response.data.status == -1) {
-                                    this.$Message.error(response.data.message);
-                                    position = {
-                                        lng: response.data.lng,
-                                        lat: response.data.lat
-                                    };
-                                } else {
-                                    document.write(response.data);
-                                    return false;
-                                }
-                                this.currentUser.shop.lng = position.lng;
-                                this.currentUser.shop.lat = position.lat;
-                                sessionStorage.setItem('staff', JSON.stringify(this.currentUser));
-                                axios.get('/re_login');
-                            });
-                        },
-                        onFail: (err) => {
-                            document.write(JSON.stringify(err));
-                        }
-                    });
-                });
-            },
-            getAllAttendanceRecords() {
-                axios.post('/attendance/all').then((response) => {
-                    this.attendanceRecords = response.data;
-                });
-            },
-            renderCalendar() {
-                let cell;
-                let date;
-                let attendance;
-                let html;
-                let color;
-                let dayContainer = this.calandar.days.getElementsByTagName('span');
-
-                for (let i = 0; i < dayContainer.length; i++) {
-                    cell = dayContainer[i];
-                    if (!cell.className.match(/(MonthDay|disabled)/)) {
-                        date = cell.id.replace(/calandar\-(.*)/, '$1');
-                        attendance = this.attendanceRecords[date];
-                        if (attendance) {
-                            switch (attendance.status) {
-                                case 0:
-                                    color = '#2d8cf0';
-                                    break;
-                                case 1:
-                                    color = '#ff9900';
-                                    break;
-                                case 2:
-                                    color = '#19be6b';
-                                    break;
-                                case -1:
-                                    color = '#ed3f14';
-                                    break;
-                                default:
-                                    color = '#999999';
-                                    break;
-                            }
-                        } else {
-                            color = '#999999';
-                        }
-                        html = '<div style="position:absolute;top:0;left:0;border-top:10px solid ' + color +
-                            ';border-right:10px solid transparent;"></div>';
-                        cell.innerHTML += html;
-                    }
-                }
-                Indicator.close();
-            },
-            getAttendanceRecord() {
-                Indicator.open('加载中...');
-                axios.post('/attendance/sheet', {date: this.date}).then((response) => {
-                    this.attendanceData = response.data;
-                    Indicator.close();
-                }).catch((error) => {
-                    if (error.response) {
-                        document.write(error.response.data);
-                    } else {
-                        document.write(error.message);
-                    }
-                });
-            },
-            refreshAttendanceRecord() {
-                if (this.attendanceData.status > 0) {
-                    axios.post('/attendance/sheet', {date: this.date}).then((response) => {
-                        this.attendanceData = response.data;
-                        this.$refs.loadmore.onTopLoaded();
-                    }).catch((error) => {
-                        if (error.response) {
-                            document.write(error.response.data);
-                        } else {
-                            document.write(error.message);
-                        }
-                    });
-                } else {
-                    axios.post('/attendance/refresh', this.attendanceData).then((response) => {
-                        this.attendanceData = response.data;
-                        this.$refs.loadmore.onTopLoaded();
-                    }).catch((error) => {
-                        if (error.response) {
-                            document.write(error.response.data);
-                        } else {
-                            document.write('其他错误:' + error.message);
-                        }
-                    });
-                }
-            },
-            submit() {
-                if (this.attendanceData.is_missing) {
-                    this.$Message.error('存在漏签，请补全签卡后再提交');
-                } else {
-                    Indicator.open('处理中...');
-                    let url = '/attendance/submit';
-                    axios.post(url, this.attendanceData).then((response) => {
-                        if (response.data.status == 1) {
-                            this.attendanceData = response.data.msg;
-                            Indicator.close();
-                            this.$Message.success('提交成功');
-                        } else if (response.data.status == 0) {
-                            this.$Message.error(response.data.msg);
-                        }
-                    }).catch((error) => {
-                        document.write(error);
-                    });
-                }
-            },
-            withdraw() {
-                Indicator.open('处理中...');
-                let url = '/attendance/withdraw';
-                axios.post(url, this.attendanceData).then((response) => {
-                    this.attendanceData = response.data;
-                    Indicator.close();
-                    this.$Message.success('撤回成功');
-                }).catch((error) => {
-                    document.write(error);
-                });
-            },
-            clearContent(e) {
-                if (e.target.value == 0) e.target.value = '';
-            },
-            setShopDutyToAssistant() {
-                let staffAttendance;
-                for (let i in this.attendanceData.details) {
-                    staffAttendance = this.attendanceData.details[i];
-                    if (staffAttendance.shop_duty_id == 2) {
-                        staffAttendance.shop_duty_id = 3;
-                        staffAttendance.shop_duty.id = 3;
-                        staffAttendance.shop_duty.name = '导购';
-                    }
-                }
-                this.attendanceData.details[this.shopDutyStaffKey].shop_duty_id = 2;
-                this.attendanceData.details[this.shopDutyStaffKey].shop_duty.id = 2;
-                this.attendanceData.details[this.shopDutyStaffKey].shop_duty.name = '店助';
-            },
-            setShopDutyToSalesperson() {
-                this.attendanceData.details[this.shopDutyStaffKey].shop_duty_id = 3;
-                this.attendanceData.details[this.shopDutyStaffKey].shop_duty.id = 3;
-                this.attendanceData.details[this.shopDutyStaffKey].shop_duty.name = '导购';
-            },
-            toggleAssistor() {
-                let is_assistor = this.attendanceData.details[this.shopDutyStaffKey].is_assistor;
-                this.attendanceData.details[this.shopDutyStaffKey].is_assistor = is_assistor ? 0 : 1;
-            },
-            toggleShift() {
-                let is_shift = this.attendanceData.details[this.shopDutyStaffKey].is_shift;
-                this.attendanceData.details[this.shopDutyStaffKey].is_shift = is_shift ? 0 : 1;
-            },
-            showSheet(key) {
-                if (this.attendanceData.status <= 0) {
-                    let staffAttendance = this.attendanceData.details[key];
-                    this.shopDutyStaffKey = key;
-                    this.shopDutyActions = [];
-                    //@TODO 使用一段时间后恢复店助全开
-                    if (staffAttendance.shop_duty_id == 3 && assistantActive.indexOf(this.attendanceData.shop_sn) != -1) {
-                        this.shopDutyActions.push({name: '设为店助', method: this.setShopDutyToAssistant});
-                    } else if (staffAttendance.shop_duty_id == 2) {
-                        this.shopDutyActions.push({name: '设为导购', method: this.setShopDutyToSalesperson});
-                    }
-                    if (staffAttendance.is_assistor == 0) {
-                        this.shopDutyActions.push({name: '协助', method: this.toggleAssistor});
-                    } else {
-                        this.shopDutyActions.push({name: '取消协助', method: this.toggleAssistor});
-                    }
-                    if (staffAttendance.is_shift == 0) {
-                        this.shopDutyActions.push({name: '倒班', method: this.toggleShift});
-                    } else {
-                        this.shopDutyActions.push({name: '取消倒班', method: this.toggleShift});
-                    }
-                    this.shopDutySheetVisible = true;
-                }
-            }
+        date: null,
+        statusColor: { '0': 'info', '1': 'warning', '2': 'success', '-1': 'error' },
+        searchStaffStatus: false,
+        showCalendar: false,
+        shopDutyActions: [
+          { name: '设为店助', method: this.setShopDutyToAssistant }
+        ],
+        shopDutySheetVisible: false,
+        shopDutyStaffKey: false,
+        calandar: false
+      }
+    },
+    props: ['currentUser'],
+    components: components,
+    computed: {
+      total: function () {
+        let total = 0;
+        let staffAttendance;
+        for (let i in this.attendanceData.details) {
+          staffAttendance = this.attendanceData.details[i];
+          total += parseFloat(staffAttendance.sales_performance_lisha) || 0;
+          total += parseFloat(staffAttendance.sales_performance_go) || 0;
+          total += parseFloat(staffAttendance.sales_performance_group) || 0;
+          total += parseFloat(staffAttendance.sales_performance_partner) || 0;
         }
+        return total.toFixed(2);
+      }
+    },
+    beforeMount() {
+      this.getAllAttendanceRecords();
+      this.getAttendanceRecord();
+    },
+    mounted() {
+      this.calandar = Flatpickr("#calendar", {
+        inline: true,
+        locale: Chinese,
+        defaultDate: 'today',
+        maxDate: 'today',
+        minDate: new Date().fp_incr(-40),
+        onChange: (selectedDates, dateStr) => {
+          this.renderCalendar();
+          this.date = dateStr;
+          this.getAttendanceRecord();
+          this.showCalendar = false;
+        },
+        onReady: () => {
+          setTimeout(this.renderCalendar, 500);
+        },
+        onMonthChange: (selectedDates, dateStr, instance) => {
+          Indicator.open('加载中...');
+          setTimeout(this.renderCalendar, 500);
+        },
+        onYearChange: (selectedDates, dateStr, instance) => {
+          Indicator.open('加载中...');
+          setTimeout(this.renderCalendar, 500);
+        },
+        onDayCreate: (dObj, dStr, fp, dayElem) => {
+          let year = dayElem.dateObj.getFullYear();
+          let month = (Array(2).join(0) + (dayElem.dateObj.getMonth() + 1)).slice(-2);
+          let date = (Array(2).join(0) + dayElem.dateObj.getDate()).slice(-2);
+          dayElem.id = 'calandar-' + year + '-' + month + '-' + date;
+        }
+      });
+    },
+    watch: {},
+    methods: {
+      locate() {
+        dd.ready(() => {
+          Indicator.open('定位中...');
+          dd.device.geolocation.get({
+            targetAccuracy: 15,
+            coordinate: 1,
+            withReGeocode: true,
+            useCache: false,
+            onSuccess: (result) => {
+              let position = {
+                lng: result.longitude,
+                lat: result.latitude
+              };
+              this.getAttendanceRecord();
+              axios.post('/attendance/locate', position).then((response) => {
+                Indicator.close();
+                if (response.data.status == 1) {
+                  this.$Message.success('定位成功');
+                } else if (response.data.status == -1) {
+                  this.$Message.error(response.data.message);
+                  position = {
+                    lng: response.data.lng,
+                    lat: response.data.lat
+                  };
+                } else {
+                  document.write(response.data);
+                  return false;
+                }
+                this.currentUser.shop.lng = position.lng;
+                this.currentUser.shop.lat = position.lat;
+                sessionStorage.setItem('staff', JSON.stringify(this.currentUser));
+                axios.get('/re_login');
+              });
+            },
+            onFail: (err) => {
+              document.write(JSON.stringify(err));
+            }
+          });
+        });
+      },
+      getAllAttendanceRecords() {
+        axios.post('/attendance/all').then((response) => {
+          this.attendanceRecords = response.data;
+        });
+      },
+      renderCalendar() {
+        let cell;
+        let date;
+        let attendance;
+        let html;
+        let color;
+        let dayContainer = this.calandar.days.getElementsByTagName('span');
+
+        for (let i = 0; i < dayContainer.length; i++) {
+          cell = dayContainer[i];
+          if (!cell.className.match(/(MonthDay|disabled)/)) {
+            date = cell.id.replace(/calandar\-(.*)/, '$1');
+            attendance = this.attendanceRecords[date];
+            if (attendance) {
+              switch (attendance.status) {
+                case 0:
+                  color = '#2d8cf0';
+                  break;
+                case 1:
+                  color = '#ff9900';
+                  break;
+                case 2:
+                  color = '#19be6b';
+                  break;
+                case -1:
+                  color = '#ed3f14';
+                  break;
+                default:
+                  color = '#999999';
+                  break;
+              }
+            } else {
+              color = '#999999';
+            }
+            html = '<div style="position:absolute;top:0;left:0;border-top:10px solid ' + color +
+              ';border-right:10px solid transparent;"></div>';
+            cell.innerHTML += html;
+          }
+        }
+        Indicator.close();
+      },
+      getAttendanceRecord() {
+        Indicator.open('加载中...');
+        axios.post('/attendance/sheet', { date: this.date }).then((response) => {
+          this.attendanceData = response.data;
+          this.originalAttendanceData = JSON.parse(JSON.stringify(response.data));
+          Indicator.close();
+        }).catch((error) => {
+          if (error.response) {
+            document.write(error.response.data);
+          } else {
+            document.write(error.message);
+          }
+        });
+      },
+      refreshAttendanceRecord() {
+        if (this.attendanceData.status > 0) {
+          axios.post('/attendance/sheet', { date: this.date }).then((response) => {
+            this.attendanceData = response.data;
+            this.$refs.loadmore.onTopLoaded();
+          }).catch((error) => {
+            if (error.response) {
+              document.write(error.response.data);
+            } else {
+              document.write(error.message);
+            }
+          });
+        } else {
+          axios.post('/attendance/refresh', this.attendanceData).then((response) => {
+            this.attendanceData = response.data;
+            this.$refs.loadmore.onTopLoaded();
+          }).catch((error) => {
+            if (error.response) {
+              document.write(error.response.data);
+            } else {
+              document.write('其他错误:' + error.message);
+            }
+          });
+        }
+      },
+      submit() {
+        if (this.attendanceData.is_missing) {
+          this.$Message.error('存在漏签，请补全签卡后再提交');
+        } else {
+          Indicator.open('处理中...');
+          let url = '/attendance/submit';
+          axios.post(url, this.attendanceData).then((response) => {
+            if (response.data.status == 1) {
+              this.attendanceData = response.data.msg;
+              Indicator.close();
+              this.$Message.success('提交成功');
+            } else if (response.data.status == 0) {
+              this.$Message.error(response.data.msg);
+            }
+          }).catch((error) => {
+            document.write(error);
+          });
+        }
+      },
+      withdraw() {
+        Indicator.open('处理中...');
+        let url = '/attendance/withdraw';
+        axios.post(url, this.attendanceData).then((response) => {
+          this.attendanceData = response.data;
+          Indicator.close();
+          this.$Message.success('撤回成功');
+        }).catch((error) => {
+          document.write(error);
+        });
+      },
+      clearContent(e) {
+        if (e.target.value == 0) e.target.value = '';
+      },
+      setShopDutyToAssistant() {
+        let staffAttendance;
+        let originalStaffAttendance;
+        for (let i in this.attendanceData.details) {
+          staffAttendance = this.attendanceData.details[i];
+          originalStaffAttendance = this.originalAttendanceData.details[i];
+          if (staffAttendance.shop_duty_id == 2) {
+            staffAttendance.shop_duty_id = originalStaffAttendance.shop_duty_id;
+            staffAttendance.shop_duty.id = originalStaffAttendance.shop_duty.id;
+            staffAttendance.shop_duty.name = originalStaffAttendance.shop_duty.name;
+          }
+        }
+        this.attendanceData.details[this.shopDutyStaffKey].shop_duty_id = 2;
+        this.attendanceData.details[this.shopDutyStaffKey].shop_duty.id = 2;
+        this.attendanceData.details[this.shopDutyStaffKey].shop_duty.name = '店助';
+      },
+      setShopDutyToSalesperson() {
+        this.attendanceData.details[this.shopDutyStaffKey].shop_duty_id = 3;
+        this.attendanceData.details[this.shopDutyStaffKey].shop_duty.id = 3;
+        this.attendanceData.details[this.shopDutyStaffKey].shop_duty.name = '导购';
+      },
+      setShopDutyToManager() {
+        this.attendanceData.details[this.shopDutyStaffKey].shop_duty_id = 1;
+        this.attendanceData.details[this.shopDutyStaffKey].shop_duty.id = 1;
+        this.attendanceData.details[this.shopDutyStaffKey].shop_duty.name = '店长';
+      },
+      toggleAssistor() {
+        let is_assistor = this.attendanceData.details[this.shopDutyStaffKey].is_assistor;
+        this.attendanceData.details[this.shopDutyStaffKey].is_assistor = is_assistor ? 0 : 1;
+      },
+      toggleShift() {
+        let is_shift = this.attendanceData.details[this.shopDutyStaffKey].is_shift;
+        this.attendanceData.details[this.shopDutyStaffKey].is_shift = is_shift ? 0 : 1;
+      },
+      showSheet(key) {
+        if (this.attendanceData.status <= 0) {
+          let staffAttendance = this.attendanceData.details[key];
+          let originalAttendanceData = this.originalAttendanceData.details[key];
+          this.shopDutyStaffKey = key;
+          this.shopDutyActions = [];
+          if ([1, 3].indexOf(staffAttendance.shop_duty_id) != -1 && assistantActive.indexOf(this.attendanceData.shop_sn) != -1) {
+            this.shopDutyActions.push({ name: '设为店助', method: this.setShopDutyToAssistant });
+          } else if (staffAttendance.shop_duty_id == 2 && originalAttendanceData.shop_duty_id == 3) {
+            this.shopDutyActions.push({ name: '设为导购', method: this.setShopDutyToSalesperson });
+          } else if (staffAttendance.shop_duty_id == 2 && originalAttendanceData.shop_duty_id == 1) {
+            this.shopDutyActions.push({ name: '设为店长', method: this.setShopDutyToManager });
+          }
+          if (staffAttendance.is_assistor == 0) {
+            this.shopDutyActions.push({ name: '协助', method: this.toggleAssistor });
+          } else {
+            this.shopDutyActions.push({ name: '取消协助', method: this.toggleAssistor });
+          }
+          if (staffAttendance.is_shift == 0) {
+            this.shopDutyActions.push({ name: '倒班', method: this.toggleShift });
+          } else {
+            this.shopDutyActions.push({ name: '取消倒班', method: this.toggleShift });
+          }
+          this.shopDutySheetVisible = true;
+        }
+      }
     }
+  }
 </script>

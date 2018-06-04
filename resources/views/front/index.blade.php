@@ -25,9 +25,7 @@
     dd.ui.webViewBounce.disable();
   });
   //@TODO 使用一段时间后恢复店助全开
-  window.assistantActive = [
-    'lsw4797',
-  ];
+  window.assistantActive = ['go0001','lsw4908'];
 </script>
 <script src="{{source('/js/front.js')}}"></script>
 </body>
