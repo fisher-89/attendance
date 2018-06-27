@@ -18,18 +18,6 @@ class Initial extends OAService
      */
     public function handle($request, Closure $next)
     {
-        if ($this->hasAppToken()) {
-            //
-        } elseif (session()->has('OA_refresh_token')) {
-            $this->refreshAppToken();
-        } elseif (request()->has('auth_code')) {
-            $this->getAppToken();
-        } else {
-            if (empty($this->receiptUrl)) {
-                $this->receiptUrl = url()->current();
-            }
-            $this->getAuthCode();
-        }
         if (!app('CurrentUser')->isLogin()) {
             app('CurrentUser')->login();
         }
