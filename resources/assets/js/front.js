@@ -15,13 +15,14 @@ import '../css/front.css';
 /* Global Packages Start */
 import axios from 'axios';
 import {
-    Indicator,
-    Toast,
-    InfiniteScroll,
-    Tabbar,
-    TabItem
+  Indicator,
+  Toast,
+  InfiniteScroll,
+  Tabbar,
+  TabItem
 } from 'mint-ui';
 
+axios.defaults.headers.common['Accept'] = 'application/json';
 window.axios = axios;
 window.Indicator = Indicator;
 window.Toast = Toast;
@@ -33,22 +34,22 @@ Vue.component(TabItem.name, TabItem);
 import routes from './router';
 
 const router = new VueRouter({
-    mode: 'history',
-    routes: routes,
+  mode: 'history',
+  routes: routes,
 });
 router.beforeEach((to, from, next) => {
-    iView.LoadingBar.start();
-    next();
+  iView.LoadingBar.start();
+  next();
 });
 router.afterEach((to, from, next) => {
-    iView.LoadingBar.finish();
-    window.scrollTo(0, 0);
+  iView.LoadingBar.finish();
+  window.scrollTo(0, 0);
 });
 /* Router End */
 import View from '../front/view.vue';
 
 const app = new Vue({
-    el: '#app',
-    router: router,
-    render: h => h(View)
+  el: '#app',
+  router: router,
+  render: h => h(View)
 });

@@ -28,7 +28,10 @@ class OAService
         if ($this->hasToken()) {
             $accessToken = session('oauth_access_token');
             $response = CurlService::build($url)
-                ->setHeader(['Authorization:Bearer ' . $accessToken])
+                ->setHeader([
+                    'Accept:application/json',
+                    'Authorization:Bearer ' . $accessToken,
+                ])
                 ->sendMessageByPost($params);
             return $this->checkResponse($response);
         } elseif (!$this->passport) {
@@ -169,7 +172,7 @@ class OAService
         } elseif (isset($response['status'])) {
             return $response;
         } elseif (isset($response['message'])) {
-            abort(500, $response['message']);
+            return $response;
         }
     }
 

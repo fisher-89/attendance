@@ -281,7 +281,11 @@
               Indicator.close();
             }).catch((error) => {
               if (error.response) {
-                document.write(JSON.stringify(error.response.data));
+                if (typeof error.response.data == 'string') {
+                  document.write(error.response.data);
+                } else {
+                  document.write(JSON.stringify(error.response.data));
+                }
               } else {
                 document.write(error.message);
               }
