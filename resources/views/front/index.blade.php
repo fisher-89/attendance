@@ -25,7 +25,14 @@
     dd.ui.webViewBounce.disable();
   });
   //@TODO 使用一段时间后恢复店助全开
-  window.assistantActive = ['go0001', 'lsw5125','lsw5219'];
+  window.assistantActive = ['go0001',
+    'lsw5488', // 2018-10-15
+    'lsw5491', // 2018-10-31
+    'lsw5495', // 2018-10-31
+    'lsw5610', // 2018-11-30
+    'lsw5740', // 2018-10-31
+    'lsw5150', // 2018-11-24
+  ];
 </script>
 <script src="{{source('/js/front.js')}}"></script>
 </body>

@@ -502,7 +502,7 @@
           this.shopDutyActions = [];
           if ([1, 3].indexOf(staffAttendance.shop_duty_id) != -1 && assistantActive.indexOf(this.attendanceData.shop_sn) != -1) {
             this.shopDutyActions.push({ name: '设为店助', method: this.setShopDutyToAssistant });
-          } else if (staffAttendance.shop_duty_id == 2 && originalAttendanceData.shop_duty_id == 3) {
+          } else if (staffAttendance.shop_duty_id == 2 && originalAttendanceData.shop_duty_id !== 1) {
             this.shopDutyActions.push({ name: '设为导购', method: this.setShopDutyToSalesperson });
           } else if (staffAttendance.shop_duty_id == 2 && originalAttendanceData.shop_duty_id == 1) {
             this.shopDutyActions.push({ name: '设为店长', method: this.setShopDutyToManager });
