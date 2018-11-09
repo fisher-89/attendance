@@ -12,6 +12,7 @@ use App\Models\WorkingSchedule;
 use App\Services\UpfileService;
 use Illuminate\Http\Request;
 use Artisan;
+use DB;
 
 class AttendanceController extends Controller
 {
@@ -176,6 +177,16 @@ class AttendanceController extends Controller
                 $attendanceData['sales_performance_group'] += $detail['sales_performance_group'];
                 $attendanceData['sales_performance_partner'] += $detail['sales_performance_partner'];
             }
+            $totalSalePerformance = $attendanceData['sales_performance_lisha'] +
+                $attendanceData['sales_performance_go'] +
+                $attendanceData['sales_performance_group'] +
+                $attendanceData['sales_performance_partner'];
+            $salePerformanceFromTDOA = $this->getSalePerformanceFromTDOA($form->shop_sn, $form->date);
+            if ($salePerformanceFromTDOA == null) {
+                return ['status' => 0, 'msg' => '未提交外汇表'];
+            } elseif ($salePerformanceFromTDOA != $totalSalePerformance) {
+                return ['status' => 0, 'msg' => '业绩与外汇表 ￥' . $salePerformanceFromTDOA . ' 不同'];
+            }
             $form->status = 1;
             $form->submitted_at = date('Y-m-d H:i:s');
             $form->details;
@@ -207,5 +218,24 @@ class AttendanceController extends Controller
             abort(500, '考勤表不可撤回');
         }
 
+    }
+
+
+    protected function getSalePerformanceFromTDOA($shopSn, $date)
+    {
+        $data = DB::connection('TDOA')->table('flow_data_42 AS a')
+            ->join('flow_run AS b', 'a.run_id', '=', 'b.run_id')
+            ->select(
+                'a.data_7 as shop_sn',
+                'a.data_8 as attendance_date',
+                DB::raw('SUM(a.data_62+a.data_25+a.data_26+a.data_27) as sale_performance'),
+                DB::raw('!ISNULL(MIN(b.END_TIME)) as is_end')
+            )
+            ->groupBy('a.data_7', 'a.data_8')
+            ->where('b.DEL_FLAG', '=', 0)
+            ->where(DB::raw('STR_TO_DATE(a.data_8,"%Y-%m-%d")'), $date)
+            ->where('a.data_7', $shopSn)
+            ->first();
+        return empty($data) ? null : $data['sale_performance'];
     }
 }

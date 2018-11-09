@@ -440,6 +440,7 @@
               this.$Message.success('提交成功');
             } else if (response.data.status == 0) {
               this.$Message.error(response.data.msg);
+              Indicator.close();
             }
           }).catch((error) => {
             document.write(error);

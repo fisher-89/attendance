@@ -61,6 +61,19 @@ return [
             'schema' => 'public',
             'sslmode' => 'prefer',
         ],
+        'TDOA' => [
+            'driver' => 'mysql',
+            'host' => env('TDOA_DB_HOST', 'localhost'),
+            'port' => env('TDOA_DB_PORT', '3306'),
+            'database' => env('TDOA_DB_DATABASE', 'forge'),
+            'username' => env('TDOA_DB_USERNAME', 'forge'),
+            'password' => env('TDOA_DB_PASSWORD', ''),
+            'charset' => 'gbk',
+            'collation' => 'gbk_chinese_ci',
+            'prefix' => '',
+            'strict' => true,
+            'engine' => null,
+        ],
     ],
     /*
       |--------------------------------------------------------------------------
