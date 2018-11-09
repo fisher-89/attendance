@@ -177,15 +177,19 @@ class AttendanceController extends Controller
                 $attendanceData['sales_performance_group'] += $detail['sales_performance_group'];
                 $attendanceData['sales_performance_partner'] += $detail['sales_performance_partner'];
             }
-            $totalSalePerformance = $attendanceData['sales_performance_lisha'] +
-                $attendanceData['sales_performance_go'] +
-                $attendanceData['sales_performance_group'] +
-                $attendanceData['sales_performance_partner'];
-            $salePerformanceFromTDOA = $this->getSalePerformanceFromTDOA($form->shop_sn, $form->date);
-            if ($salePerformanceFromTDOA == null) {
-                return ['status' => 0, 'msg' => '未提交外汇表'];
-            } elseif ($salePerformanceFromTDOA != $totalSalePerformance) {
-                return ['status' => 0, 'msg' => '业绩与外汇表 ￥' . $salePerformanceFromTDOA . ' 不同'];
+            if (!$request->get('skip_check', false)) {
+                $totalSalePerformance = $attendanceData['sales_performance_lisha'] +
+                    $attendanceData['sales_performance_go'] +
+                    $attendanceData['sales_performance_group'] +
+                    $attendanceData['sales_performance_partner'];
+                $salePerformanceFromTDOA = $this->getSalePerformanceFromTDOA($form->shop_sn, $form->attendance_date);
+                if ($salePerformanceFromTDOA == null && $totalSalePerformance != 0) {
+                    return [
+                        'status' => -1,
+                        'msg' => '未找到外汇表,店铺:' . $form->shop_sn . ',日期:' . $form->attendance_date . '。'];
+                } elseif ($salePerformanceFromTDOA != $totalSalePerformance && $totalSalePerformance != 0) {
+                    return ['status' => -1, 'msg' => '业绩与外汇表(￥' . $salePerformanceFromTDOA . ')不同。'];
+                }
             }
             $form->status = 1;
             $form->submitted_at = date('Y-m-d H:i:s');
@@ -236,6 +240,6 @@ class AttendanceController extends Controller
             ->where(DB::raw('STR_TO_DATE(a.data_8,"%Y-%m-%d")'), $date)
             ->where('a.data_7', $shopSn)
             ->first();
-        return empty($data) ? null : $data['sale_performance'];
+        return empty($data) ? null : $data->sale_performance;
     }
 }

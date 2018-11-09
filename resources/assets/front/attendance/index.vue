@@ -209,7 +209,7 @@
 </template>
 
 <script>
-  import { Field, Loadmore, Popup, Actionsheet } from 'mint-ui';
+  import { Field, Loadmore, Popup, Actionsheet, MessageBox } from 'mint-ui';
   import clockLineComponent from './clockLine.vue';
   import Flatpickr from 'flatpickr';
 
@@ -427,12 +427,12 @@
           });
         }
       },
-      submit() {
+      submit(skipCheck = false) {
         if (this.attendanceData.is_missing) {
           this.$Message.error('存在漏签，请补全签卡后再提交');
         } else {
           Indicator.open('处理中...');
-          let url = '/attendance/submit';
+          let url = '/attendance/submit' + (skipCheck == true ? '?skip_check=1' : '');
           axios.post(url, this.attendanceData).then((response) => {
             if (response.data.status == 1) {
               this.attendanceData = response.data.msg;
@@ -441,6 +441,14 @@
             } else if (response.data.status == 0) {
               this.$Message.error(response.data.msg);
               Indicator.close();
+            } else if (response.data.status == -1) {
+              Indicator.close();
+              MessageBox.confirm(response.data.msg, '确认提交')
+                .then((action) => {
+                  if (action == 'confirm') {
+                    this.submit(true);
+                  }
+                });
             }
           }).catch((error) => {
             document.write(error);
