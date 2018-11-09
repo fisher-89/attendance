@@ -122,6 +122,7 @@ class AttendanceController extends Controller
         if ($attendance->status < 1) {
             $request->offsetSet('id', $attendance->id);
             $request->offsetSet('details', $attendance->details->toArray());
+            $request->offsetSet('skip_check', 1);
             $response = $this->submit($request);
             return ['status' => $response['status'] ? 1 : -1, 'message' => $response['msg']];
         } else {
