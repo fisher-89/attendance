@@ -183,13 +183,17 @@ class AttendanceController extends Controller
                     $attendanceData['sales_performance_go'] +
                     $attendanceData['sales_performance_group'] +
                     $attendanceData['sales_performance_partner'];
-                $salePerformanceFromTDOA = $this->getSalePerformanceFromTDOA($form->shop_sn, $form->attendance_date);
-                if ($salePerformanceFromTDOA == null && $totalSalePerformance != 0) {
-                    return [
-                        'status' => -1,
-                        'msg' => '未找到外汇表,店铺:' . $form->shop_sn . ',日期:' . $form->attendance_date . '。'];
-                } elseif ($salePerformanceFromTDOA != $totalSalePerformance && $totalSalePerformance != 0) {
-                    return ['status' => -1, 'msg' => '业绩与外汇表(￥' . $salePerformanceFromTDOA . ')不同。'];
+                try {
+                    $salePerformanceFromTDOA = $this->getSalePerformanceFromTDOA($form->shop_sn, $form->attendance_date);
+                    if ($salePerformanceFromTDOA == null && $totalSalePerformance != 0) {
+                        return [
+                            'status' => -1,
+                            'msg' => '未找到外汇表,店铺:' . $form->shop_sn . ',日期:' . $form->attendance_date . '。'];
+                    } elseif ($salePerformanceFromTDOA != $totalSalePerformance && $totalSalePerformance != 0) {
+                        return ['status' => -1, 'msg' => '业绩与外汇表(￥' . $salePerformanceFromTDOA . ')不同。'];
+                    }
+                } catch (\PDOException $e) {
+                    //不操作
                 }
             }
             $form->status = 1;
