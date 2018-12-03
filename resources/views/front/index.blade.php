@@ -27,10 +27,7 @@
   //@TODO 使用一段时间后恢复店助全开
   window.assistantActive = ['go0001',
     'lsw5610', // 2018-11-30
-    'lsw5150', // 2018-11-24
-    'lsw5743', // 2018-11-10
     'lsw5618', // 2018-11-29
-    'lsw5600', // 2018-11-04
   ];
 </script>
 <script src="{{source('/js/front.js')}}"></script>

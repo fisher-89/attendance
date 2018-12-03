@@ -88,6 +88,9 @@
 									<Tag v-if="staffAttendance.is_assistor == 1" color="blue"
 									     @click.native="showSheet(index)">协助
 									</Tag>
+									<Tag v-if="staffAttendance.is_assistor == 2" color="blue"
+									     @click.native="showSheet(index)">巡店
+									</Tag>
 									<Tag v-if="staffAttendance.is_shift == 1" color="yellow"
 									     @click.native="showSheet(index)">倒班
 									</Tag>
@@ -499,6 +502,10 @@
         let is_assistor = this.attendanceData.details[this.shopDutyStaffKey].is_assistor;
         this.attendanceData.details[this.shopDutyStaffKey].is_assistor = is_assistor ? 0 : 1;
       },
+      togglePatrol() {
+        let is_assistor = this.attendanceData.details[this.shopDutyStaffKey].is_assistor;
+        this.attendanceData.details[this.shopDutyStaffKey].is_assistor = is_assistor ? 0 : 2;
+      },
       toggleShift() {
         let is_shift = this.attendanceData.details[this.shopDutyStaffKey].is_shift;
         this.attendanceData.details[this.shopDutyStaffKey].is_shift = is_shift ? 0 : 1;
@@ -518,8 +525,11 @@
           }
           if (staffAttendance.is_assistor == 0) {
             this.shopDutyActions.push({ name: '协助', method: this.toggleAssistor });
-          } else {
+            this.shopDutyActions.push({ name: '巡店', method: this.togglePatrol });
+          } else if (staffAttendance.is_assistor == 1) {
             this.shopDutyActions.push({ name: '取消协助', method: this.toggleAssistor });
+          } else if (staffAttendance.is_assistor == 2) {
+            this.shopDutyActions.push({ name: '取消巡店', method: this.togglePatrol });
           }
           if (staffAttendance.is_shift == 0) {
             this.shopDutyActions.push({ name: '倒班', method: this.toggleShift });
