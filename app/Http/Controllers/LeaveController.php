@@ -198,7 +198,7 @@ class LeaveController extends Controller
             return 0;
         }
         if ($request->EventType == 'bpms_task_change' && $request->type == 'start') {
-            $staff = app('OA')->withoutPassport()->getDataFromApi('get_user', ['dingding' => $request->staffId])['message'];
+            $staff = app('OA')->withoutPassport()->getDataFromApi('get_user', ['dingtalk_number' => $request->staffId])['message'];
             if (!empty($staff)) {
                 $staff = $staff[0];
                 $leaveRequest->approver_sn = $staff['staff_sn'];
