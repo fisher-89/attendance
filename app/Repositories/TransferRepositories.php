@@ -6,7 +6,7 @@ use App\Models\Clock;
 use App\Models\Transfer;
 use App\Models\WorkingSchedule;
 use DB;
-use Mockery\Exception;
+use Log;
 
 class TransferRepositories
 {
@@ -116,6 +116,7 @@ class TransferRepositories
             }
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error($e);
             return ['status' => 0, 'msg' => $e->getMessage()];
         }
         return $response;
