@@ -45,151 +45,155 @@
 
 
 <script>
-    import {Spinner} from 'mint-ui';
+  import { Spinner } from 'mint-ui';
 
-    var components = {};
-    components[Spinner.name] = Spinner;
+  var components = {};
+  components[Spinner.name] = Spinner;
 
-    export default {
-        data() {
-            return {
-                locating: false,        //定位中提示
-                aLocation: false,	    //定位信息
-                locationErr: false,	    //定位失败信息
-                curTime: '12:00:00',    //当前时间
-                success: false,
-            };
-        },
-        props: ['currentUser', 'close'],
-        components: components,
-        watch: {
-            refresh(newValue) {
-                if (newValue == true) {
-                    this.getRecord();
-                }
-            }
-        },
-        computed: {
-            inShop() { //员工是否有所属店铺;
-                if (this.currentUser) {
-                    return this.currentUser.shop_sn.length > 0;
-                } else {
-                    return false;
-                }
-            },
-            clockAvailable() { //是否可以打卡
-                let avaliableError = true;
-                if (this.locationErr &&
-                    this.locationErr.match('error message = 取消') == null &&
-                    this.locationErr.match('error message = 定位错误') == null) {
-                    avaliableError = false;
-                }
-                return this.aLocation !== false && avaliableError && this.inShop;
-            },
-            inTime() {
-                return (this.hasClockIn && this.curTime > this.currentUser.working_end_at) || (!this.hasClockIn && this.curTime < this.currentUser.working_start_at);
-            }
-        },
-        beforeMount() {
-            this.getCurTime();
-            setInterval(this.getCurTime, 1000);
-        },
-        mounted() {
-            this.dingtalkInit();
-        },
-        methods: {
-            getLocation() {
-                dd.device.geolocation.get({
-                    targetAccuracy: 200,
-                    coordinate: 1,
-                    withReGeocode: true,
-                    useCache: false,
-                    onSuccess: (result) => {
-                        this.locating = false;
-                        try {
-                            if (result.location) {
-                                result = result.location;
-                            }
-                            this.aLocation = {
-                                position: {
-                                    lng: result.longitude,
-                                    lat: result.latitude
-                                },
-                                formattedAddress: result.address ? result.address : '获取地址信息失败，可正常打卡',
-                                accuracy: result.accuracy
-                            };
-                            this.locationErr = false;
-                        } catch (e) {
-                            this.locationErr = e.message;
-                        }
-
-                    },
-                    onFail: (err) => {
-                        this.locationErr = err.errorCode + ':' + err.errorMessage;
-                    }
-                });
-            },
-            getCurTime() {
-                let date = new Date();
-                let hour = (Array(2).join(0) + date.getHours()).slice(-2);
-                let minute = (Array(2).join(0) + date.getMinutes()).slice(-2);
-                let second = (Array(2).join(0) + date.getSeconds()).slice(-2);
-                this.curTime = hour + ':' + minute + ':' + second;
-            },
-            uploadClock() {
-                this.takePhoto((picPath) => {
-                    Indicator.open('处理中...');
-                    let url = '/clock/flash';
-                    let params = {
-                        lng: this.aLocation.position.lng,
-                        lat: this.aLocation.position.lat,
-                        address: this.aLocation.formattedAddress,
-                        accuracy: this.aLocation.accuracy,
-                        photo: picPath[0]
-                    };
-                    axios.post(url, params).then((response) => {
-                        if (typeof response.data == 'string') {
-                            document.write(response.data);
-                        }
-                        if (response.data.status) {
-                            this.$Message.success(response.data.msg);
-                            this.success = true;
-                        } else {
-                            this.$Message.error(response.data.msg);
-                        }
-                        Indicator.close();
-                    }).catch((err) => {
-                        document.write(err);
-                    });
-                });
-            },
-            dingtalkInit() {
-                let url = '/js_config';
-                axios.post(url, {'current_url': location.href}).then((response) => {
-                    let jsConfig = response.data;
-                    jsConfig['jsApiList'] = ['biz.util.uploadImageFromCamera', 'device.geolocation.get'];
-                    dd.config(jsConfig);
-                    dd.ready(() => {
-                        this.locating = true;
-                        this.getLocation();
-                        setInterval(this.getLocation, 10000);
-                    });
-                    dd.error(function (error) {
-                        let html = JSON.stringify(error);
-                        html += '<h2 onClick="location.reload()" style="text-align:center;margin-top:20px;color:#333;">点此刷新</h2>';
-                        document.write(html);
-                    });
-                });
-            },
-            takePhoto(callback) {
-                dd.ready(() => {
-                    dd.biz.util.uploadImageFromCamera({
-                        onSuccess: (picPath) => {
-                            callback(picPath);
-                        }
-                    });
-                })
-            }
+  export default {
+    data() {
+      return {
+        locating: false,        //定位中提示
+        aLocation: false,	    //定位信息
+        locationErr: false,	    //定位失败信息
+        curTime: '12:00:00',    //当前时间
+        success: false,
+      };
+    },
+    props: ['currentUser', 'close'],
+    components: components,
+    watch: {
+      refresh(newValue) {
+        if (newValue == true) {
+          this.getRecord();
         }
+      }
+    },
+    computed: {
+      inShop() { //员工是否有所属店铺;
+        if (this.currentUser) {
+          return this.currentUser.shop_sn.length > 0;
+        } else {
+          return false;
+        }
+      },
+      clockAvailable() { //是否可以打卡
+        let avaliableError = true;
+        if (this.locationErr &&
+          this.locationErr.match('error message = 取消') == null &&
+          this.locationErr.match('error message = 定位错误') == null) {
+          avaliableError = false;
+        }
+        return this.aLocation !== false && avaliableError && this.inShop;
+      },
+      inTime() {
+        return (this.hasClockIn && this.curTime > this.currentUser.working_end_at) || (!this.hasClockIn && this.curTime < this.currentUser.working_start_at);
+      }
+    },
+    beforeMount() {
+      this.getCurTime();
+      setInterval(this.getCurTime, 1000);
+    },
+    mounted() {
+      this.dingtalkInit();
+    },
+    methods: {
+      getLocation() {
+        dd.device.geolocation.get({
+          targetAccuracy: 200,
+          coordinate: 1,
+          withReGeocode: true,
+          useCache: false,
+          onSuccess: (result) => {
+            this.locating = false;
+            try {
+              if (result.location) {
+                result = result.location;
+              }
+              this.aLocation = {
+                position: {
+                  lng: result.longitude,
+                  lat: result.latitude
+                },
+                formattedAddress: result.address ? result.address : '获取地址信息失败，可正常打卡',
+                accuracy: result.accuracy
+              };
+              this.locationErr = false;
+            } catch (e) {
+              this.locationErr = e.message;
+            }
+
+          },
+          onFail: (err) => {
+            let inBackground = err.errorCode === 3 && err.errorMessage === 'in background';
+            if (!inBackground || !this.aLocation) {
+              this.aLocation = false;
+              this.errorMessage = err.errorCode + ':' + err.errorMessage;
+            }
+          }
+        });
+      },
+      getCurTime() {
+        let date = new Date();
+        let hour = (Array(2).join(0) + date.getHours()).slice(-2);
+        let minute = (Array(2).join(0) + date.getMinutes()).slice(-2);
+        let second = (Array(2).join(0) + date.getSeconds()).slice(-2);
+        this.curTime = hour + ':' + minute + ':' + second;
+      },
+      uploadClock() {
+        this.takePhoto((picPath) => {
+          Indicator.open('处理中...');
+          let url = '/clock/flash';
+          let params = {
+            lng: this.aLocation.position.lng,
+            lat: this.aLocation.position.lat,
+            address: this.aLocation.formattedAddress,
+            accuracy: this.aLocation.accuracy,
+            photo: picPath[0]
+          };
+          axios.post(url, params).then((response) => {
+            if (typeof response.data == 'string') {
+              document.write(response.data);
+            }
+            if (response.data.status) {
+              this.$Message.success(response.data.msg);
+              this.success = true;
+            } else {
+              this.$Message.error(response.data.msg);
+            }
+            Indicator.close();
+          }).catch((err) => {
+            document.write(err);
+          });
+        });
+      },
+      dingtalkInit() {
+        let url = '/js_config';
+        axios.post(url, { 'current_url': location.href }).then((response) => {
+          let jsConfig = response.data;
+          jsConfig['jsApiList'] = ['biz.util.uploadImageFromCamera', 'device.geolocation.get'];
+          dd.config(jsConfig);
+          dd.ready(() => {
+            this.locating = true;
+            this.getLocation();
+            setInterval(this.getLocation, 10000);
+          });
+          dd.error(function (error) {
+            let html = JSON.stringify(error);
+            html += '<h2 onClick="location.reload()" style="text-align:center;margin-top:20px;color:#333;">点此刷新</h2>';
+            document.write(html);
+          });
+        });
+      },
+      takePhoto(callback) {
+        dd.ready(() => {
+          dd.biz.util.uploadImageFromCamera({
+            onSuccess: (picPath) => {
+              callback(picPath);
+            }
+          });
+        })
+      }
     }
+  }
 </script>
