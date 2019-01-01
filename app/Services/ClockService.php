@@ -136,6 +136,19 @@ class ClockService
                     return $query->where('shop_sn', $clock->shop_sn);
                 })->orderBy('clock_at', 'desc')->first();
         }
+        if (empty($response)) {
+            $ym = date('Ym', strtotime($clockAt . ' -2 month'));
+            $clockModel = new Clock(['ym' => $ym]);
+            $response = $clockModel->where('staff_sn', $staffSn)
+                ->where('is_abandoned', 0)
+                ->where('clock_at', '<', $clockAt)
+                ->where('type', '<', 3)
+                ->when($startAt != false, function ($query) use ($startAt) {
+                    return $query->where('clock_at', '>', $startAt);
+                })->when($lockShop, function ($query) use ($clock) {
+                    return $query->where('shop_sn', $clock->shop_sn);
+                })->orderBy('clock_at', 'desc')->first();
+        }
         return $response;
     }
 
