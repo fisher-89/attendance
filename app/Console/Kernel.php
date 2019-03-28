@@ -4,6 +4,7 @@ namespace App\Console;
 
 use App\Console\Commands\CleanUpPhotos;
 use App\Console\Commands\CleanUpTmpFiles;
+use App\Console\Commands\GenerateMonthlyTable;
 use App\Console\Commands\RefreshAttendance;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
@@ -19,6 +20,7 @@ class Kernel extends ConsoleKernel
         RefreshAttendance::class,
         CleanUpPhotos::class,
         CleanUpTmpFiles::class,
+        GenerateMonthlyTable::class,
     ];
 
     /**
@@ -31,6 +33,7 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('file:clean-up-photos')->dailyAt('5:00');
         $schedule->command('file:clean-up-tmp-files')->dailyAt('5:05');
+        $schedule->command('attendance:copy-table')->monthlyOn('1', '2:00');
     }
 
     /**
